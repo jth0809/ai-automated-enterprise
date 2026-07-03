@@ -1,0 +1,42 @@
+---
+# Canary metrics measured at the ingress gateway's Envoy (scraped by the
+# istio-gateway-envoy-stats PodMonitor). Ambient has no sidecars, so the
+# gateway is the only L7 telemetry point; destination_service identifies
+# the canary Service the gateway routed to.
+apiVersion: flagger.app/v1beta1
+kind: MetricTemplate
+metadata:
+  name: gateway-success-rate
+  namespace: backend
+spec:
+  provider:
+    type: prometheus
+    address: http://kube-prometheus-stack-prometheus.monitoring:9090
+  query: |
+    100 - (
+      sum(rate(istio_requests_total{
+        destination_service=~"{{ target }}-canary.{{ namespace }}.svc.cluster.local",
+        response_code=~"5.*"
+      }[{{ interval }}]))
+      /
+      sum(rate(istio_requests_total{
+        destination_service=~"{{ target }}-canary.{{ namespace }}.svc.cluster.local"
+      }[{{ interval }}]))
+      * 100
+    )
+---
+apiVersion: flagger.app/v1beta1
+kind: MetricTemplate
+metadata:
+  name: gateway-latency-p99
+  namespace: backend
+spec:
+  provider:
+    type: prometheus
+    address: http://kube-prometheus-stack-prometheus.monitoring:9090
+  query: |
+    histogram_quantile(0.99,
+      sum(rate(istio_request_duration_milliseconds_bucket{
+        destination_service=~"{{ target }}-canary.{{ namespace }}.svc.cluster.local"
+      }[{{ interval }}])) by (le)
+    )

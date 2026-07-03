@@ -1,0 +1,41 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: istiod
+  namespace: flux-system
+spec:
+  dependsOn:
+    - name: istio-base
+  interval: 30m
+  timeout: 10m
+  releaseName: istiod
+  targetNamespace: istio-system
+  chart:
+    spec:
+      chart: istiod
+      version: "1.26.x"
+      sourceRef:
+        kind: HelmRepository
+        name: istio
+        namespace: flux-system
+      interval: 12h
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      retries: 3
+      strategy: rollback
+  values:
+    profile: ambient
+    pilot:
+      # Single replica, no HPA: 12GB Always Free cluster.
+      replicaCount: 1
+      autoscaleEnabled: false
+      resources:
+        requests:
+          cpu: 50m
+          memory: 256Mi
+        limits:
+          memory: 512Mi

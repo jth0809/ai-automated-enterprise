@@ -1,0 +1,20 @@
+# Provider binaries and module cache
+.terraform/
+
+# State files contain secrets (ATP passwords, wallet) - never commit
+*.tfstate
+*.tfstate.*
+*.tfstate.backup
+
+# Local variable files may contain credentials
+*.tfvars
+*.tfvars.json
+!terraform.tfvars.example
+
+# Crash logs and plan files
+crash.log
+crash.*.log
+*.tfplan
+
+# Keep the dependency lock file tracked (reproducible provider versions)
+!.terraform.lock.hcl

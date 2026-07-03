@@ -1,0 +1,3 @@
+# Real inventories contain node IPs and SSH details
+inventory.ini
+*.retry

@@ -1,0 +1,81 @@
+---
+# Progressive delivery operator. Drives Canary analysis by shifting
+# HTTPRoute weights on the Gateway API (gatewayapi:v1 provider) and
+# querying Prometheus for the canary metrics.
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: flagger
+  namespace: flux-system
+spec:
+  interval: 30m
+  timeout: 10m
+  releaseName: flagger
+  targetNamespace: flagger-system
+  chart:
+    spec:
+      chart: flagger
+      version: "1.43.x"
+      sourceRef:
+        kind: HelmRepository
+        name: flagger
+        namespace: flux-system
+      interval: 12h
+  install:
+    createNamespace: true
+    remediation:
+      retries: 3
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      retries: 3
+      strategy: rollback
+  values:
+    meshProvider: gatewayapi:v1
+    metricsServer: http://kube-prometheus-stack-prometheus.monitoring:9090
+    # Sized for Always Free ARM A1 (2 OCPU / 12GB total).
+    resources:
+      requests:
+        cpu: 25m
+        memory: 96Mi
+      limits:
+        memory: 192Mi
+---
+# Generates synthetic traffic through the public gateway during canary
+# analysis, so success-rate/latency metrics exist even without real users.
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: flagger-loadtester
+  namespace: flux-system
+spec:
+  dependsOn:
+    - name: flagger
+  interval: 30m
+  timeout: 10m
+  releaseName: flagger-loadtester
+  targetNamespace: flagger-system
+  chart:
+    spec:
+      chart: loadtester
+      version: "0.37.x"
+      sourceRef:
+        kind: HelmRepository
+        name: flagger
+        namespace: flux-system
+      interval: 12h
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      retries: 3
+      strategy: rollback
+  values:
+    resources:
+      requests:
+        cpu: 10m
+        memory: 32Mi
+      limits:
+        memory: 64Mi

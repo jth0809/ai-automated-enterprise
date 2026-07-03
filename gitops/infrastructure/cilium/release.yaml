@@ -1,0 +1,73 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: cilium
+  namespace: flux-system
+spec:
+  interval: 30m
+  timeout: 10m
+  releaseName: cilium
+  targetNamespace: kube-system
+  chart:
+    spec:
+      chart: cilium
+      version: "1.17.x"
+      sourceRef:
+        kind: HelmRepository
+        name: cilium
+        namespace: flux-system
+      interval: 12h
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      retries: 3
+      strategy: rollback
+  values:
+    cluster:
+      name: oke-production
+      id: 1
+    # Replace OKE's default Flannel. exclusive=false so istio-cni (Ambient
+    # Mesh, Phase 3) can chain itself after Cilium in /etc/cni/net.d;
+    # removal of Flannel's conflist is handled during node bootstrap (Ansible).
+    cni:
+      install: true
+      exclusive: false
+    # OKE (flannel-based clusters) allocates PodCIDR per node via the
+    # Kubernetes API, so Cilium reads it from the Node spec.
+    ipam:
+      mode: kubernetes
+    k8s:
+      requireIPv4PodCIDR: true
+    routingMode: tunnel
+    tunnelProtocol: vxlan
+    # Keep OKE's managed kube-proxy; full replacement requires pinning
+    # k8sServiceHost/k8sServicePort to the OKE API endpoint.
+    kubeProxyReplacement: false
+    # Strict L3/L4 Zero-Trust: endpoints without a matching (Cilium)NetworkPolicy
+    # are default-deny. Every workload namespace MUST ship its own policies.
+    policyEnforcementMode: default
+    policyAuditMode: false
+    hubble:
+      enabled: true
+      relay:
+        enabled: false
+      ui:
+        enabled: false
+    # Sized for Always Free ARM A1 (2 OCPU / 12GB total).
+    operator:
+      replicas: 1
+      resources:
+        requests:
+          cpu: 25m
+          memory: 128Mi
+        limits:
+          memory: 256Mi
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        memory: 512Mi

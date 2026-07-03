@@ -1,0 +1,12 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - namespace.yaml
+  - externalsecret.yaml
+  - image-pull-secret.yaml
+  - deployment.yaml
+  - service.yaml
+  - httproute.yaml
+  - network-policy.yaml
+  - progressive-delivery/metric-templates.yaml
+  - progressive-delivery/canary.yaml

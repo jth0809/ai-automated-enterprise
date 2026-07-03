@@ -1,0 +1,135 @@
+---
+# Layer 1: CNI must be healthy before anything else schedules reliably.
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: infra-cilium
+  namespace: flux-system
+spec:
+  interval: 10m
+  retryInterval: 2m
+  timeout: 10m
+  prune: true
+  wait: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  path: ./gitops/infrastructure/cilium
+---
+# Layer 2: certificates for webhooks and Gateway API HTTPS.
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: infra-cert-manager
+  namespace: flux-system
+spec:
+  dependsOn:
+    - name: infra-cilium
+  interval: 10m
+  retryInterval: 2m
+  timeout: 10m
+  prune: true
+  wait: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  path: ./gitops/infrastructure/cert-manager
+---
+# Layer 3: secret injection from OCI Vault. Serial dependsOn chain keeps
+# concurrent Helm installs low on the 2 OCPU / 12GB Always Free cluster.
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: infra-external-secrets
+  namespace: flux-system
+spec:
+  dependsOn:
+    - name: infra-cert-manager
+  interval: 10m
+  retryInterval: 2m
+  timeout: 10m
+  prune: true
+  wait: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  path: ./gitops/infrastructure/external-secrets
+---
+# Layer 3.5 (Phase 5): Gateway API standard CRDs, required by the shared
+# Gateway in istio-ambient and by app HTTPRoutes.
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: infra-gateway-api
+  namespace: flux-system
+spec:
+  dependsOn:
+    - name: infra-external-secrets
+  interval: 10m
+  retryInterval: 2m
+  timeout: 5m
+  prune: true
+  wait: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  path: ./gitops/infrastructure/gateway-api
+---
+# Layer 4 (Phase 3): sidecar-less mTLS mesh. Depends on the full Phase 2
+# chain so Helm installs stay serialized on the 2 OCPU cluster.
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: infra-istio-ambient
+  namespace: flux-system
+spec:
+  dependsOn:
+    - name: infra-gateway-api
+  interval: 10m
+  retryInterval: 2m
+  timeout: 15m
+  prune: true
+  wait: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  path: ./gitops/infrastructure/istio-ambient
+---
+# Layer 5 (Phase 3): metrics stack, after the mesh is healthy.
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: infra-observability
+  namespace: flux-system
+spec:
+  dependsOn:
+    - name: infra-istio-ambient
+  interval: 10m
+  retryInterval: 2m
+  timeout: 15m
+  prune: true
+  wait: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  path: ./gitops/infrastructure/observability
+---
+# Layer 6 (Phase 5): Flagger progressive delivery operator. Last in the
+# chain: it needs Prometheus (metrics) and the Gateway API (traffic).
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: infra-flagger
+  namespace: flux-system
+spec:
+  dependsOn:
+    - name: infra-observability
+  interval: 10m
+  retryInterval: 2m
+  timeout: 10m
+  prune: true
+  wait: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  path: ./gitops/infrastructure/flagger

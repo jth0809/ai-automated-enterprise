@@ -1,0 +1,13 @@
+# Copy to inventory.ini (gitignored) and fill in the worker private IPs
+# (terraform output, or: kubectl get nodes -o wide). Workers sit in the
+# private subnet, so connect through a bastion or run from a host inside
+# the VCN. Default OKE node user is "opc".
+[oke_workers]
+10.0.2.11
+10.0.2.12
+
+[oke_workers:vars]
+ansible_user=opc
+ansible_ssh_private_key_file=~/.ssh/oke_nodes
+# Bastion example (uncomment and adjust):
+# ansible_ssh_common_args='-o ProxyJump=opc@<bastion-public-ip>'

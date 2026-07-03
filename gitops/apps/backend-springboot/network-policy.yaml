@@ -1,0 +1,85 @@
+---
+# Zero-Trust policy for the backend. Once this policy selects the pods,
+# Cilium switches them to default-deny in both directions; every flow
+# below is an explicit whitelist. Port 15008 appears next to the app
+# ports because Ambient Mesh (ztunnel/gateway) tunnels in-mesh traffic
+# over HBONE mTLS on 15008 while out-of-mesh flows stay on the app port.
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: backend-springboot
+  namespace: backend
+spec:
+  endpointSelector:
+    matchLabels:
+      app: backend-springboot
+  ingress:
+    # 1) Istio Ingress Gateway (Gateway API auto-deployed pods) only.
+    - fromEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: istio-ingress
+            gateway.networking.k8s.io/gateway-name: public-gateway
+      toPorts:
+        - ports:
+            - port: "8080"
+              protocol: TCP
+            - port: "15008"
+              protocol: TCP
+    # 2) Frontend nginx (/api reverse proxy). Required counterpart of the
+    #    frontend policy's "egress only to backend" rule — without it the
+    #    proxy path is dead on arrival under default-deny.
+    - fromEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: frontend
+            app: frontend-react
+      toPorts:
+        - ports:
+            - port: "8080"
+              protocol: TCP
+            - port: "15008"
+              protocol: TCP
+  egress:
+    # DNS to CoreDNS — nothing resolves without this under default-deny.
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: kube-system
+            k8s-app: kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: UDP
+            - port: "53"
+              protocol: TCP
+    # Kafka brokers (Strimzi) in the kafka namespace: 9092 plain listener,
+    # 9093 TLS listener, 15008 in case the namespace joins the mesh later.
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: kafka
+            strimzi.io/cluster: production-kafka
+      toPorts:
+        - ports:
+            - port: "9092"
+              protocol: TCP
+            - port: "9093"
+              protocol: TCP
+            - port: "15008"
+              protocol: TCP
+    # Redis cache in the redis namespace.
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: redis
+            app: production-redis
+      toPorts:
+        - ports:
+            - port: "6379"
+              protocol: TCP
+            - port: "15008"
+              protocol: TCP
+    # Oracle ATP lives outside the cluster (OCI endpoint, TCPS 1522).
+    # Tighten "world" to a toCIDRSet with the ATP endpoint once known.
+    - toEntities:
+        - world
+      toPorts:
+        - ports:
+            - port: "1522"
+              protocol: TCP

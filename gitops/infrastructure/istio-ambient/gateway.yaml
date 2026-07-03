@@ -1,0 +1,56 @@
+---
+# Dedicated namespace for the shared ingress gateway. NOT ambient-enrolled:
+# the auto-deployed gateway pod runs its own Envoy proxy.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: istio-ingress
+---
+# Shared Kubernetes Gateway API entrypoint. istiod auto-deploys the
+# Deployment/Service "public-gateway-istio" in this namespace; its pods
+# carry the label gateway.networking.k8s.io/gateway-name=public-gateway,
+# which app CiliumNetworkPolicies whitelist for ingress.
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: public-gateway
+  namespace: istio-ingress
+  annotations:
+    # Copied onto the generated gateway pods: shrink the default 100m
+    # request to fit the 2 OCPU budget (no cpu limit, bursting allowed).
+    sidecar.istio.io/proxyCPU: 50m
+    sidecar.istio.io/proxyMemory: 128Mi
+spec:
+  gatewayClassName: istio
+  infrastructure:
+    annotations:
+      # OCI Always Free flexible LB: pin bandwidth to the free 10 Mbps.
+      service.beta.kubernetes.io/oci-load-balancer-shape: "flexible"
+      service.beta.kubernetes.io/oci-load-balancer-shape-flex-min: "10"
+      service.beta.kubernetes.io/oci-load-balancer-shape-flex-max: "10"
+  listeners:
+    - name: http
+      port: 80
+      protocol: HTTP
+      allowedRoutes:
+        namespaces:
+          from: Selector
+          selector:
+            matchLabels:
+              shared-gateway-access: "true"
+    # HTTPS listener: uncomment once a cert-manager (Cluster)Issuer and a
+    # real domain exist. cert-manager (Gateway API solver) populates the
+    # referenced Secret from the annotation on this Gateway.
+    # - name: https
+    #   port: 443
+    #   protocol: HTTPS
+    #   tls:
+    #     mode: Terminate
+    #     certificateRefs:
+    #       - name: public-gateway-tls
+    #   allowedRoutes:
+    #     namespaces:
+    #       from: Selector
+    #       selector:
+    #         matchLabels:
+    #           shared-gateway-access: "true"

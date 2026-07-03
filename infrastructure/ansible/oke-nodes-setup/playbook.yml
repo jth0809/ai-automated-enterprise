@@ -1,0 +1,40 @@
+---
+# OKE worker node CNI cutover: Flannel -> Cilium (+ chained istio-cni).
+#
+# The cluster is provisioned with cni_type = FLANNEL_OVERLAY (oci-oke),
+# and gitops/infrastructure/cilium installs Cilium with exclusive=false.
+# Cilium writes 05-cilium.conflist; this playbook removes Flannel's
+# leftover config from /etc/cni/net.d so kubelet can never fall back to
+# it. Run it (see README.md for the full ordering):
+#   1. after FluxCD reports the infra-cilium Kustomization healthy, and
+#   2. again for every node added or recycled by the node pool.
+- name: Remove Flannel CNI config from OKE worker nodes
+  hosts: oke_workers
+  become: true
+  tasks:
+    - name: Find Flannel CNI config files
+      ansible.builtin.find:
+        paths: /etc/cni/net.d
+        patterns: "*flannel*"
+      register: flannel_conf
+
+    - name: Delete Flannel CNI config files
+      ansible.builtin.file:
+        path: "{{ item.path }}"
+        state: absent
+      loop: "{{ flannel_conf.files }}"
+      loop_control:
+        label: "{{ item.path }}"
+
+    - name: Verify Cilium is the primary CNI config
+      ansible.builtin.find:
+        paths: /etc/cni/net.d
+        patterns: "05-cilium.conflist"
+      register: cilium_conf
+      failed_when: cilium_conf.matched == 0
+
+    - name: Restart kubelet to re-read CNI config
+      ansible.builtin.systemd:
+        name: kubelet
+        state: restarted
+      when: flannel_conf.matched > 0

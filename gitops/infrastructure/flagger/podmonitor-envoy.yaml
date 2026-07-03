@@ -1,0 +1,33 @@
+---
+# Scrapes the auto-deployed Gateway API pods (Envoy) in istio-ingress.
+# istio_requests_total / istio_request_duration_milliseconds from the
+# gateway are the data source for Flagger's canary MetricTemplates.
+# Lives in this layer (not istio-ambient) because the PodMonitor CRD is
+# installed by kube-prometheus-stack, which reconciles after the mesh.
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: istio-gateway-envoy-stats
+  namespace: monitoring
+  labels:
+    # Required: kube-prometheus-stack only selects monitors with its
+    # release label (podMonitorSelectorNilUsesHelmValues default).
+    release: kube-prometheus-stack
+spec:
+  namespaceSelector:
+    matchNames:
+      - istio-ingress
+  selector:
+    matchExpressions:
+      - key: gateway.networking.k8s.io/gateway-name
+        operator: Exists
+  podMetricsEndpoints:
+    - port: http-envoy-prom
+      path: /stats/prometheus
+      interval: 30s
+      metricRelabelings:
+        # Keep only Istio L7 telemetry; raw envoy_* series would blow the
+        # 1GB Prometheus memory budget.
+        - sourceLabels: [__name__]
+          regex: "istio_.*"
+          action: keep

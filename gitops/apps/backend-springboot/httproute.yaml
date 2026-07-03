@@ -1,0 +1,28 @@
+---
+# External route for the API, attached to the shared Istio gateway.
+# Flagger owns this route at runtime (it shifts the primary/canary
+# weights during analysis), so Flux only creates the initial version
+# and never re-applies it — hence ssa: IfNotPresent. The name matches
+# the route Flagger generates for the apex service.
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: backend-springboot
+  namespace: backend
+  annotations:
+    kustomize.toolkit.fluxcd.io/ssa: IfNotPresent
+spec:
+  parentRefs:
+    - name: public-gateway
+      namespace: istio-ingress
+  hostnames:
+    - api.example.com   # CHANGE_ME: real API domain
+  rules:
+    - backendRefs:
+        # Steady state after Flagger bootstrap: 100% primary, 0% canary.
+        - name: backend-springboot-primary
+          port: 8080
+          weight: 100
+        - name: backend-springboot-canary
+          port: 8080
+          weight: 0

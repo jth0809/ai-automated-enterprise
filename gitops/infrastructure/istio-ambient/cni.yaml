@@ -1,0 +1,47 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: istio-cni
+  namespace: flux-system
+spec:
+  dependsOn:
+    - name: istiod
+  interval: 30m
+  timeout: 10m
+  releaseName: istio-cni
+  # Node-level CNI agent belongs in kube-system alongside Cilium.
+  targetNamespace: kube-system
+  chart:
+    spec:
+      chart: cni
+      version: "1.26.x"
+      sourceRef:
+        kind: HelmRepository
+        name: istio
+        namespace: flux-system
+      interval: 12h
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      retries: 3
+      strategy: rollback
+  values:
+    profile: ambient
+    cni:
+      # Chained mode: istio-cni appends itself to Cilium's conflist in
+      # /etc/cni/net.d instead of owning the node CNI config. Requires
+      # cni.exclusive=false on the Cilium HelmRelease (set in Phase 2 dir).
+      chained: true
+      cniConfDir: /etc/cni/net.d
+      excludeNamespaces:
+        - kube-system
+        - istio-system
+      resources:
+        requests:
+          cpu: 25m
+          memory: 64Mi
+        limits:
+          memory: 128Mi

@@ -1,0 +1,49 @@
+---
+# Phase 5 application layer. wait is disabled on both: Flagger owns the
+# backend Deployment lifecycle (scales the target to 0 after cloning it
+# to -primary), and first reconciles land before real OCIR image tags /
+# vault OCIDs are configured — health gating here would wedge the chain.
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: apps-backend-springboot
+  namespace: flux-system
+spec:
+  dependsOn:
+    # Flagger brings Canary/MetricTemplate CRDs and, transitively, the
+    # whole mesh + Gateway API + observability chain.
+    - name: infra-flagger
+    - name: security-external-secrets
+    - name: db-kafka
+    - name: db-redis
+  interval: 10m
+  retryInterval: 2m
+  timeout: 5m
+  prune: true
+  wait: false
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  path: ./gitops/apps/backend-springboot
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: apps-frontend-react
+  namespace: flux-system
+spec:
+  dependsOn:
+    # Needs the shared Gateway (istio-ambient), HTTPRoute CRDs
+    # (transitively via infra-gateway-api), and the ClusterSecretStore
+    # for the OCIR image pull secret.
+    - name: infra-istio-ambient
+    - name: security-external-secrets
+  interval: 10m
+  retryInterval: 2m
+  timeout: 5m
+  prune: true
+  wait: false
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  path: ./gitops/apps/frontend-react

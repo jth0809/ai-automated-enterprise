@@ -1,0 +1,87 @@
+---
+# Canary target. Flagger clones this into backend-springboot-primary and
+# scales this Deployment to 0 between rollouts — therefore spec.replicas
+# is intentionally omitted so Flux (SSA) never fights Flagger over it.
+# The image tag is rewritten by the ci-backend workflow; set the real
+# OCIR region/tenancy once (must match the workflow's IMAGE_REPO).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-springboot
+  namespace: backend
+  labels:
+    app: backend-springboot
+spec:
+  selector:
+    matchLabels:
+      app: backend-springboot
+  template:
+    metadata:
+      labels:
+        app: backend-springboot
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      imagePullSecrets:
+        - name: ocir-pull-secret
+      containers:
+        - name: backend
+          # Region matches terraform.tfvars (ap-osaka-1).
+          # CHANGE_ME once: TENANCY_NAMESPACE -> real OCIR tenancy namespace.
+          image: ap-osaka-1.ocir.io/TENANCY_NAMESPACE/backend-springboot:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          env:
+            - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+              value: production-kafka-kafka-bootstrap.kafka.svc.cluster.local:9092
+            - name: SPRING_DATA_REDIS_HOST
+              value: production-redis.redis.svc.cluster.local
+            - name: SPRING_DATA_REDIS_PORT
+              value: "6379"
+            - name: JAVA_TOOL_OPTIONS
+              value: "-XX:MaxRAMPercentage=75.0"
+          envFrom:
+            - secretRef:
+                name: backend-springboot-secrets
+          startupProbe:
+            httpGet:
+              path: /actuator/health
+              port: http
+            periodSeconds: 5
+            failureThreshold: 36
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: http
+            periodSeconds: 15
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: http
+            periodSeconds: 10
+          # Sized for Always Free ARM A1 (2 OCPU / 12GB total). Low CPU
+          # reservation, no CPU limit: the JVM bursts freely at startup,
+          # and during canary analysis primary+canary run concurrently.
+          resources:
+            requests:
+              cpu: 150m
+              memory: 512Mi
+            limits:
+              memory: 768Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}

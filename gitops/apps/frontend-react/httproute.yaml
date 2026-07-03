@@ -1,0 +1,18 @@
+---
+# External route for the web app, attached to the shared Istio gateway.
+# No canary here, so Flux fully owns this route.
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: frontend-react
+  namespace: frontend
+spec:
+  parentRefs:
+    - name: public-gateway
+      namespace: istio-ingress
+  hostnames:
+    - app.example.com   # CHANGE_ME: real web domain
+  rules:
+    - backendRefs:
+        - name: frontend-react
+          port: 80

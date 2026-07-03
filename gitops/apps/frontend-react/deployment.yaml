@@ -1,0 +1,74 @@
+---
+# Static SPA served by unprivileged nginx listening on 8080 (non-root).
+# The image tag is rewritten by the ci-frontend workflow; set the real
+# OCIR region/tenancy once (must match the workflow's IMAGE_REPO).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend-react
+  namespace: frontend
+  labels:
+    app: frontend-react
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend-react
+  template:
+    metadata:
+      labels:
+        app: frontend-react
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      imagePullSecrets:
+        - name: ocir-pull-secret
+      containers:
+        - name: frontend
+          # Region matches terraform.tfvars (ap-osaka-1).
+          # CHANGE_ME once: TENANCY_NAMESPACE -> real OCIR tenancy namespace.
+          image: ap-osaka-1.ocir.io/TENANCY_NAMESPACE/frontend-react:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            periodSeconds: 15
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            periodSeconds: 10
+          # Sized for Always Free ARM A1 (2 OCPU / 12GB total).
+          resources:
+            requests:
+              cpu: 25m
+              memory: 64Mi
+            limits:
+              memory: 128Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          volumeMounts:
+            - name: nginx-cache
+              mountPath: /var/cache/nginx
+            - name: nginx-run
+              mountPath: /var/run
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: nginx-cache
+          emptyDir: {}
+        - name: nginx-run
+          emptyDir: {}
+        - name: tmp
+          emptyDir: {}

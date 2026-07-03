@@ -1,0 +1,28 @@
+# Single-node standalone Redis for distributed caching. No replication or
+# sentinel: cache data is reconstructible, and the 12GB cluster budget does
+# not allow an HA topology.
+apiVersion: redis.redis.opstreelabs.in/v1beta2
+kind: Redis
+metadata:
+  name: production-redis
+  namespace: redis
+spec:
+  kubernetesConfig:
+    image: quay.io/opstree/redis:v7.2.3
+    imagePullPolicy: IfNotPresent
+    resources:
+      requests:
+        cpu: 25m
+        memory: 128Mi
+      limits:
+        memory: 256Mi
+  redisExporter:
+    enabled: false
+  storage:
+    volumeClaimTemplate:
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi

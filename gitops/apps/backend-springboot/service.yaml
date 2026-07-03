@@ -1,0 +1,22 @@
+---
+# Apex service. Flagger adopts it during canary bootstrap (repoints the
+# selector at backend-springboot-primary), so Flux only creates it and
+# never reconciles it afterwards — hence ssa: IfNotPresent.
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-springboot
+  namespace: backend
+  labels:
+    app: backend-springboot
+  annotations:
+    kustomize.toolkit.fluxcd.io/ssa: IfNotPresent
+spec:
+  type: ClusterIP
+  selector:
+    app: backend-springboot
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+      protocol: TCP

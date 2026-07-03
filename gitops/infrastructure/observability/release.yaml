@@ -1,0 +1,116 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: kube-prometheus-stack
+  namespace: flux-system
+spec:
+  interval: 30m
+  timeout: 15m
+  releaseName: kube-prometheus-stack
+  targetNamespace: monitoring
+  chart:
+    spec:
+      chart: kube-prometheus-stack
+      version: "75.x"
+      sourceRef:
+        kind: HelmRepository
+        name: prometheus-community
+        namespace: flux-system
+      interval: 12h
+  install:
+    createNamespace: true
+    # CRDs (ServiceMonitor, PodMonitor, PrometheusRule, ...) are large;
+    # CreateReplace avoids the 262KB client-side apply annotation limit.
+    crds: CreateReplace
+    remediation:
+      retries: 3
+  upgrade:
+    crds: CreateReplace
+    cleanupOnFail: true
+    remediation:
+      retries: 3
+      strategy: rollback
+  values:
+    # --- Disabled components (12GB RAM budget) ---
+    alertmanager:
+      enabled: false
+    # OKE is a managed control plane: these targets are not scrapable and
+    # only produce dead targets and firing rules.
+    kubeControllerManager:
+      enabled: false
+    kubeScheduler:
+      enabled: false
+    kubeEtcd:
+      enabled: false
+    kubeProxy:
+      enabled: false
+    defaultRules:
+      create: true
+      rules:
+        alertmanager: false
+        etcd: false
+        kubeControllerManager: false
+        kubeSchedulerAlerting: false
+        kubeSchedulerRecording: false
+        kubeProxy: false
+
+    # --- Prometheus: strictly minimized ---
+    prometheus:
+      prometheusSpec:
+        replicas: 1
+        retention: 1d
+        retentionSize: 2GB
+        scrapeInterval: 60s
+        evaluationInterval: 60s
+        walCompression: true
+        resources:
+          requests:
+            cpu: 100m
+            memory: 512Mi
+          limits:
+            memory: 1Gi
+        storageSpec:
+          volumeClaimTemplate:
+            spec:
+              accessModes:
+                - ReadWriteOnce
+              resources:
+                requests:
+                  storage: 5Gi
+
+    prometheusOperator:
+      resources:
+        requests:
+          cpu: 25m
+          memory: 128Mi
+        limits:
+          memory: 256Mi
+
+    grafana:
+      enabled: true
+      # Stateless: dashboards/datasources come from sidecar-loaded ConfigMaps,
+      # so losing the pod loses nothing.
+      persistence:
+        enabled: false
+      resources:
+        requests:
+          cpu: 25m
+          memory: 128Mi
+        limits:
+          memory: 256Mi
+
+    kube-state-metrics:
+      resources:
+        requests:
+          cpu: 10m
+          memory: 64Mi
+        limits:
+          memory: 128Mi
+
+    prometheus-node-exporter:
+      resources:
+        requests:
+          cpu: 10m
+          memory: 32Mi
+        limits:
+          memory: 64Mi

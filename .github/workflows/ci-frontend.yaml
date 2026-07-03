@@ -1,0 +1,138 @@
+name: CI - Frontend (React)
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "apps/frontend/react-app/**"
+      - ".github/workflows/ci-frontend.yaml"
+  workflow_dispatch:
+
+concurrency:
+  group: ci-frontend-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  APP_DIR: apps/frontend/react-app
+  GITOPS_DIR: gitops/apps/frontend-react
+  IMAGE_NAME: frontend-react
+
+jobs:
+  build-scan-push:
+    name: Build, Scan, Push & GitOps Update
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write   # GitOps manifest auto-commit
+      id-token: write   # cosign keyless signing (OIDC)
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Compute image metadata
+        run: |
+          IMAGE_TAG="${GITHUB_SHA::12}"
+          IMAGE_REPO="${{ secrets.OCI_REGION }}.ocir.io/${{ secrets.OCI_TENANCY_NAMESPACE }}/${IMAGE_NAME}"
+          {
+            echo "IMAGE_TAG=${IMAGE_TAG}"
+            echo "IMAGE_REPO=${IMAGE_REPO}"
+          } >> "$GITHUB_ENV"
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: ${{ env.APP_DIR }}/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ${{ env.APP_DIR }}
+        run: npm ci
+
+      - name: Run tests
+        working-directory: ${{ env.APP_DIR }}
+        run: npm test --if-present
+
+      - name: Build React app
+        working-directory: ${{ env.APP_DIR }}
+        run: npm run build
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image (local, for scanning)
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ env.APP_DIR }}
+          load: true
+          push: false
+          tags: ${{ env.IMAGE_REPO }}:${{ env.IMAGE_TAG }}
+          cache-from: type=gha,scope=frontend
+          cache-to: type=gha,scope=frontend,mode=max
+
+      - name: Scan image with Trivy (fail fast on HIGH/CRITICAL)
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: ${{ env.IMAGE_REPO }}:${{ env.IMAGE_TAG }}
+          format: table
+          exit-code: "1"
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          vuln-type: os,library
+
+      - name: Login to OCIR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ secrets.OCI_REGION }}.ocir.io
+          username: ${{ secrets.OCI_TENANCY_NAMESPACE }}/${{ secrets.OCI_CLI_USER }}
+          password: ${{ secrets.OCIR_AUTH_TOKEN }}
+
+      - name: Push image to OCIR
+        id: push
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ env.APP_DIR }}
+          push: true
+          tags: |
+            ${{ env.IMAGE_REPO }}:${{ env.IMAGE_TAG }}
+            ${{ env.IMAGE_REPO }}:latest
+          cache-from: type=gha,scope=frontend
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3
+
+      - name: Sign image (keyless, OIDC)
+        env:
+          DIGEST: ${{ steps.push.outputs.digest }}
+        run: cosign sign --yes "${IMAGE_REPO}@${DIGEST}"
+
+      - name: Update GitOps manifest with new image tag
+        run: |
+          set -euo pipefail
+          MANIFESTS=$(grep -rls "${IMAGE_REPO}:" "${GITOPS_DIR}" || true)
+          if [ -z "${MANIFESTS}" ]; then
+            echo "::warning::No manifest referencing ${IMAGE_REPO} found under ${GITOPS_DIR}; skipping GitOps update."
+            exit 0
+          fi
+          echo "${MANIFESTS}" | xargs sed -i "s|${IMAGE_REPO}:[A-Za-z0-9._-]\{1,\}|${IMAGE_REPO}:${IMAGE_TAG}|g"
+
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "${GITOPS_DIR}"
+          if git diff --cached --quiet; then
+            echo "Image tag already up to date; nothing to commit."
+            exit 0
+          fi
+          git commit -m "chore(gitops): update ${IMAGE_NAME} image to ${IMAGE_TAG} [skip ci]"
+          for attempt in 1 2 3; do
+            if git push origin HEAD:main; then
+              exit 0
+            fi
+            git pull --rebase origin main
+          done
+          echo "::error::Failed to push GitOps update after 3 attempts."
+          exit 1

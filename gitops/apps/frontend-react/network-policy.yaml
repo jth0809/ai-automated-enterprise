@@ -1,0 +1,49 @@
+---
+# Zero-Trust policy for the frontend: ingress only from the Istio
+# Ingress Gateway, egress only to DNS and the backend service (nginx
+# /api reverse proxy). Port 15008 accompanies the app ports because
+# Ambient Mesh tunnels in-mesh traffic over HBONE mTLS on 15008.
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: frontend-react
+  namespace: frontend
+spec:
+  endpointSelector:
+    matchLabels:
+      app: frontend-react
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: istio-ingress
+            gateway.networking.k8s.io/gateway-name: public-gateway
+      toPorts:
+        - ports:
+            - port: "8080"
+              protocol: TCP
+            - port: "15008"
+              protocol: TCP
+  egress:
+    # DNS to CoreDNS — nothing resolves without this under default-deny.
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: kube-system
+            k8s-app: kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: UDP
+            - port: "53"
+              protocol: TCP
+    # Backend API only. Includes the Flagger-managed primary/canary pods
+    # because they all carry the app=backend-springboot pod label.
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: backend
+            app: backend-springboot
+      toPorts:
+        - ports:
+            - port: "8080"
+              protocol: TCP
+            - port: "15008"
+              protocol: TCP
