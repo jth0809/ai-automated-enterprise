@@ -11,7 +11,7 @@ spec:
     - name: public-gateway
       namespace: istio-ingress
   hostnames:
-    - app.example.com   # CHANGE_ME: real web domain
+    - 64.110.118.19.nip.io
   rules:
     - backendRefs:
         - name: frontend-react
