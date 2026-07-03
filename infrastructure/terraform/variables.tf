@@ -149,6 +149,19 @@ variable "atp_whitelisted_ips" {
   default     = []
 }
 
+variable "ocir_username" {
+  description = "IAM username for OCIR docker login, without the tenancy-namespace prefix (federated users: 'oracleidentitycloudservice/user@example.com'). Null skips the ocir-dockerconfigjson vault secret."
+  type        = string
+  default     = null
+}
+
+variable "ocir_auth_token" {
+  description = "Existing OCI Auth Token for OCIR (same value as the OCIR_AUTH_TOKEN GitHub secret). Null skips the ocir-dockerconfigjson vault secret."
+  type        = string
+  default     = null
+  sensitive   = true
+}
+
 variable "atp_mtls_required" {
   description = <<-EOT
     Require mutual TLS (wallet) for ATP connections. The OCI API rejects

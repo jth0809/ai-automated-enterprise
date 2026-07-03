@@ -19,8 +19,29 @@ variable "atp_admin_password" {
   sensitive   = true
 }
 
-variable "atp_wallet_content_base64" {
-  description = "Base64-encoded ATP wallet to store as the 'backend-atp-wallet' secret. Skipped when null."
+variable "atp_connection_strings" {
+  description = "ATP connection strings (to extract the walletless TCPS profile)."
+  type        = any
+}
+
+variable "region" {
+  description = "OCI region identifier, used to build the OCIR registry host (<region>.ocir.io)."
+  type        = string
+}
+
+variable "ocir_username" {
+  description = <<-EOT
+    IAM username for OCIR docker login, WITHOUT the tenancy-namespace prefix
+    (federated users include the provider prefix, e.g.
+    "oracleidentitycloudservice/user@example.com"). Set together with
+    ocir_auth_token; null skips the ocir-dockerconfigjson secret.
+  EOT
+  type        = string
+  default     = null
+}
+
+variable "ocir_auth_token" {
+  description = "Existing OCI Auth Token for OCIR (same one the CI uses). Null skips the ocir-dockerconfigjson secret."
   type        = string
   default     = null
   sensitive   = true

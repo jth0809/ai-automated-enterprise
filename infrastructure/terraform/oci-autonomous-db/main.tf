@@ -44,11 +44,11 @@ resource "oci_database_autonomous_database" "this" {
   db_workload    = "OLTP"
   db_version     = var.db_version
 
-  is_free_tier             = true
+  is_free_tier = true
   # cpu_core_count           = 1
   # data_storage_size_in_tbs = 1
-  license_model            = "LICENSE_INCLUDED"
-  is_auto_scaling_enabled  = false
+  license_model           = "LICENSE_INCLUDED"
+  is_auto_scaling_enabled = false
 
   admin_password = local.admin_password
 
