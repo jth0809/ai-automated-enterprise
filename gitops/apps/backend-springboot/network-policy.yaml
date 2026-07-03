@@ -75,11 +75,14 @@ spec:
               protocol: TCP
             - port: "15008"
               protocol: TCP
-    # Oracle ATP lives outside the cluster (OCI endpoint, TCPS 1522).
+    # Oracle ATP lives outside the cluster: 1521 = one-way TLS (walletless,
+    # current mode), 1522 = mTLS (kept for a future wallet-based setup).
     # Tighten "world" to a toCIDRSet with the ATP endpoint once known.
     - toEntities:
         - world
       toPorts:
         - ports:
+            - port: "1521"
+              protocol: TCP
             - port: "1522"
               protocol: TCP

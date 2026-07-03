@@ -148,3 +148,15 @@ variable "atp_whitelisted_ips" {
   type        = list(string)
   default     = []
 }
+
+variable "atp_mtls_required" {
+  description = <<-EOT
+    Require mutual TLS (wallet) for ATP connections. The OCI API rejects
+    changing the TLS auth type and the ACL in one request, so flipping
+    mTLS off is a two-step apply:
+      1. terraform apply -var="atp_mtls_required=true"   # ACL change only
+      2. terraform apply                                  # mTLS off (default)
+  EOT
+  type        = bool
+  default     = false
+}

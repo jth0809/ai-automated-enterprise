@@ -69,3 +69,16 @@ output "atp_wallet_password" {
   value       = module.autonomous_db.wallet_password
   sensitive   = true
 }
+
+# ------------------------------------------------------------------------------
+# Vault
+# ------------------------------------------------------------------------------
+output "vault_ocid" {
+  description = "OCID of the OCI Vault. Paste into gitops/security/external-secrets/cluster-secret-store.yaml (spec.provider.oracle.vault)."
+  value       = module.vault.vault_id
+}
+
+output "vault_secret_ids" {
+  description = "OCIDs of the secrets stored in the vault, keyed by secret name."
+  value       = module.vault.secret_ids
+}

@@ -57,7 +57,19 @@ module "autonomous_db" {
   compartment_ocid = var.compartment_ocid
   db_name          = var.atp_db_name
   display_name     = "${local.name_prefix}-atp"
-  admin_password   = var.atp_admin_password
-  whitelisted_ips  = var.atp_whitelisted_ips
-  freeform_tags    = local.common_tags
+  admin_password              = var.atp_admin_password
+  whitelisted_ips             = concat(var.atp_whitelisted_ips, [module.network.vcn_id])
+  is_mtls_connection_required = var.atp_mtls_required
+  generate_wallet             = false
+  freeform_tags               = local.common_tags
+}
+
+module "vault" {
+  source = "./oci-vault"
+
+  compartment_ocid          = var.compartment_ocid
+  vault_display_name        = "${local.name_prefix}-vault"
+  atp_admin_password        = module.autonomous_db.admin_password
+  atp_wallet_content_base64 = module.autonomous_db.wallet_content_base64
+  freeform_tags             = local.common_tags
 }

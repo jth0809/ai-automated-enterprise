@@ -27,9 +27,7 @@ spec:
         - name: ocir-pull-secret
       containers:
         - name: frontend
-          # Region matches terraform.tfvars (ap-osaka-1).
-          # CHANGE_ME once: TENANCY_NAMESPACE -> real OCIR tenancy namespace.
-          image: ap-osaka-1.ocir.io/TENANCY_NAMESPACE/frontend-react:latest
+          image: ap-osaka-1.ocir.io/axmlliealtlv/frontend-react:latest
           imagePullPolicy: IfNotPresent
           ports:
             - name: http

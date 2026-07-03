@@ -28,9 +28,7 @@ spec:
         - name: ocir-pull-secret
       containers:
         - name: backend
-          # Region matches terraform.tfvars (ap-osaka-1).
-          # CHANGE_ME once: TENANCY_NAMESPACE -> real OCIR tenancy namespace.
-          image: ap-osaka-1.ocir.io/TENANCY_NAMESPACE/backend-springboot:latest
+          image: ap-osaka-1.ocir.io/axmlliealtlv/backend-springboot:latest
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
@@ -49,8 +47,11 @@ spec:
             - secretRef:
                 name: backend-springboot-secrets
           startupProbe:
+            # Liveness group only: the aggregate /actuator/health includes
+            # the DB check, and a DB outage must not block pod startup
+            # (the app starts with initialization-fail-timeout: -1).
             httpGet:
-              path: /actuator/health
+              path: /actuator/health/liveness
               port: http
             periodSeconds: 5
             failureThreshold: 36
