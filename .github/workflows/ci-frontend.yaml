@@ -132,7 +132,7 @@ jobs:
             if git push origin HEAD:main; then
               exit 0
             fi
-            git pull --rebase origin main
+            git pull --rebase --autostash origin main
           done
           echo "::error::Failed to push GitOps update after 3 attempts."
           exit 1

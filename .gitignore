@@ -18,6 +18,13 @@ kubeconfig
 # Ansible
 infrastructure/ansible/oke-nodes-setup/inventory.ini
 
+# Java / Maven build output
+apps/backend/**/target/
+
+# Node.js dependencies & build output
+node_modules/
+apps/frontend/**/dist/
+
 # OS / IDE
 .DS_Store
 .idea/
