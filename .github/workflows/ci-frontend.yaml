@@ -61,6 +61,9 @@ jobs:
         working-directory: ${{ env.APP_DIR }}
         run: npm run build
 
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -68,6 +71,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: ${{ env.APP_DIR }}
+          platforms: linux/arm64
           load: true
           push: false
           tags: ${{ env.IMAGE_REPO }}:${{ env.IMAGE_TAG }}
@@ -96,6 +100,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: ${{ env.APP_DIR }}
+          platforms: linux/arm64
           push: true
           tags: |
             ${{ env.IMAGE_REPO }}:${{ env.IMAGE_TAG }}
