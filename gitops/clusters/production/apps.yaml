@@ -12,10 +12,11 @@ spec:
   dependsOn:
     # Flagger brings Canary/MetricTemplate CRDs and, transitively, the
     # whole mesh + Gateway API + observability chain.
+    # db-kafka/db-redis were removed: Strimzi + Redis operator exceed the
+    # Always Free A1 budget (2 OCPU/12GB) and the app has no listeners yet.
+    # Re-add via gitops/databases with an operator/instance split when needed.
     - name: infra-flagger
     - name: security-external-secrets
-    - name: db-kafka
-    - name: db-redis
   interval: 10m
   retryInterval: 2m
   timeout: 5m
