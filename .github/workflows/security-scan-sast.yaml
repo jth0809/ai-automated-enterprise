@@ -1,0 +1,41 @@
+---
+# DevSecOps gate: static application security testing for the app sources
+# (plan Phase 4 SAST). Semgrep CE with the curated low-noise "p/ci" pack;
+# --error turns findings into a failing check.
+name: Security - SAST (Semgrep)
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "apps/**"
+      - ".github/workflows/security-scan-sast.yaml"
+  pull_request:
+    paths:
+      - "apps/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: security-sast-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  semgrep:
+    name: Semgrep scan (backend + frontend)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    container:
+      image: semgrep/semgrep
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Semgrep (gate on findings)
+        run: >
+          semgrep scan --config p/ci --error --metrics=off
+          apps/backend/springboot-app/src
+          apps/frontend/react-app/src

@@ -1,0 +1,49 @@
+---
+# DevSecOps gate: IaC / manifest misconfiguration scanning (plan Phase 4).
+# Trivy config mode covers Terraform, Kubernetes manifests and Dockerfiles
+# in one pass (successor of the standalone tfsec scanner).
+# NOTE: GitHub only loads workflows from .github/workflows/ top level —
+# a security-scans/ subdirectory would be silently ignored.
+name: Security - IaC Scan (Trivy)
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "infrastructure/**"
+      - "gitops/**"
+      - "**/Dockerfile"
+      - ".github/workflows/security-scan-iac.yaml"
+  pull_request:
+    paths:
+      - "infrastructure/**"
+      - "gitops/**"
+      - "**/Dockerfile"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: security-iac-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  trivy-config:
+    name: Terraform / K8s / Dockerfile misconfig scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Scan IaC with Trivy (gate on HIGH/CRITICAL)
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: config
+          scan-ref: .
+          format: table
+          exit-code: "1"
+          severity: CRITICAL,HIGH
+          skip-dirs: apps/frontend/react-app/node_modules,apps/backend/springboot-app/target

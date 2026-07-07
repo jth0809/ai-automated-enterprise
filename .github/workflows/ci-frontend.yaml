@@ -79,11 +79,12 @@ jobs:
           cache-to: type=gha,scope=frontend,mode=max
 
       - name: Scan image with Trivy (fail fast on HIGH/CRITICAL)
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@0.28.0
         with:
           image-ref: ${{ env.IMAGE_REPO }}:${{ env.IMAGE_TAG }}
           format: table
-          exit-code: "0"
+          # Gate, not report: fixable HIGH/CRITICAL vulns block the push.
+          exit-code: "1"
           severity: CRITICAL,HIGH
           ignore-unfixed: true
           vuln-type: os,library
