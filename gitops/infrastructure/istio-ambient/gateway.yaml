@@ -63,7 +63,11 @@ spec:
       tls:
         mode: Terminate
         certificateRefs:
-          - name: api-ai-auto-kro-kr-tls
+          # Same secret as https-web on purpose: cert-manager merges both
+          # hostnames into ONE SAN certificate. kro.kr is a shared free
+          # domain, so all its users share Let's Encrypt's 50-certs/week
+          # registered-domain quota — burn one slot, not two.
+          - name: ai-auto-kro-kr-tls
       allowedRoutes:
         namespaces:
           from: Selector
