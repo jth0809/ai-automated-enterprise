@@ -1,0 +1,35 @@
+---
+# DevSecOps: DAST against the live production entrypoint (plan Phase 4).
+# ZAP baseline = spidering + passive analysis only, safe for production
+# (no active attack payloads). Findings land as a run artifact and a
+# GitHub issue ("ZAP Scan Baseline Report"); the run itself stays green
+# so a prod scan finding never blocks unrelated CI — triage via issues.
+name: Security - DAST (OWASP ZAP)
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Mondays 03:00 KST (18:00 UTC Sunday), off-peak for the free-tier LB.
+    - cron: "0 18 * * 0"
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: security-dast
+  cancel-in-progress: false
+
+jobs:
+  zap-baseline:
+    name: ZAP baseline scan (https://ai-auto.kro.kr)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: ZAP baseline scan
+        uses: zaproxy/action-baseline@v0.15.0
+        with:
+          target: "https://ai-auto.kro.kr"
+          # -a: include the alpha passive rules for broader coverage.
+          cmd_options: "-a"
+          allow_issue_writing: true

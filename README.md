@@ -7,17 +7,17 @@ Oracle Cloud **Always Free Tier**(ARM A1 2 OCPU / 12GB) 위에 Zero-Trust DevSec
 ## 아키텍처 개요
 
 ```text
-사용자 ── http://64.110.118.19.nip.io
+사용자 ── https://ai-auto.kro.kr  (HTTP:80은 301 리다이렉트, ACME 챌린지만 예외)
   │
   ▼
-[OCI Load Balancer]
+[OCI Load Balancer 64.110.118.19]
   ▼
-[Istio Gateway (Gateway API, istio-ingress ns)]
-  │  HTTPRoute (hostname 기반)
-  ├─ 64.110.118.19.nip.io → frontend-react (nginx, React SPA)
-  │                            └─ /api → backend apex Service로 리버스 프록시
-  └─ api.example.com(예약) → backend-springboot primary/canary (Flagger가 가중치 제어)
-                                └─ Oracle ATP (클러스터 외부, TLS 1521)
+[Istio Gateway (Gateway API, istio-ingress ns)] ← cert-manager가 Let's Encrypt 인증서 자동 발급/갱신
+  │  HTTPRoute (hostname 기반, HTTPS 리스너에만 연결)
+  ├─ ai-auto.kro.kr     → frontend-react (nginx, React SPA)
+  │                         └─ /api → backend apex Service로 리버스 프록시
+  └─ api.ai-auto.kro.kr → backend-springboot primary/canary (Flagger가 가중치 제어)
+                            └─ Oracle ATP (클러스터 외부, TLS 1521)
 
 데이터플레인: Cilium CNI (+CiliumNetworkPolicy 제로트러스트) + Istio Ambient Mesh (ztunnel HBONE mTLS, 사이드카 없음)
 컨트롤플레인: FluxCD ← gitops/clusters/production (Git이 유일한 진실의 원천)
@@ -35,10 +35,10 @@ Oracle Cloud **Always Free Tier**(ARM A1 2 OCPU / 12GB) 위에 Zero-Trust DevSec
 | IaC | Terraform (oci-network / oci-oke / oci-autonomous-db / oci-vault), Ansible (노드 flannel 정리) |
 | 오케스트레이션 | OKE (Kubernetes v1.36, ARM A1 노드 2대) |
 | GitOps | FluxCD (source/kustomize/helm/notification 컨트롤러) |
-| CI / 보안 | GitHub Actions, Trivy 이미지·IaC 스캔(HIGH/CRITICAL 게이트), Semgrep SAST, Gitleaks 시크릿 스캔, cosign keyless 서명(OIDC) |
+| CI / 보안 | GitHub Actions, Trivy 이미지·IaC 스캔(HIGH/CRITICAL 게이트), Semgrep SAST, Gitleaks 시크릿 스캔, OWASP ZAP DAST(주간+수동), cosign keyless 서명(OIDC) |
 | CNI / 정책 | Cilium v1.17 (CiliumNetworkPolicy 기반 default-deny 제로트러스트) |
 | 서비스 메시 | Istio Ambient v1.26 (ztunnel, 사이드카리스 mTLS) |
-| 인그레스 | Kubernetes Gateway API v1.3 + Istio Gateway, cert-manager |
+| 인그레스 / TLS | Kubernetes Gateway API v1.3 + Istio Gateway, cert-manager + Let's Encrypt(ACME HTTP-01 자동 발급·갱신), HTTP→HTTPS 301 |
 | 시크릿 | OCI Vault + External Secrets Operator (ClusterSecretStore `oci-vault`) |
 | 프로그레시브 딜리버리 | Flagger (gatewayapi:v1 프로바이더) + flagger-loadtester |
 | 관측성 | kube-prometheus-stack (Prometheus 보존 1d/2GB, Grafana) |
@@ -47,7 +47,7 @@ Oracle Cloud **Always Free Tier**(ARM A1 2 OCPU / 12GB) 위에 Zero-Trust DevSec
 ## 저장소 구조
 
 ```text
-├── .github/workflows/       # ci-backend / ci-frontend / security-scan-{iac,sast,secrets}
+├── .github/workflows/       # ci-backend / ci-frontend / security-scan-{iac,sast,secrets,dast}
 ├── apps/
 │   ├── backend/springboot-app/   # Spring Boot 소스 + Dockerfile
 │   └── frontend/react-app/       # React(Vite) 소스 + nginx.conf + Dockerfile
@@ -114,7 +114,9 @@ kubectl annotate --overwrite kustomization -n flux-system flux-system reconcile.
 kubectl get kustomizations -n flux-system     # GitOps 동기화 상태
 kubectl get canary -n backend                 # 카나리 진행 상황 (Progressing/Succeeded/Failed)
 kubectl get pods -n frontend -n backend
-curl http://64.110.118.19.nip.io/             # 프런트엔드 (HTTP 200)
+kubectl get certificate -n istio-ingress      # TLS 인증서 발급/갱신 상태
+curl https://ai-auto.kro.kr/                  # 프런트엔드 (HTTP 200)
+curl -I http://ai-auto.kro.kr/                # 301 → https 리다이렉트 확인
 ```
 
 ### Grafana 대시보드
@@ -148,7 +150,7 @@ kubectl patch deploy -n backend backend-springboot --type=merge \
 | Phase 2 GitOps/보안 부트스트랩 | ✅ 완료 |
 | Phase 3 메시 + 관측성 | ✅ 완료 (Loki는 미구축 — Prometheus/Grafana만) |
 | Phase 3 Kafka/Redis | ⏸️ **의도적 보류** — Free Tier 2 OCPU에서 Strimzi+Redis 오퍼레이터는 OOM 유발, 앱 코드도 아직 미사용. 매니페스트는 `gitops/databases/`에 보관 |
-| Phase 4 CI/CD | ✅ 완료 (빌드→Trivy 게이트→OCIR→cosign→GitOps 자동 커밋). IaC 스캔(Trivy config), SAST(Semgrep), 시크릿 스캔(Gitleaks) 워크플로 가동. 남은 항목: 클러스터 측 cosign 서명 검증(admission), DAST |
+| Phase 4 CI/CD | ✅ 완료 (빌드→Trivy 게이트→OCIR→cosign→GitOps 자동 커밋). IaC 스캔(Trivy config), SAST(Semgrep), 시크릿 스캔(Gitleaks), DAST(OWASP ZAP baseline, 주간+수동) 가동. 남은 항목: 클러스터 측 cosign 서명 검증(admission) |
 | Phase 5 프로그레시브 딜리버리 | ✅ 카나리 완주(promotion) 검증 완료. A/B 테스트는 미구현 |
 | Zero-Trust (mTLS + default-deny CNP) | ✅ 앱 네임스페이스 적용 완료. ATP egress도 `world`가 아닌 리전 ADB FQDN(`adb.ap-osaka-1.oraclecloud.com`)으로 한정 |
-| HTTPS / 실도메인 | ⏳ cert-manager는 배포됨, 현재 nip.io HTTP. `api.example.com` 플레이스홀더 교체 필요 |
+| HTTPS / 실도메인 | ✅ `ai-auto.kro.kr` + `api.ai-auto.kro.kr` — Let's Encrypt 자동 발급(ClusterIssuer `letsencrypt-prod`, Gateway HTTP-01), HTTP는 301 리다이렉트 |
