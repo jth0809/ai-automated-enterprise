@@ -47,3 +47,9 @@ jobs:
           exit-code: "1"
           severity: CRITICAL,HIGH
           skip-dirs: apps/frontend/react-app/node_modules,apps/backend/springboot-app/target
+          # gotk-components.yaml is the flux-bootstrap-generated vendored
+          # manifest (DO NOT EDIT). Its only findings are KSV-0041: Flux
+          # controllers managing Secrets — inherent to a GitOps operator
+          # that applies Secret manifests, accepted by design. Everything
+          # we author stays in scope.
+          skip-files: gitops/clusters/production/flux-system/gotk-components.yaml
