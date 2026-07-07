@@ -65,7 +65,9 @@ spec:
         walCompression: true
         resources:
           requests:
-            cpu: 100m
+            # 50m fits the 60s scrape interval on this 2-node cluster and
+            # leaves CPU-request headroom for OKE-managed daemonsets.
+            cpu: 50m
             memory: 512Mi
           limits:
             memory: 1Gi
