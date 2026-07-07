@@ -25,3 +25,34 @@ spec:
                 name: public-gateway
                 namespace: istio-ingress
                 sectionName: http
+---
+# Active issuer. kro.kr is a shared free domain whose Let's Encrypt
+# 50-certs/week registered-domain quota is exhausted by other users;
+# ZeroSSL's ACME endpoint has no such shared quota (unlimited free
+# 90-day certs). Requires External Account Binding: the HMAC lives in
+# the out-of-band Secret cert-manager/zerossl-eab-hmac (never in Git,
+# same pattern as the flux-system bootstrap secret). The keyID is not
+# sensitive. letsencrypt-prod above is kept as a fallback.
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: zerossl-prod
+spec:
+  acme:
+    server: https://acme.zerossl.com/v2/DV90
+    email: daehanjang003@gmail.com
+    externalAccountBinding:
+      keyID: ws0GHSTV4w2icKK8R5zcAg
+      keySecretRef:
+        name: zerossl-eab-hmac
+        key: secret
+    privateKeySecretRef:
+      name: zerossl-prod-account-key
+    solvers:
+      - http01:
+          gatewayHTTPRoute:
+            parentRefs:
+              - kind: Gateway
+                name: public-gateway
+                namespace: istio-ingress
+                sectionName: http

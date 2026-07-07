@@ -23,7 +23,9 @@ metadata:
     # cert-manager gateway-shim: creates one Certificate per HTTPS
     # listener below (secret name = certificateRefs[0].name) and renews
     # them via the ACME HTTP-01 solver on the http listener.
-    cert-manager.io/cluster-issuer: letsencrypt-prod
+    # zerossl-prod: LE's shared kro.kr quota is exhausted (see
+    # cluster-issuer.yaml); ZeroSSL has no per-domain quota.
+    cert-manager.io/cluster-issuer: zerossl-prod
 spec:
   gatewayClassName: istio
   infrastructure:
