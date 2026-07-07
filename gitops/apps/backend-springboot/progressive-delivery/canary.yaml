@@ -19,7 +19,7 @@ spec:
     port: 8080
     targetPort: http
     hosts:
-      - api.example.com   # CHANGE_ME: keep in sync with httproute.yaml
+      - api.ai-auto.kro.kr   # keep in sync with httproute.yaml
     gatewayRefs:
       - name: public-gateway
         namespace: istio-ingress
@@ -54,4 +54,7 @@ spec:
         url: http://flagger-loadtester.flagger-system/
         timeout: 15s
         metadata:
-          cmd: "hey -z 1m -q 5 -c 2 -host api.example.com http://public-gateway-istio.istio-ingress.svc.cluster.local/actuator/health"
+          # Real production path (DNS -> LB -> TLS -> route): the port-80
+          # in-cluster path now only answers with the HTTPS redirect, and
+          # analysis should fail if the cert/LB/route chain is broken.
+          cmd: "hey -z 1m -q 5 -c 2 https://api.ai-auto.kro.kr/actuator/health"

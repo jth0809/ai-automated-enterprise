@@ -20,6 +20,10 @@ metadata:
     # request to fit the 2 OCPU budget (no cpu limit, bursting allowed).
     sidecar.istio.io/proxyCPU: 50m
     sidecar.istio.io/proxyMemory: 128Mi
+    # cert-manager gateway-shim: creates one Certificate per HTTPS
+    # listener below (secret name = certificateRefs[0].name) and renews
+    # them via the ACME HTTP-01 solver on the http listener.
+    cert-manager.io/cluster-issuer: letsencrypt-prod
 spec:
   gatewayClassName: istio
   infrastructure:
@@ -29,28 +33,40 @@ spec:
       service.beta.kubernetes.io/oci-load-balancer-shape-flex-min: "10"
       service.beta.kubernetes.io/oci-load-balancer-shape-flex-max: "10"
   listeners:
+    # Plaintext listener now serves only the HTTP->HTTPS redirect and the
+    # ACME challenge routes, both living in this namespace — hence
+    # allowedRoutes Same. App routes attach to the HTTPS listeners.
     - name: http
       port: 80
       protocol: HTTP
+      allowedRoutes:
+        namespaces:
+          from: Same
+    - name: https-web
+      port: 443
+      protocol: HTTPS
+      hostname: ai-auto.kro.kr
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - name: ai-auto-kro-kr-tls
       allowedRoutes:
         namespaces:
           from: Selector
           selector:
             matchLabels:
               shared-gateway-access: "true"
-    # HTTPS listener: uncomment once a cert-manager (Cluster)Issuer and a
-    # real domain exist. cert-manager (Gateway API solver) populates the
-    # referenced Secret from the annotation on this Gateway.
-    # - name: https
-    #   port: 443
-    #   protocol: HTTPS
-    #   tls:
-    #     mode: Terminate
-    #     certificateRefs:
-    #       - name: public-gateway-tls
-    #   allowedRoutes:
-    #     namespaces:
-    #       from: Selector
-    #       selector:
-    #         matchLabels:
-    #           shared-gateway-access: "true"
+    - name: https-api
+      port: 443
+      protocol: HTTPS
+      hostname: api.ai-auto.kro.kr
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - name: api-ai-auto-kro-kr-tls
+      allowedRoutes:
+        namespaces:
+          from: Selector
+          selector:
+            matchLabels:
+              shared-gateway-access: "true"

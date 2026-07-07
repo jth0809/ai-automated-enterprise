@@ -16,7 +16,7 @@ spec:
     - name: public-gateway
       namespace: istio-ingress
   hostnames:
-    - api.example.com   # CHANGE_ME: real API domain
+    - api.ai-auto.kro.kr   # keep in sync with canary.yaml service.hosts
   rules:
     - backendRefs:
         # Steady state after Flagger bootstrap: 100% primary, 0% canary.

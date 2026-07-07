@@ -11,7 +11,9 @@ spec:
     - name: public-gateway
       namespace: istio-ingress
   hostnames:
-    - 64.110.118.19.nip.io
+    # Binds to the https-web listener (the http listener only accepts
+    # routes from istio-ingress, where the HTTPS redirect lives).
+    - ai-auto.kro.kr
   rules:
     - backendRefs:
         - name: frontend-react

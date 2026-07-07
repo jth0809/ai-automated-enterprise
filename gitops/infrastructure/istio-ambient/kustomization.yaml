@@ -7,4 +7,6 @@ resources:
   - cni.yaml
   - ztunnel.yaml
   - gateway.yaml
+  - cluster-issuer.yaml
+  - http-redirect.yaml
   - cilium-hostprobes.yaml

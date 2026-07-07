@@ -1,0 +1,26 @@
+---
+# Catch-all HTTP -> HTTPS redirect on the plaintext listener. ACME
+# HTTP-01 challenges still pass: cert-manager's solver HTTPRoute uses an
+# Exact /.well-known/acme-challenge/<token> match, which Gateway API
+# route precedence ranks above this PathPrefix "/" rule.
+# Lives in istio-ingress because the http listener only accepts routes
+# from its own namespace (allowedRoutes: Same) — app routes must attach
+# to the HTTPS listeners only.
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: http-to-https-redirect
+  namespace: istio-ingress
+spec:
+  parentRefs:
+    - name: public-gateway
+      sectionName: http
+  hostnames:
+    - ai-auto.kro.kr
+    - api.ai-auto.kro.kr
+  rules:
+    - filters:
+        - type: RequestRedirect
+          requestRedirect:
+            scheme: https
+            statusCode: 301
