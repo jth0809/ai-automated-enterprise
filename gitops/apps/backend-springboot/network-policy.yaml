@@ -10,9 +10,17 @@ metadata:
   name: backend-springboot
   namespace: backend
 spec:
+  # Flagger rewrites the pod label on the primary it manages
+  # (app=backend-springboot-primary); canary/target pods keep
+  # app=backend-springboot. Select both so the primary — the pods that
+  # actually serve traffic — is covered by this default-deny policy too.
   endpointSelector:
-    matchLabels:
-      app: backend-springboot
+    matchExpressions:
+      - key: app
+        operator: In
+        values:
+          - backend-springboot
+          - backend-springboot-primary
   ingress:
     # 1) Istio Ingress Gateway (Gateway API auto-deployed pods) only.
     - fromEndpoints:

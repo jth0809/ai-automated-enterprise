@@ -35,12 +35,19 @@ spec:
               protocol: UDP
             - port: "53"
               protocol: TCP
-    # Backend API only. Includes the Flagger-managed primary/canary pods
-    # because they all carry the app=backend-springboot pod label.
+    # Backend API only. Flagger rewrites the pod label on the primary it
+    # manages (app=backend-springboot-primary); canary/target pods keep
+    # app=backend-springboot — match both or the nginx /api proxy is
+    # dropped at egress once Flagger owns the workload.
     - toEndpoints:
         - matchLabels:
             k8s:io.kubernetes.pod.namespace: backend
-            app: backend-springboot
+          matchExpressions:
+            - key: app
+              operator: In
+              values:
+                - backend-springboot
+                - backend-springboot-primary
       toPorts:
         - ports:
             - port: "8080"
