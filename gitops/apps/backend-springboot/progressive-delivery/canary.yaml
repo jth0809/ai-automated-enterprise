@@ -29,18 +29,23 @@ spec:
     maxWeight: 50
     stepWeight: 10
     metrics:
+      # interval is the rate() window in the templates, not the check
+      # cadence. The gateway PodMonitor scrapes every 30s, so a 1m window
+      # intermittently sees a single sample and rate() returns nothing —
+      # Flagger then halts with "no values found" until the run fails.
+      # 2m guarantees >=3 samples per evaluation.
       - name: success-rate
         templateRef:
           name: gateway-success-rate
         thresholdRange:
           min: 99
-        interval: 1m
+        interval: 2m
       - name: latency-p99
         templateRef:
           name: gateway-latency-p99
         thresholdRange:
           max: 500
-        interval: 1m
+        interval: 2m
     webhooks:
       # Synthetic traffic through the gateway so the metrics above have
       # data even when no real users are hitting the canary.
