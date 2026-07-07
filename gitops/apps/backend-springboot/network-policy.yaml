@@ -48,6 +48,8 @@ spec:
               protocol: TCP
   egress:
     # DNS to CoreDNS — nothing resolves without this under default-deny.
+    # The L7 dns rule routes lookups through Cilium's DNS proxy, which the
+    # toFQDNs rule below requires to map names to allowed IPs.
     - toEndpoints:
         - matchLabels:
             k8s:io.kubernetes.pod.namespace: kube-system
@@ -58,6 +60,9 @@ spec:
               protocol: UDP
             - port: "53"
               protocol: TCP
+          rules:
+            dns:
+              - matchPattern: "*"
     # Kafka brokers (Strimzi) in the kafka namespace: 9092 plain listener,
     # 9093 TLS listener, 15008 in case the namespace joins the mesh later.
     - toEndpoints:
@@ -85,9 +90,12 @@ spec:
               protocol: TCP
     # Oracle ATP lives outside the cluster: 1521 = one-way TLS (walletless,
     # current mode), 1522 = mTLS (kept for a future wallet-based setup).
-    # Tighten "world" to a toCIDRSet with the ATP endpoint once known.
-    - toEntities:
-        - world
+    # Shared serverless Always Free ATP (terraform: is_free_tier, no private
+    # endpoint) is only reachable via the regional ADB endpoint, so scope
+    # egress to that FQDN instead of the whole "world" entity.
+    - toFQDNs:
+        - matchName: adb.ap-osaka-1.oraclecloud.com
+        - matchPattern: "*.adb.ap-osaka-1.oraclecloud.com"
       toPorts:
         - ports:
             - port: "1521"
