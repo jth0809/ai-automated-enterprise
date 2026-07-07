@@ -7,3 +7,4 @@ resources:
   - cni.yaml
   - ztunnel.yaml
   - gateway.yaml
+  - cilium-hostprobes.yaml

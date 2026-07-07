@@ -70,7 +70,7 @@ spec:
           # and during canary analysis primary+canary run concurrently.
           resources:
             requests:
-              cpu: 150m
+              cpu: 25m
               memory: 512Mi
             limits:
               memory: 768Mi
