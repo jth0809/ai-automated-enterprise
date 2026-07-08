@@ -21,7 +21,7 @@
 | 컨테이너 오케스트레이션 | Oracle Kubernetes Engine (OKE) 또는 K3s |
 | 컴퓨트 한도 (Compute Limits) | 최대 2 OCPU / 12GB RAM (ARM A1), AMD 마이크로 VM 2개, 스토리지 200GB |
 | GitOps / 지속적 배포 (CD) | FluxCD |
-| CI / 보안 스캔 | GitHub Actions, Trivy, tfsec |
+| CI / 보안 스캔 | GitHub Actions, Trivy(이미지 + IaC 미스컨피그, tfsec 후속), Semgrep SAST, Gitleaks, OWASP ZAP DAST, CycloneDX SBOM, cosign 서명 |
 | 서비스 메쉬 / CNI | Istio Ambient Mesh, Cilium |
 | 인그레스 / HTTPS | Kubernetes Gateway API, cert-manager |
 | 비밀값 관리 (Secret Management) | OCI Vault + External Secrets Operator |
@@ -84,6 +84,7 @@
 
 ### 4단계: 애플리케이션 CI/CD
 - React 및 Spring Boot 이미지를 빌드, 취약점 스캔(Trivy), OCI 컨테이너 레지스트리에 푸시하기 위한 GitHub Actions 워크플로우 구성.
+- 취약점 게이트를 통과한 모든 이미지에 대해 CycloneDX SBOM을 생성하고 run 아티팩트로 발행 (공급망 투명성, EO 14028).
 - 새로운 빌드 이미지가 푸시되면 GitOps 매니페스트의 이미지 태그를 자동 업데이트하도록 구성.
 
 ### 5단계: 점진적 배포 및 MSA 연동

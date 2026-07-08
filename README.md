@@ -35,7 +35,7 @@ Oracle Cloud **Always Free Tier**(ARM A1 2 OCPU / 12GB) 위에 Zero-Trust DevSec
 | IaC | Terraform (oci-network / oci-oke / oci-autonomous-db / oci-vault), Ansible (노드 flannel 정리) |
 | 오케스트레이션 | OKE (Kubernetes v1.36, ARM A1 노드 2대) |
 | GitOps | FluxCD (source/kustomize/helm/notification 컨트롤러) |
-| CI / 보안 | GitHub Actions, Trivy 이미지·IaC 스캔(HIGH/CRITICAL 게이트), Semgrep SAST, Gitleaks 시크릿 스캔, OWASP ZAP DAST(주간+수동), cosign keyless 서명(OIDC) |
+| CI / 보안 | GitHub Actions, Trivy 이미지·IaC 스캔(HIGH/CRITICAL 게이트), Semgrep SAST, Gitleaks 시크릿 스캔, OWASP ZAP DAST(주간+수동), CycloneDX SBOM(run 아티팩트, 90일 보존), cosign keyless 서명(OIDC) |
 | CNI / 정책 | Cilium v1.17 (CiliumNetworkPolicy 기반 default-deny 제로트러스트) |
 | 서비스 메시 | Istio Ambient v1.26 (ztunnel, 사이드카리스 mTLS) |
 | 인그레스 / TLS | Kubernetes Gateway API v1.3 + Istio Gateway, cert-manager + Let's Encrypt(ACME HTTP-01 자동 발급·갱신), HTTP→HTTPS 301 |
@@ -150,7 +150,7 @@ kubectl patch deploy -n backend backend-springboot --type=merge \
 | Phase 2 GitOps/보안 부트스트랩 | ✅ 완료 |
 | Phase 3 메시 + 관측성 | ✅ 완료 (Loki는 미구축 — Prometheus/Grafana만) |
 | Phase 3 Kafka/Redis | ⏸️ **의도적 보류** — Free Tier 2 OCPU에서 Strimzi+Redis 오퍼레이터는 OOM 유발, 앱 코드도 아직 미사용. 매니페스트는 `gitops/databases/`에 보관 |
-| Phase 4 CI/CD | ✅ 완료 (빌드→Trivy 게이트→OCIR→cosign→GitOps 자동 커밋). IaC 스캔(Trivy config), SAST(Semgrep), 시크릿 스캔(Gitleaks), DAST(OWASP ZAP baseline, 주간+수동) 가동. 남은 항목: 클러스터 측 cosign 서명 검증(admission) |
+| Phase 4 CI/CD | ✅ 완료 (빌드→Trivy 게이트→SBOM 생성→OCIR→cosign→GitOps 자동 커밋). IaC 스캔(Trivy config), SAST(Semgrep), 시크릿 스캔(Gitleaks), DAST(OWASP ZAP baseline, 주간+수동), CycloneDX SBOM 아티팩트 가동. 남은 항목: 클러스터 측 cosign 서명 검증(admission) |
 | Phase 5 프로그레시브 딜리버리 | ✅ 카나리 완주(promotion) 검증 완료. A/B 테스트는 미구현 |
 | Zero-Trust (mTLS + default-deny CNP) | ✅ 앱 네임스페이스 적용 완료. ATP egress도 `world`가 아닌 리전 ADB FQDN(`adb.ap-osaka-1.oraclecloud.com`)으로 한정 |
 | HTTPS / 실도메인 | ✅ `ai-auto.kro.kr` + `api.ai-auto.kro.kr` — Let's Encrypt 자동 발급(ClusterIssuer `letsencrypt-prod`, Gateway HTTP-01), HTTP는 301 리다이렉트 |

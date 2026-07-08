@@ -21,7 +21,7 @@ This document serves as the master blueprint for the Zero-Trust DevSecOps, GitOp
 | Container Orchestration | Oracle Kubernetes Engine (OKE) or K3s |
 | Compute Limits | Max 2 OCPU / 12GB RAM (ARM A1), 2 AMD Micro VMs, 200GB Storage |
 | GitOps / CD | FluxCD |
-| CI / Security Scans | GitHub Actions, Trivy, tfsec |
+| CI / Security Scans | GitHub Actions, Trivy (image + IaC misconfig, successor of tfsec), Semgrep SAST, Gitleaks, OWASP ZAP DAST, CycloneDX SBOM, cosign signing |
 | Service Mesh / CNI | Istio Ambient Mesh, Cilium |
 | Ingress / HTTPS | Kubernetes Gateway API, cert-manager |
 | Secret Management | OCI Vault + External Secrets Operator |
@@ -84,6 +84,7 @@ This document serves as the master blueprint for the Zero-Trust DevSecOps, GitOp
 
 ### Phase 4: Application CI/CD
 - Write GitHub Actions workflows to build, scan (Trivy), and push React and Spring Boot images to OCI Registry.
+- Generate a CycloneDX SBOM for every image that passes the vulnerability gate and publish it as a run artifact (supply-chain transparency, EO 14028).
 - Auto-update GitOps manifests with new image tags.
 
 ### Phase 5: Progressive Delivery & MSA
