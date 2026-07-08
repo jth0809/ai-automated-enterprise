@@ -37,7 +37,10 @@
 공급망: Trivy 게이트(HIGH/CRITICAL 차단) + Semgrep + Gitleaks(전 히스토리 clean) + CycloneDX SBOM + cosign 서명. 네트워크: CNP default-deny(ATP egress는 FQDN 한정), ambient mTLS. 엣지: ZeroSSL HTTPS 자동화, 301 리다이렉트, 보안 헤더 9종(ZAP FAIL 0/PASS 65). 주간 DAST.
 
 ### 격차와 할 일
-- [ ] **P1 — 브랜치 보호**: `main` 직푸시가 현재 관행이다. Branch protection + required checks(보안 스캔 4종)를 걸면 게이트 우회가 구조적으로 불가능해진다. 단, CI의 GitOps 태그 자동 커밋(`[skip ci]`)이 푸시 가능하도록 봇 예외 또는 PAT 정리가 선행 조건.
+- [~] **P1 — 브랜치 보호** (부분 완료 2026-07-08):
+  - ✅ **`main-integrity` (active, bypass 없음)**: `main`에 대한 강제푸시·브랜치 삭제 금지 — 소유자·관리자·봇 예외 없이 절대 차단. GitOps 감사 이력(커밋 히스토리)이 되감기/삭제로 조작될 수 없게 만든다. "Git이 유일한 진실" 원칙을 무결성 측면에서 강제. 일반 푸시는 영향 없음(이 문서 커밋으로 실증).
+  - ⏸️ **PR + 스캔 게이트는 보류 — 아키텍처 결정 필요**: 실측 결과 **개인(personal) 저장소는 GitHub Actions 앱을 ruleset bypass actor로 API 추가 불가**(HTTP 422). CI 봇이 GitOps 태그 갱신을 `main`에 **직푸시**하므로, 봇 bypass 없이 PR을 강제하면 검증 완료된 배포 루프가 깨진다. 활성화하려면 셋 중 하나 선행: (a) GitHub UI에서 Actions bypass 수동 추가, (b) CI를 auto-merge PR 방식으로 전환(배포마다 PR 트레일+1~2분 지연), (c) 소유자 PAT를 CI push 스텝 시크릿으로 분리. 부가 설정(완료): merge 후 브랜치 자동 삭제, auto-merge 허용 — (b) 경로의 사전 준비.
+  - **잔여 트레이드오프**: 어떤 경로든 admin bypass가 남는 한 소유자 본인의 스캔 우회는 가능 — 진짜 "구조적 불가"는 팀 확장 후 admin을 bypass에서 제거할 때 성립.
 - [ ] **P2 — 시크릿 로테이션 runbook**: OCIR 토큰, ZeroSSL EAB(클러스터 재구축 시 재발급 필요 — Git 밖 유일 자산), Slack webhook(신설 예정). 각각 만료·유출 시 절차를 README 운영 표에 문서화.
 - [ ] **P2 — actuator 외부 노출 차단** (2026-07-08 드릴 중 발견): `https://api.ai-auto.kro.kr/actuator/health`가 공개 응답 — 현재는 health/info만이라 저위험이나 원칙 위반. HTTPRoute에서 `/actuator` 경로 분리 차단 또는 Spring 관리 포트 분리.
 - [ ] **P2 — ZAP full scan 검토**: 현 baseline은 수동적 스캔. active scan은 프로덕션 대상 불가 → 카나리 가중치 0%의 canary 서비스를 대상으로 하거나 P3 스테이징에서.
