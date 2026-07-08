@@ -32,6 +32,12 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          # GITOPS_PAT (owner fine-grained PAT, contents:write) authenticates
+          # the tag-update push to main as an admin, so it bypasses the
+          # main-pr-gate ruleset while non-admin actors (Dependabot) still go
+          # through PR + scans. Falls back to the default token until the
+          # secret exists, so this stays a no-op change on its own.
+          token: ${{ secrets.GITOPS_PAT || github.token }}
 
       - name: Compute image metadata
         run: |
