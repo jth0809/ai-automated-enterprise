@@ -91,6 +91,23 @@ jobs:
           ignore-unfixed: true
           vuln-type: os,library
 
+      # Supply-chain transparency (EO 14028): a CycloneDX inventory of the
+      # exact image that passed the gate above — anything that ships has a
+      # downloadable bill of materials.
+      - name: Generate CycloneDX SBOM
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: ${{ env.IMAGE_REPO }}:${{ env.IMAGE_TAG }}
+          format: cyclonedx
+          output: sbom-${{ env.IMAGE_NAME }}.json
+
+      - name: Upload SBOM artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-${{ env.IMAGE_NAME }}
+          path: sbom-${{ env.IMAGE_NAME }}.json
+          if-no-files-found: error
+
       - name: Login to OCIR
         uses: docker/login-action@v3
         with:
