@@ -1,0 +1,22 @@
+---
+# Actuator endpoints are liveness/readiness plumbing, not public API.
+# Kubelet probes hit the pod directly and Flagger's loadtester targets
+# /api/status, so nothing legitimate reaches /actuator through the
+# gateway — deny it at the edge (Envoy RBAC returns 403).
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: deny-actuator-external
+  namespace: istio-ingress
+spec:
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: public-gateway
+  action: DENY
+  rules:
+    - to:
+        - operation:
+            paths:
+              - /actuator
+              - /actuator/*

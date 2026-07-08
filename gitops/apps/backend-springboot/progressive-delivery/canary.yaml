@@ -57,4 +57,7 @@ spec:
           # Real production path (DNS -> LB -> TLS -> route): the port-80
           # in-cluster path now only answers with the HTTPS redirect, and
           # analysis should fail if the cert/LB/route chain is broken.
-          cmd: "hey -z 1m -q 5 -c 2 https://api.ai-auto.kro.kr/actuator/health"
+          # /api/status (not /actuator/*): the gateway denies /actuator
+          # externally (gateway-authz.yaml), and /api/status additionally
+          # exercises the ATP connectivity path at a modest 10 rps.
+          cmd: "hey -z 1m -q 5 -c 2 https://api.ai-auto.kro.kr/api/status"
