@@ -132,6 +132,14 @@ kubectl patch deploy -n backend backend-springboot --type=merge \
   -p "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"flagger.app/revalidated-at\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"}}}}}"
 ```
 
+## CPU 예산 (Always Free 2노드의 제1 관리 대상)
+
+노드당 할당 가능 CPU는 **840m**뿐이며, 이 클러스터 장애 이력의 상당수가 requests 포화에서 왔다. 규칙:
+
+- 새 워크로드 추가 전 `kubectl describe nodes | grep -A5 "Allocated resources"`로 여유 확인. **노드당 requests 합계 800m 초과 금지**(카나리 분석 시 backend 25m×2가 동시에 뜰 여유 필수).
+- 인프라 컴포넌트는 HelmRelease values(또는 flux-system `patches:`)로 requests를 명시적으로 줄여서 배포한다 — 기본값(100m대)을 그대로 두면 두세 개로 예산이 끝난다.
+- **주의: OKE가 `kube-flannel-ds`를 주기적으로 재생성한다**(실측 2026-07-07 — 노드당 100m 잠식, 카나리 스케줄 실패 유발). Cilium이 CNI이므로 flannel은 불필요: `kubectl -n kube-system delete daemonset kube-flannel-ds` ([절차 문서](infrastructure/ansible/oke-nodes-setup/README.md)). 재발 감지는 Alertmanager 노드 예산 룰(백로그 0절)로.
+
 ## 운영 노하우 (실전에서 검증된 함정들)
 
 | 증상 | 원인과 해법 |

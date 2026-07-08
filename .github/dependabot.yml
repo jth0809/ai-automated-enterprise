@@ -1,0 +1,46 @@
+---
+# Automated dependency PRs (BACKLOG_BY_DOMAIN §4 P2). Every merge to
+# main still passes the full gate chain (Trivy/Semgrep/SBOM/cosign), so
+# these PRs are proposals, not deployments. Grouped weekly to keep PR
+# noise low on a solo-maintained repo.
+version: 2
+updates:
+  - package-ecosystem: maven
+    directory: /apps/backend/springboot-app
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:00"
+      timezone: Asia/Seoul
+    groups:
+      backend-minor-patch:
+        update-types: [minor, patch]
+
+  - package-ecosystem: npm
+    directory: /apps/frontend/react-app
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:00"
+      timezone: Asia/Seoul
+    groups:
+      frontend-minor-patch:
+        update-types: [minor, patch]
+
+  - package-ecosystem: docker
+    directories:
+      - /apps/backend/springboot-app
+      - /apps/frontend/react-app
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:00"
+      timezone: Asia/Seoul
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:00"
+      timezone: Asia/Seoul

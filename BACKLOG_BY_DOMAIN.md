@@ -66,7 +66,8 @@
 
 ### 할 일
 - [ ] **P1 — 알림 활성화** (0절 P1/P2와 동일 — 운영 파트의 최우선 결핍은 "장애를 사람이 모른다"이다).
-- [ ] **P1 — 용량 상한 문서화**: 신규 워크로드 추가 시 CPU requests 예산표(노드별 가용 여유)를 README에 명시 — 이번 주 Pending 사태의 재발 방지는 스케줄링이 아니라 예산 관리다.
+- [x] **P1 — 용량 상한 문서화** (✅ 2026-07-08 README "CPU 예산" 절): 노드당 800m 규칙 + 인프라 requests 명시 원칙.
+- [ ] **P1 — flannel 재생성 대응** (2026-07-08 실측 발견): OKE가 `kube-flannel-ds`를 재생성해 노드당 100m을 재잠식(07-07 18:54Z), 이후 카나리 스케줄 실패의 원인. 삭제는 자동 실행 정책상 사용자 승인 필요 — `kubectl -n kube-system delete daemonset kube-flannel-ds`. 재발은 Alertmanager 예산 룰로 감지(0절 P2 룰 ②와 연동).
 - [ ] **P2 — cert 갱신 감시**: ZeroSSL 자동 갱신(만료 2026-10-05)의 첫 사이클을 Alertmanager 룰로 감시. 첫 갱신 성공 확인 전까지는 미검증 경로다.
 - [ ] **P2 — node drain 훈련**: 현 2노드에서 어디까지 견디는지 실측(아마 실패할 것이고, 그 실측치가 P3 증설의 근거 데이터가 된다).
 - [ ] **P3 — HA**: 노드 증설 + PDB + topologySpreadConstraints (Evolution §3.1), Prometheus 보존 확대, Loki.
