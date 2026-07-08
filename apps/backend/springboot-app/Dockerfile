@@ -14,7 +14,7 @@ RUN mvn -B -ntp package -DskipTests
 
 # ---------- Runtime stage ----------
 # Ubuntu-based JRE: multi-arch (ARM A1 nodes), unlike the alpine variant.
-FROM eclipse-temurin:21-jre
+FROM eclipse-temurin:25-jre
 # The base bundles pebble (Ubuntu's service manager); the java entrypoint
 # never uses it and its embedded Go deps trip the Trivy HIGH/CRITICAL
 # gate — remove the binary instead of ignoring the CVEs.
