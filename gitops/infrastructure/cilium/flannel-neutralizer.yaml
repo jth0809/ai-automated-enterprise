@@ -1,0 +1,35 @@
+---
+# OKE keeps recreating the flannel addon DaemonSet (measured 2026-07-07
+# 18:54Z: it came back and re-ate 100m CPU per node, silently breaking
+# canary scheduling). Cilium is the CNI here, and a BASIC_CLUSTER has no
+# addon-management API to disable Flannel — so Git owns a neutralized
+# copy instead: the impossible nodeSelector keeps desired pods at 0,
+# and every Flux reconcile re-wins the spec whenever OKE re-applies it.
+# spec.selector must stay byte-identical to OKE's (immutable field).
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: kube-flannel-ds
+  namespace: kube-system
+  labels:
+    app: flannel
+    tier: node
+spec:
+  selector:
+    matchLabels:
+      app: flannel
+      tier: node
+  template:
+    metadata:
+      labels:
+        app: flannel
+        tier: node
+    spec:
+      # Matches no node on purpose: desired/scheduled stays 0.
+      nodeSelector:
+        oke.oraclecloud.com/flannel-neutralized: "never"
+      containers:
+        - name: kube-flannel
+          # Never scheduled; harmless placeholder if it ever were.
+          image: busybox:1.36
+          command: ["/bin/true"]
