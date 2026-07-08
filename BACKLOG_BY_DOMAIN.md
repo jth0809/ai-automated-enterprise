@@ -39,6 +39,7 @@
 ### 격차와 할 일
 - [ ] **P1 — 브랜치 보호**: `main` 직푸시가 현재 관행이다. Branch protection + required checks(보안 스캔 4종)를 걸면 게이트 우회가 구조적으로 불가능해진다. 단, CI의 GitOps 태그 자동 커밋(`[skip ci]`)이 푸시 가능하도록 봇 예외 또는 PAT 정리가 선행 조건.
 - [ ] **P2 — 시크릿 로테이션 runbook**: OCIR 토큰, ZeroSSL EAB(클러스터 재구축 시 재발급 필요 — Git 밖 유일 자산), Slack webhook(신설 예정). 각각 만료·유출 시 절차를 README 운영 표에 문서화.
+- [ ] **P2 — actuator 외부 노출 차단** (2026-07-08 드릴 중 발견): `https://api.ai-auto.kro.kr/actuator/health`가 공개 응답 — 현재는 health/info만이라 저위험이나 원칙 위반. HTTPRoute에서 `/actuator` 경로 분리 차단 또는 Spring 관리 포트 분리.
 - [ ] **P2 — ZAP full scan 검토**: 현 baseline은 수동적 스캔. active scan은 프로덕션 대상 불가 → 카나리 가중치 0%의 canary 서비스를 대상으로 하거나 P3 스테이징에서.
 - [ ] **P3 — Kyverno `verifyImages`**: 서명 검증 공백 폐쇄 + `cosign attest`로 SBOM 첨부 (Evolution §3.2).
 - [ ] **P3 — 도메인 이전 검토**: kro.kr은 공유 도메인 — 발급 문제는 ZeroSSL로 해소했으나 도메인 자체의 신뢰도·통제권 한계는 남는다.
@@ -51,7 +52,7 @@
 백엔드는 사실상 스켈레톤이다: 컨트롤러/테스트 각 1개(StatusController), Kafka/Redis 코드 부재, `application.yml`은 datasource뿐. 프런트도 Vite 기본 구조 + 테스트 부재(`npm test --if-present`가 조용히 통과). **파이프라인 성숙도(상)와 애플리케이션 성숙도(하)의 불균형이 이 프로젝트의 현재 모습이다.**
 
 ### 할 일
-- [ ] **P1 — `/api` 경로 계약 정리**: nginx가 `/api` 프리픽스를 그대로 백엔드에 전달하는데 백엔드에 해당 컨텍스트가 없어 404가 난다(실측). `server.servlet.context-path=/api`로 맞추거나 nginx에서 프리픽스를 벗기는 것 중 하나로 확정하고 OpenAPI 스펙을 저장소에 커밋.
+- [x] **P1 — `/api` 경로 계약 확인** (✅ 2026-07-08 실측으로 오진 정정): 앱 컨트롤러는 이미 `/api` 프리픽스로 일관(`/api/status` 200 + DB 상태). 404는 `/api/actuator/*` 한정으로 정상 동작. 실제 후속 과제는 OpenAPI 스펙 커밋(P2로 이동)과 아래 보안 항목.
 - [ ] **P1 — 테스트 실체화**: 백엔드 서비스 계층 단위 테스트 + Testcontainers 통합 테스트, 프런트 vitest 도입. CI가 이미 테스트를 실행하므로 작성 즉시 게이트가 된다(.github/AGENTS.md의 "robust test coverage" 원칙이 현재는 공약이다).
 - [ ] **P2 — 실제 도메인 기능 구현**: 아키텍처가 지탱할 대상이 필요하다.
 - [ ] **P3 — Kafka/Redis 코드 우선 원칙**: 인프라 재도입(Evolution §3.3)은 소비할 코드(리스너/프로듀서/캐시 계층)와 같은 PR로만.
@@ -97,7 +98,7 @@
 ### 5.1 부하 테스트 (Load / Performance)
 도구: in-cluster는 이미 배포된 flagger-loadtester(hey), 본격 테스트는 **k6**(임계값 검증·리포트) — K8s Job(내부 경로) 또는 GitHub Actions(외부 경로, `workflow_dispatch`).
 
-- [ ] **P1 — 베이스라인 측정**: 현재 상태의 p50/p99·최대 RPS를 경로별로 기록 — ① 외부→`https://ai-auto.kro.kr/`(정적, LB+TLS 포함) ② 외부→`/api` 프록시 경유 ③ 내부→backend apex 직행(게이트웨이 제외분 분리). **이 수치 없이는 P3 증설 규모 산정과 "성능 저하" 판단 모두 불가능하다.**
+- [x] **P1 — 베이스라인 측정** (✅ 2026-07-08 [실측 완료](docs/drills/2026-07-08-p1-drills.md)): 100 RPS 지속·에러 0에서 정적 p99 36ms / API 직행 67ms / 풀체인+DB 65ms — 카나리 임계값(500ms)의 ~13%. 스트레스 시작 강도는 300~500 RPS부터.
 - [ ] **P2 — 스트레스 테스트**: RPS를 단계 상승시켜 포화점 실측 — 예상 병목 후보는 LB 10Mbps, JVM(메모리 limit 768Mi — OOM 여부가 관전 포인트), ATP 세션 순. 결과를 용량 예산표(운영 P1)에 기록.
 - [ ] **P2 — 소크 테스트**: 저강도(카나리 수준) 부하 30~60분 유지 — 메모리 누수·커넥션 누수 검출. Grafana로 추세 관찰.
 - [ ] **P3 — 카나리 분석 강화**: 베이스라인 확보 후 Canary `metrics`의 latency 임계값(현재 p99 500ms)을 실측 기반으로 조정하고, 부하 프로파일(`hey -q 5 -c 2`)을 실트래픽 모사 수준으로 상향.
@@ -105,8 +106,8 @@
 ### 5.2 장애 테스트 (Failure / Resilience Drills)
 각 실험은 "가설 → 실행 → 기대 결과 → 실측"의 4열 표로 기록한다(별도 `docs/drills/` 축적 권장).
 
-- [ ] **P1 — 불량 이미지 롤백 드릴**: 의도적으로 5xx를 반환하는 이미지를 배포해 Flagger가 **메트릭 기반 자동 롤백**하는지 E2E 검증. 메트릭 결함으로 인한 롤백은 2회 실측했지만, "나쁜 앱"을 정확히 걸러내는 정상 롤백은 아직 미검증이다. 위험도 낮음(카나리 트래픽 최대 50%, 자동 복귀).
-- [ ] **P1 — GitOps 드리프트 복원**: Flux 관리 리소스(예: frontend Service)를 수동 삭제 → 다음 reconcile에서 자동 복원되는지 확인. 위험도 최저, GitOps 신뢰의 기본 증명.
+- [ ] **P1 — 불량 이미지 롤백 드릴** (⏸️ 자동 실행 정책 차단 — 사용자 입회 필요, [절차 문서화됨](docs/drills/2026-07-08-p1-drills.md)): 존재하지 않는 이미지 태그를 Git으로 주입 → ImagePullBackOff → progressDeadline(600s) 후 자동 롤백 검증. 전 과정 primary 무중단이 합격 기준.
+- [ ] **P1 — GitOps 드리프트 복원** (⏸️ 동일 — [실행 명령 문서화됨](docs/drills/2026-07-08-p1-drills.md)): 대상은 영향 최소인 `http-to-https-redirect` HTTPRoute로 확정.
 - [ ] **P2 — DB 격리 드릴**: 백엔드 CNP의 ATP egress 규칙을 임시 제거(Git 커밋으로) → 앱이 설계대로 기동 유지(`initialization-fail-timeout: -1`, liveness 그룹 프로브) + `/api/status` DOWN 보고를 확인 → revert. 알림(0절) 가동 후에는 감지 시간도 함께 측정.
 - [ ] **P2 — node drain 실측** (운영 P2와 동일 항목): 기대 결과는 "부분 실패"다 — 어떤 파드가 못 뜨는지가 P3 증설의 근거 데이터.
 - [ ] **P2 — 메시 데이터플레인 재시작**: ztunnel/cilium-agent 파드 재시작 중 트래픽 지속성 확인(ambient 모드의 실질 무중단 여부 실측).
