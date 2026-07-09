@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { fetchNews } from "../api";
 import type { Article } from "../api";
+import { stripHtml } from "../stripHtml";
 
 type FeedState =
   | { phase: "loading" }
@@ -57,7 +58,8 @@ export function NewsFeed() {
     <section className="feed">
       {state.articles.map((article) => {
         const date = formatDate(article.publishedAt);
-        const body = article.summary ?? article.excerpt;
+        const raw = article.summary ?? article.excerpt;
+        const body = raw ? stripHtml(raw) : raw;
         return (
           <article className="news-card" key={article.link}>
             <div className="news-meta">

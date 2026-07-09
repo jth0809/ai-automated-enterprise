@@ -10,15 +10,16 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.web.client.RestClient;
 
 import com.aienterprise.backend.news.NewsIngestionScheduler.FeedSpec;
 
 /**
- * Wires the news beans. Defaults are safe-to-deploy: the summarizer is
- * disabled (no ANTHROPIC_API_KEY needed) and the feed list is empty (no
- * ingestion, no egress needed) until {@code news.feeds} is configured as
- * comma-separated {@code source|url} pairs or bare feed URLs (the source
- * label then defaults to the URL's host).
+ * Wires the news beans. Defaults are safe-to-deploy: the summarizer stays
+ * disabled until {@code anthropic.api-key} (env ANTHROPIC_API_KEY) is set,
+ * and the feed list is empty (no ingestion, no egress needed) until
+ * {@code news.feeds} is configured as comma-separated {@code source|url}
+ * pairs or bare feed URLs (the source label then defaults to the URL's host).
  */
 @Configuration
 @EnableScheduling
@@ -32,8 +33,21 @@ public class NewsConfig {
     }
 
     @Bean
-    public ArticleSummarizer articleSummarizer() {
-        return new DisabledSummarizer();
+    public ArticleSummarizer articleSummarizer(
+            RestClient.Builder restClientBuilder,
+            @Value("${anthropic.api-key:}") String apiKey,
+            @Value("${anthropic.model:claude-opus-4-8}") String model) {
+        return summarizer(restClientBuilder, apiKey, model);
+    }
+
+    /** Claude summarizer once a key is provisioned; no-op fallback otherwise. */
+    static ArticleSummarizer summarizer(RestClient.Builder builder, String apiKey, String model) {
+        if (apiKey == null || apiKey.isBlank()) {
+            log.info("anthropic.api-key not set; AI summarization disabled");
+            return new DisabledSummarizer();
+        }
+        log.info("AI summarization enabled (model {})", model);
+        return new AnthropicSummarizer(builder, apiKey, model);
     }
 
     @Bean

@@ -52,6 +52,33 @@ describe("NewsFeed", () => {
     expect(screen.getByText("Only an excerpt here")).toBeInTheDocument();
   });
 
+  it("renders excerpts containing HTML as plain text, never raw markup", async () => {
+    vi.stubGlobal(
+      "fetch",
+      mockFetch(200, {
+        count: 1,
+        articles: [
+          {
+            title: "Messy feed item",
+            link: "https://news.example/messy",
+            source: "RSS Desk",
+            publishedAt: null,
+            excerpt:
+              '<img src="https://cdn.example/thumb.jpg"><b>Anthropic</b> ships &amp; iterates',
+            summary: null,
+          },
+        ],
+      }),
+    );
+    render(<NewsFeed />);
+
+    await screen.findByRole("link", { name: /messy feed item/i });
+    // Tags are stripped, entities decoded — only readable text remains.
+    expect(screen.getByText("Anthropic ships & iterates")).toBeInTheDocument();
+    // The raw markup must not leak into the page as literal text.
+    expect(screen.queryByText(/<b>|<img|&amp;/)).not.toBeInTheDocument();
+  });
+
   it("shows an empty state when the feed has no articles", async () => {
     vi.stubGlobal("fetch", mockFetch(200, { count: 0, articles: [] }));
     render(<NewsFeed />);

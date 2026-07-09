@@ -5,10 +5,29 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.web.client.RestClient;
 
 import com.aienterprise.backend.news.NewsIngestionScheduler.FeedSpec;
 
 class NewsConfigTest {
+
+    private static final String MODEL = "claude-opus-4-8";
+
+    @Test
+    void summarizerFallsBackToDisabledWithoutApiKey() {
+        assertThat(NewsConfig.summarizer(RestClient.builder(), null, MODEL))
+                .isInstanceOf(DisabledSummarizer.class);
+        assertThat(NewsConfig.summarizer(RestClient.builder(), "", MODEL))
+                .isInstanceOf(DisabledSummarizer.class);
+        assertThat(NewsConfig.summarizer(RestClient.builder(), "   ", MODEL))
+                .isInstanceOf(DisabledSummarizer.class);
+    }
+
+    @Test
+    void summarizerUsesAnthropicWhenApiKeyIsPresent() {
+        assertThat(NewsConfig.summarizer(RestClient.builder(), "sk-ant-test", MODEL))
+                .isInstanceOf(AnthropicSummarizer.class);
+    }
 
     @Test
     void parsesSourceUrlPairs() {
