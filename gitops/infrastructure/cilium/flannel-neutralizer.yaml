@@ -28,8 +28,24 @@ spec:
       # Matches no node on purpose: desired/scheduled stays 0.
       nodeSelector:
         oke.oraclecloud.com/flannel-neutralized: "never"
+      # This pod never runs, but the manifest is still in scope for the
+      # Trivy IaC gate — harden the placeholder so it passes the same
+      # HIGH/CRITICAL bar (KSV-0014 readOnlyRootFilesystem, KSV-0118
+      # default security context) as everything else we author.
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        runAsGroup: 65534
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: kube-flannel
           # Never scheduled; harmless placeholder if it ever were.
           image: busybox:1.36
           command: ["/bin/true"]
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
