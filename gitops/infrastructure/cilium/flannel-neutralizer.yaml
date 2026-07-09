@@ -43,7 +43,14 @@ spec:
           # Never scheduled; harmless placeholder if it ever were.
           image: busybox:1.36
           command: ["/bin/true"]
+          # privileged: false is set EXPLICITLY, not just left default. The
+          # live kube-flannel-ds (managed by OKE's addon) carries
+          # privileged: true; under server-side apply Flux must own and
+          # override this field, otherwise the merge yields the invalid
+          # combo privileged: true + allowPrivilegeEscalation: false and
+          # the whole infra-cilium Kustomization fails its dry-run.
           securityContext:
+            privileged: false
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
             capabilities:
