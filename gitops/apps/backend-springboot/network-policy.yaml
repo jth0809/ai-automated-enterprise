@@ -88,6 +88,15 @@ spec:
               protocol: TCP
             - port: "15008"
               protocol: TCP
+    # News feed ingestion (RSS over HTTPS). Scoped to the configured feed
+    # host only — NEWS_FEEDS entries for other hosts also need a rule here,
+    # or the fetch is dropped by default-deny.
+    - toFQDNs:
+        - matchName: news.google.com
+      toPorts:
+        - ports:
+            - port: "443"
+              protocol: TCP
     # Oracle ATP lives outside the cluster: 1521 = one-way TLS (walletless,
     # current mode), 1522 = mTLS (kept for a future wallet-based setup).
     # Shared serverless Always Free ATP (terraform: is_free_tier, no private

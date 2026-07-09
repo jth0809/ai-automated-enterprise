@@ -4,6 +4,8 @@ import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Scheduled;
 
 /**
@@ -28,6 +30,13 @@ public class NewsIngestionScheduler {
         this.news = news;
         this.fetcher = fetcher;
         this.feeds = feeds;
+    }
+
+    // Without this, the in-memory feed stays empty after every rollout until
+    // the next cron tick (up to an hour) — long enough to look broken.
+    @EventListener(ApplicationReadyEvent.class)
+    public void onStartup() {
+        refresh();
     }
 
     @Scheduled(cron = "${news.refresh-cron:0 0 * * * *}")
