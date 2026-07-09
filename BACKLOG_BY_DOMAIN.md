@@ -42,7 +42,7 @@
   - **`main-pr-gate`**: PR 필수 + Gitleaks 체크 필수(모든 PR에서 실행되는 유일한 보편 체크; IaC/SAST는 경로 필터라 필수화하면 문서-only PR이 영구 pending → 제외). bypass = Repository admin. 소유자 PAT(`GITOPS_PAT`, contents:write)를 CI push 스텝에 분리해, CI 태그 갱신은 admin 인증으로 직푸시 bypass(배포 속도 유지) → Dependabot·외부 기여만 PR+스캔 강제.
   - **잔여 트레이드오프**: admin bypass가 남는 한 소유자 본인의 스캔 우회는 가능 — 진짜 "구조적 불가"는 팀 확장 후 bypass에서 admin 제거 시 성립.
   - 참고: 개인 저장소는 GitHub Actions 앱을 bypass actor로 API 추가 불가(HTTP 422)라 PAT 분리 경로를 택함. 부가: merge 후 브랜치 자동 삭제 + auto-merge 허용.
-- [ ] **P2 — 시크릿 로테이션 runbook**: OCIR 토큰, ZeroSSL EAB(클러스터 재구축 시 재발급 필요 — Git 밖 유일 자산), Slack webhook(신설 예정). 각각 만료·유출 시 절차를 README 운영 표에 문서화.
+- [x] **P2 — 시크릿 로테이션 runbook** (✅ 2026-07-08 [docs/runbooks/secret-rotation.md](docs/runbooks/secret-rotation.md)): 8개 자격증명 인벤토리 + 위치/주기/절차/blast radius/탐지. GITOPS_PAT·OCI Vault 최상위·ZeroSSL EAB 포함.
 - [ ] **P2 — actuator 외부 노출 차단** (2026-07-08 드릴 중 발견): `https://api.ai-auto.kro.kr/actuator/health`가 공개 응답 — 현재는 health/info만이라 저위험이나 원칙 위반. HTTPRoute에서 `/actuator` 경로 분리 차단 또는 Spring 관리 포트 분리.
 - [ ] **P2 — ZAP full scan 검토**: 현 baseline은 수동적 스캔. active scan은 프로덕션 대상 불가 → 카나리 가중치 0%의 canary 서비스를 대상으로 하거나 P3 스테이징에서.
 - [ ] **P3 — Kyverno `verifyImages`**: 서명 검증 공백 폐쇄 + `cosign attest`로 SBOM 첨부 (Evolution §3.2).
@@ -58,7 +58,7 @@
 ### 할 일
 - [x] **P1 — `/api` 경로 계약 확인** (✅ 2026-07-08 실측으로 오진 정정): 앱 컨트롤러는 이미 `/api` 프리픽스로 일관(`/api/status` 200 + DB 상태). 404는 `/api/actuator/*` 한정으로 정상 동작. 실제 후속 과제는 OpenAPI 스펙 커밋(P2로 이동)과 아래 보안 항목.
 - [ ] **P1 — 테스트 실체화**: 백엔드 서비스 계층 단위 테스트 + Testcontainers 통합 테스트, 프런트 vitest 도입. CI가 이미 테스트를 실행하므로 작성 즉시 게이트가 된다(.github/AGENTS.md의 "robust test coverage" 원칙이 현재는 공약이다).
-- [ ] **P2 — 실제 도메인 기능 구현**: 아키텍처가 지탱할 대상이 필요하다.
+- [ ] **P2 — 실제 도메인 기능 구현**: 아키텍처가 지탱할 대상이 필요하다. 계획 수립됨 → [docs/plans/resume-and-news-features.md](docs/plans/resume-and-news-features.md) (인증형 이력서 + AI 뉴스 다이제스트; 뉴스 속보가 Phase 3 Kafka 재도입의 소비 코드).
 - [ ] **P3 — Kafka/Redis 코드 우선 원칙**: 인프라 재도입(Evolution §3.3)은 소비할 코드(리스너/프로듀서/캐시 계층)와 같은 PR로만.
 
 ---
