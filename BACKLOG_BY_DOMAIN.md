@@ -8,12 +8,12 @@
 
 ## 0. 알림/가시성 (Alerting & Notification) — 이 문서의 발단, 모든 파트의 공통 기반
 
-### 원칙: "거의 모든 로그를 슬랙으로"는 안티패턴이다
+### 원칙: "거의 모든 로그를 디스코드로"는 안티패턴이다
 전 로그를 알림 채널로 보내면 일주일 안에 채널을 뮤트하게 되고, 진짜 장애를 놓친다(alert fatigue). 세 계층으로 분리한다:
 
 | 계층 | 성격 | 도구 | 목적지 |
 |---|---|---|---|
-| **알림(Alert)** | 사람의 행동이 필요한 이벤트만 | Flux notification-controller, Alertmanager, GitHub 알림 | Slack / 이메일 |
+| **알림(Alert)** | 사람의 행동이 필요한 이벤트만 | Flux notification-controller, Alertmanager, GitHub 알림 | Discord / 이메일 |
 | **로그(Log)** | 전량 보관, 필요할 때 조회 | Loki (P3, 미구축) | Grafana 조회 |
 | **메트릭(Metric)** | 추세·임계값 | Prometheus (가동 중) | Grafana + Alertmanager 룰 |
 
@@ -23,9 +23,9 @@
 - **런타임 이벤트** (파드 크래시루프, 노드 자원, 인증서 만료 임박) → Alertmanager — kube-prometheus-stack에 **의도적으로 비활성**(`enabled: false`) 상태. CPU 예산(2.5절 운영 참조) 안에서 최소 구성으로 활성화 가능.
 
 ### 할 일
-- [ ] **P1 — GitHub↔Slack 공식 앱 연동** (코드 0줄): 워크플로 실패·이슈(ZAP 리포트 포함)·Dependabot을 채널 구독. `/github subscribe jth0809/ai-automated-enterprise workflows issues`
-- [ ] **P1 — Flux 알림 활성화**: Slack Incoming Webhook을 OCI Vault → ExternalSecret으로 주입, `Provider`(slack) + `Alert`(모든 Kustomization/HelmRelease, severity: error) CR을 `gitops/infrastructure/` 신규 레이어로 추가. 배포 실패가 10분 주기 재시도 뒤에 조용히 묻히는 현재 상태를 끝낸다.
-- [ ] **P2 — Flagger 카나리 알림**: `AlertProvider`(slack) CR + Canary `analysis.alerts` — 롤백 발생 시 즉시 통지(이번 주 "no values found" 롤백 2회는 수동 관찰로만 발견했다).
+- [ ] **P1 — GitHub↔Discord 연동** (코드 0줄): Discord 채널 설정에서 GitHub Webhook URL을 발급받아 저장소에 등록. 워크플로 실패·이슈(ZAP 리포트 포함)·Dependabot을 채널 구독.
+- [ ] **P1 — Flux 알림 활성화**: Discord Webhook을 OCI Vault → ExternalSecret으로 주입, `Provider`(discord) + `Alert`(모든 Kustomization/HelmRelease, severity: error) CR을 `gitops/infrastructure/` 신규 레이어로 추가. 배포 실패가 10분 주기 재시도 뒤에 조용히 묻히는 현재 상태를 끝낸다.
+- [ ] **P2 — Flagger 카나리 알림**: `AlertProvider`(discord) CR + Canary `analysis.alerts` — 롤백 발생 시 즉시 통지(이번 주 "no values found" 롤백 2회는 수동 관찰로만 발견했다).
 - [ ] **P2 — Alertmanager 활성화 + 최소 룰셋**: ① `KubePodCrashLooping` ② 노드 CPU requests > 95% ③ `certmanager_certificate_expiration_timestamp_seconds` < 21일(kro.kr/ZeroSSL 갱신 실패 조기 감지) ④ Flagger 카나리 Failed. 이메일 라우팅 포함.
 - [ ] **P3 — Loki**: "모든 로그"의 올바른 종착지. 알림이 아니라 조회로 소비한다.
 
@@ -141,4 +141,4 @@
 5.테스트 P1(롤백 드릴) ──> P3 카나리 분석 강화
 ```
 
-첫 착수 권고: **0절 P1 두 항목**(GitHub-Slack 앱, Flux Provider/Alert). 둘 다 반나절 이내 작업이고, 이후 모든 파트의 실패가 보이기 시작한다. 알림과 독립적으로 바로 가능한 것은 **5절 P1 세 항목**(부하 베이스라인, 롤백 드릴, 드리프트 복원) — 모두 저위험이며 P3 계획의 근거 데이터를 만든다.
+첫 착수 권고: **0절 P1 두 항목**(GitHub-Discord 연동, Flux Provider/Alert). 둘 다 반나절 이내 작업이고, 이후 모든 파트의 실패가 보이기 시작한다. 알림과 독립적으로 바로 가능한 것은 **5절 P1 세 항목**(부하 베이스라인, 롤백 드릴, 드리프트 복원) — 모두 저위험이며 P3 계획의 근거 데이터를 만든다.
