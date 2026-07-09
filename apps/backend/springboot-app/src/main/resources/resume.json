@@ -1,0 +1,18 @@
+{
+  "name": "TODO: Your Name",
+  "headline": "TODO: Your Headline",
+  "summary": "TODO: A short professional summary. This file is served only through the token-gated /api/resume endpoint, never bundled into the frontend.",
+  "contact": {
+    "email": "TODO",
+    "location": "TODO"
+  },
+  "experience": [
+    {
+      "company": "TODO Company",
+      "role": "TODO Role",
+      "period": "2024 — present",
+      "highlights": ["TODO achievement 1", "TODO achievement 2"]
+    }
+  ],
+  "skills": ["TODO", "skill", "list"]
+}

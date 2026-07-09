@@ -29,3 +29,22 @@ management:
       # /actuator/health/liveness + /readiness for the K8s probes.
       probes:
         enabled: true
+
+# --- Gated résumé -----------------------------------------------------------
+# Ships LOCKED: with no code-hashes, the verifier accepts nothing. Add
+# sha256 hex digests (comma-separated) and a real signing secret via
+# env/Vault to open it. Codes are never stored in plaintext.
+resume:
+  access:
+    signing-secret: ${RESUME_SIGNING_SECRET:change-me-dev-secret}
+    code-hashes: ${RESUME_CODE_HASHES:}
+    ttl-minutes: ${RESUME_TTL_MINUTES:15}
+
+# --- News feed --------------------------------------------------------------
+# Empty feeds = no ingestion (safe to deploy before feed egress is set up).
+# Configure as comma-separated "source|url" pairs, e.g.
+#   NEWS_FEEDS="Google Tech|https://news.google.com/rss/search?q=kubernetes"
+# In-cluster this also needs a backend CNP egress rule to the feed hosts.
+news:
+  feeds: ${NEWS_FEEDS:}
+  refresh-cron: ${NEWS_REFRESH_CRON:0 0 * * * *}
