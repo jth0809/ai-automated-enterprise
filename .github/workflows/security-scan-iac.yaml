@@ -36,7 +36,7 @@ jobs:
     timeout-minutes: 15
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Scan IaC with Trivy (gate on HIGH/CRITICAL)
         uses: aquasecurity/trivy-action@v0.36.0
