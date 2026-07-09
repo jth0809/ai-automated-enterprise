@@ -42,7 +42,8 @@ resume:
 
 # --- News feed --------------------------------------------------------------
 # Empty feeds = no ingestion (safe to deploy before feed egress is set up).
-# Configure as comma-separated "source|url" pairs, e.g.
+# Configure as comma-separated "source|url" pairs or bare feed URLs (the
+# source label then defaults to the URL's host), e.g.
 #   NEWS_FEEDS="Google Tech|https://news.google.com/rss/search?q=kubernetes"
 # In-cluster this also needs a backend CNP egress rule to the feed hosts.
 news:
