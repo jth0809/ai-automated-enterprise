@@ -34,8 +34,8 @@ public class ResumeConfig {
     }
 
     @Bean
-    public ResumeContent resumeContent(ObjectMapper mapper) {
-        return new ClasspathResumeContent(mapper, "resume.json");
+    public ResumeContent resumeContent() {
+        return new ClasspathResumeContent(new ObjectMapper(), "resume.json");
     }
 
     private static List<String> splitCsv(String csv) {
