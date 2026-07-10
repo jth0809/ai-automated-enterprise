@@ -32,6 +32,7 @@ public class RssParser {
                     source,
                     text(item, "pubDate"),
                     text(item, "description"),
+                    null,
                     null));
         }
         return articles;

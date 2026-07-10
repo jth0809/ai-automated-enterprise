@@ -27,6 +27,8 @@ export interface Article {
   publishedAt: string | null;
   excerpt: string | null;
   summary: string | null;
+  /** AI-translated (Korean) headline for articles without a summary. */
+  translatedTitle: string | null;
 }
 
 export interface RedeemResult {

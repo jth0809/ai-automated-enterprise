@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { fetchNews } from "../api";
 import type { Article } from "../api";
-import { stripHtml } from "../stripHtml";
+import { isSameText, stripHtml } from "../stripHtml";
 
 type FeedState =
   | { phase: "loading" }
@@ -58,8 +58,12 @@ export function NewsFeed() {
     <section className="feed">
       {state.articles.map((article) => {
         const date = formatDate(article.publishedAt);
-        const raw = article.summary ?? article.excerpt;
-        const body = raw ? stripHtml(raw) : raw;
+        const raw = article.summary ?? article.translatedTitle ?? article.excerpt;
+        const stripped = raw ? stripHtml(raw) : raw;
+        // Google News excerpts are just the linked headline + outlet name;
+        // don't repeat the title as the body.
+        const body =
+          stripped && !isSameText(stripped, article.title) ? stripped : null;
         return (
           <article className="news-card" key={article.link}>
             <div className="news-meta">

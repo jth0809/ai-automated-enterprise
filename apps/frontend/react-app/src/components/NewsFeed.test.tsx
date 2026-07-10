@@ -79,6 +79,88 @@ describe("NewsFeed", () => {
     expect(screen.queryByText(/<b>|<img|&amp;/)).not.toBeInTheDocument();
   });
 
+  it("hides the body when the excerpt merely restates the title (Google News)", async () => {
+    // Google News RSS descriptions carry no article text — only the linked
+    // headline plus the outlet name. Rendering that under the title shows
+    // the same sentence twice.
+    vi.stubGlobal(
+      "fetch",
+      mockFetch(200, {
+        count: 1,
+        articles: [
+          {
+            title: "Execs Horrified by Huge AI Bills - Yahoo Finance",
+            link: "https://news.google.com/rss/articles/xyz",
+            source: "news.google.com",
+            publishedAt: "2026-07-08T13:57:18Z",
+            excerpt:
+              '<a href="https://news.google.com/rss/articles/xyz" target="_blank">Execs Horrified by Huge AI Bills</a>&nbsp;&nbsp;<font color="#6f6f6f">Yahoo Finance</font>',
+            summary: null,
+          },
+        ],
+      }),
+    );
+    const { container } = render(<NewsFeed />);
+
+    await screen.findByRole("link", { name: /execs horrified/i });
+    // The title stays; the redundant body paragraph must not render.
+    expect(container.querySelector(".news-body")).not.toBeInTheDocument();
+  });
+
+  it("shows the translated headline when there is no summary", async () => {
+    vi.stubGlobal(
+      "fetch",
+      mockFetch(200, {
+        count: 1,
+        articles: [
+          {
+            title: "Execs Horrified by Huge AI Bills - Yahoo Finance",
+            link: "https://news.google.com/rss/articles/xyz",
+            source: "news.google.com",
+            publishedAt: null,
+            excerpt:
+              '<a href="https://news.google.com/rss/articles/xyz">Execs Horrified by Huge AI Bills</a>&nbsp;&nbsp;<font color="#6f6f6f">Yahoo Finance</font>',
+            summary: null,
+            translatedTitle: "거액의 AI 청구서에 경악한 경영진들",
+          },
+        ],
+      }),
+    );
+    render(<NewsFeed />);
+
+    await screen.findByRole("link", { name: /execs horrified/i });
+    expect(
+      screen.getByText("거액의 AI 청구서에 경악한 경영진들"),
+    ).toBeInTheDocument();
+    // A translated headline is not an AI summary — no badge.
+    expect(screen.queryByText("AI summary")).not.toBeInTheDocument();
+  });
+
+  it("still shows an excerpt that carries real content beyond the title", async () => {
+    vi.stubGlobal(
+      "fetch",
+      mockFetch(200, {
+        count: 1,
+        articles: [
+          {
+            title: "Model beats benchmark",
+            link: "https://news.example/a",
+            source: "Example Wire",
+            publishedAt: null,
+            excerpt: "A genuinely informative first paragraph of the story.",
+            summary: null,
+          },
+        ],
+      }),
+    );
+    render(<NewsFeed />);
+
+    await screen.findByRole("link", { name: /model beats benchmark/i });
+    expect(
+      screen.getByText("A genuinely informative first paragraph of the story."),
+    ).toBeInTheDocument();
+  });
+
   it("shows an empty state when the feed has no articles", async () => {
     vi.stubGlobal("fetch", mockFetch(200, { count: 0, articles: [] }));
     render(<NewsFeed />);
