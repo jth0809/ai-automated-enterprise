@@ -28,7 +28,7 @@ spec:
         - name: ocir-pull-secret
       containers:
         - name: backend
-          image: ap-osaka-1.ocir.io/axmlliealtlv/backend-springboot:67c046146610
+          image: ap-osaka-1.ocir.io/axmlliealtlv/backend-springboot:33ce5d7f07cf
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
