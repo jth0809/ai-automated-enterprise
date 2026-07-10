@@ -34,10 +34,9 @@ public class NewsConfig {
 
     @Bean
     public ArticleSummarizer articleSummarizer(
-            RestClient.Builder restClientBuilder,
             @Value("${anthropic.api-key:}") String apiKey,
             @Value("${anthropic.model:claude-opus-4-8}") String model) {
-        return summarizer(restClientBuilder, apiKey, model);
+        return summarizer(RestClient.builder(), apiKey, model);
     }
 
     /** Claude headline translator once a key is provisioned; no-op otherwise. */
@@ -60,10 +59,9 @@ public class NewsConfig {
 
     @Bean
     public TitleTranslator articleTitleTranslator(
-            RestClient.Builder restClientBuilder,
             @Value("${anthropic.api-key:}") String apiKey,
             @Value("${anthropic.model:claude-opus-4-8}") String model) {
-        return titleTranslator(restClientBuilder, apiKey, model);
+        return titleTranslator(RestClient.builder(), apiKey, model);
     }
 
     @Bean

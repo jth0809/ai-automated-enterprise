@@ -60,7 +60,7 @@ public class AnthropicSummarizer implements ArticleSummarizer {
 
     private static String prompt(Article article) {
         StringBuilder sb = new StringBuilder(
-                "Summarize this news article in 1-2 plain-text sentences. Respond with the summary only.");
+                "Translate and summarize this news article into 1-2 plain-text sentences in natural Korean. Respond with the summary only.");
         if (article.title() != null && !article.title().isBlank()) {
             sb.append("\n\nTitle: ").append(article.title());
         }
