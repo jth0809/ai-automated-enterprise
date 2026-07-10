@@ -1,9 +1,11 @@
 package com.aienterprise.backend.news;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -37,18 +39,41 @@ public class NewsService {
 
     public void ingest(String feedXml, String source) {
         List<Article> parsed = parser.parse(feedXml, source);
+
+        // Snapshot which links are new under the read lock only; summarize()
+        // is a slow outbound Claude call and must never run while any lock is
+        // held, or /api/news readers queue behind it for seconds.
+        List<Article> fresh = new ArrayList<>();
+        Set<String> seen = new HashSet<>();
+        lock.readLock().lock();
+        try {
+            for (Article article : parsed) {
+                if (article.link() != null && !byLink.containsKey(article.link())
+                        && seen.add(article.link())) {
+                    fresh.add(article);
+                }
+            }
+        } finally {
+            lock.readLock().unlock();
+        }
+
+        List<Article> prepared = new ArrayList<>(fresh.size());
+        int summarized = 0;
+        for (Article article : fresh) {
+            if (summarized < MAX_SUMMARIES_PER_INGEST) {
+                prepared.add(summarizer.summarize(article));
+                summarized++;
+            } else {
+                prepared.add(article);
+            }
+        }
+
         lock.writeLock().lock();
         try {
-            int summarized = 0;
-            for (Article article : parsed) {
-                if (article.link() != null && !byLink.containsKey(article.link())) {
-                    if (summarized < MAX_SUMMARIES_PER_INGEST) {
-                        byLink.put(article.link(), summarizer.summarize(article));
-                        summarized++;
-                    } else {
-                        byLink.put(article.link(), article);
-                    }
-                }
+            // Re-check dedup: a concurrent ingest may have stored a link
+            // while we were summarizing; the first stored article wins.
+            for (Article article : prepared) {
+                byLink.putIfAbsent(article.link(), article);
             }
         } finally {
             lock.writeLock().unlock();
