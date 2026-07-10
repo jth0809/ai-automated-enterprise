@@ -1,6 +1,12 @@
 package com.aienterprise.backend.news;
 
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.jupiter.api.Test;
@@ -8,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 class NewsServiceTest {
 
@@ -109,6 +116,46 @@ class NewsServiceTest {
         assertEquals("SUMMARY:https://f",
                 svc.latest(10).stream().filter(x -> x.link().equals("https://f"))
                         .findFirst().orElseThrow().summary());
+    }
+
+    @Test
+    void latestIsNotBlockedWhileASummarizerCallIsInFlight() throws Exception {
+        // Each summarize() is a slow outbound Claude call (seconds). Readers
+        // of /api/news must not queue behind it, so it may not run while the
+        // store's write lock is held.
+        CountDownLatch summarizing = new CountDownLatch(1);
+        CountDownLatch release = new CountDownLatch(1);
+        ArticleSummarizer blocking = a -> {
+            summarizing.countDown();
+            try {
+                release.await(5, TimeUnit.SECONDS);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+            return a.withSummary("SUMMARY:" + a.link());
+        };
+        NewsService svc = new NewsService(new RssParser(), blocking);
+
+        ExecutorService pool = Executors.newFixedThreadPool(2);
+        try {
+            Future<?> ingest = pool.submit(() -> svc.ingest(feed("https://a"), "F"));
+            assertTrue(summarizing.await(5, TimeUnit.SECONDS), "summarizer never invoked");
+
+            // The Claude call is now stalled mid-flight; a read must still return.
+            Future<List<Article>> read = pool.submit(() -> svc.latest(10));
+            try {
+                read.get(1, TimeUnit.SECONDS);
+            } catch (TimeoutException e) {
+                fail("latest() blocked behind an in-flight summarizer call");
+            }
+
+            release.countDown();
+            ingest.get(5, TimeUnit.SECONDS);
+            assertEquals("SUMMARY:https://a", svc.latest(10).get(0).summary());
+        } finally {
+            release.countDown();
+            pool.shutdownNow();
+        }
     }
 
     @Test
