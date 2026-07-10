@@ -5,9 +5,11 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -55,36 +57,62 @@ public class NewsService {
 
     public void ingest(String feedXml, String source) {
         List<Article> parsed = parser.parse(feedXml, source);
-        lock.writeLock().lock();
+
+        // Snapshot which links are new under the read lock only; summarize()
+        // is a slow outbound Claude call and must never run while any lock is
+        // held, or /api/news readers queue behind it for seconds.
+        List<Article> fresh = new ArrayList<>();
+        Set<String> seen = new HashSet<>();
+        lock.readLock().lock();
         try {
-            int summarized = 0;
-            int newArticlesSeen = 0;
-            List<Article> needsTranslation = new ArrayList<>();
             for (Article article : parsed) {
-                if (article.link() != null && !byLink.containsKey(article.link())) {
-                    newArticlesSeen++;
-                    Article stored;
-                    if (summarized < MAX_SUMMARIES_PER_INGEST) {
-                        stored = summarizer.summarize(article);
-                        summarized++;
-                    } else {
-                        stored = article;
-                    }
-                    byLink.put(article.link(), stored);
-                    if (stored.summary() == null
-                            && newArticlesSeen <= MAX_ENRICHED_ARTICLES_PER_INGEST
-                            && needsKoreanTranslation(stored.title())) {
-                        needsTranslation.add(stored);
-                    }
+                if (article.link() != null && !byLink.containsKey(article.link())
+                        && seen.add(article.link())) {
+                    fresh.add(article);
                 }
             }
-            // Articles that actually lack a summary (including graceful
-            // fallback after 429/5xx) get a Korean headline in one bounded
-            // batch. Re-put replaces the plain copy while preserving order.
-            if (!needsTranslation.isEmpty()) {
-                for (Article translated : translator.translateTitles(needsTranslation)) {
-                    byLink.put(translated.link(), translated);
-                }
+        } finally {
+            lock.readLock().unlock();
+        }
+
+        List<Article> prepared = new ArrayList<>(fresh.size());
+        List<Article> needsTranslation = new ArrayList<>();
+        List<Integer> translationIndexes = new ArrayList<>();
+        int summarized = 0;
+        for (int i = 0; i < fresh.size(); i++) {
+            Article article = fresh.get(i);
+            Article enriched;
+            if (summarized < MAX_SUMMARIES_PER_INGEST) {
+                enriched = summarizer.summarize(article);
+                summarized++;
+            } else {
+                enriched = article;
+            }
+            prepared.add(enriched);
+            if (enriched.summary() == null
+                    && i < MAX_ENRICHED_ARTICLES_PER_INGEST
+                    && needsKoreanTranslation(enriched.title())) {
+                needsTranslation.add(enriched);
+                translationIndexes.add(i);
+            }
+        }
+
+        // Translation is another outbound Claude call, so it also runs with
+        // no store lock held. The translator contract preserves order.
+        if (!needsTranslation.isEmpty()) {
+            List<Article> translated = translator.translateTitles(needsTranslation);
+            int replacements = Math.min(translated.size(), translationIndexes.size());
+            for (int i = 0; i < replacements; i++) {
+                prepared.set(translationIndexes.get(i), translated.get(i));
+            }
+        }
+
+        lock.writeLock().lock();
+        try {
+            // Re-check dedup: a concurrent ingest may have stored a link
+            // while AI enrichment ran; the first stored article wins.
+            for (Article article : prepared) {
+                byLink.putIfAbsent(article.link(), article);
             }
         } finally {
             lock.writeLock().unlock();
