@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { stripHtml } from "./stripHtml";
+import { isSameText, stripHtml } from "./stripHtml";
 
 describe("stripHtml", () => {
   it("returns plain text unchanged", () => {
@@ -39,5 +39,33 @@ describe("stripHtml", () => {
 
   it("returns an empty string when the markup has no text", () => {
     expect(stripHtml('<img src="only-an-image.jpg">')).toBe("");
+  });
+});
+
+describe("isSameText", () => {
+  it("matches text differing only in punctuation, case, and whitespace", () => {
+    // Google News: title is "Headline - Source", stripped excerpt is
+    // "Headline  Source" (nbsp-separated) — same words, different glue.
+    expect(
+      isSameText(
+        "From faith to technology - more of India's wealthy - BBC",
+        "From faith to technology  more of Indias wealthy  BBC",
+      ),
+    ).toBe(true);
+    expect(isSameText("Hello, World!", "hello world")).toBe(true);
+  });
+
+  it("does not match genuinely different text", () => {
+    expect(isSameText("Model beats benchmark", "A real article excerpt")).toBe(
+      false,
+    );
+    expect(
+      isSameText("Model beats benchmark", "Model beats benchmark, and more"),
+    ).toBe(false);
+  });
+
+  it("never matches empty or punctuation-only text", () => {
+    expect(isSameText("", "")).toBe(false);
+    expect(isSameText("—", "-")).toBe(false);
   });
 });
