@@ -30,3 +30,6 @@ apps/frontend/**/dist/
 .idea/
 .vscode/
 *.swp
+
+# Local Superpowers subagent progress and review artifacts
+.superpowers/
