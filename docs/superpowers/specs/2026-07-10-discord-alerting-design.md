@@ -60,6 +60,8 @@ OCI Vault: DISCORD_ALERTS_WEBHOOK_URL
 
 `backend` 네임스페이스에 별도의 ExternalSecret과 `AlertProvider`를 추가한다. 기존 Canary의 `analysis.alerts`에는 `severity: error`인 Discord provider 참조를 추가하여 실패·롤백 이벤트만 통지하고 정상 분석 단계의 소음은 보내지 않는다.
 
+현재 Flagger chart의 `serviceMonitor.enabled` 기본값은 `false`다. `flagger_canary_status` 규칙이 실제 데이터를 받도록 ServiceMonitor를 활성화하고 kube-prometheus-stack의 selector가 요구하는 `release: kube-prometheus-stack` 라벨을 부여한다. 이는 Service와 ServiceMonitor만 추가하며 새 Pod를 만들지 않는다.
+
 Flagger 컨트롤러의 egress 정책은 기존 동작과 새 Discord 통신을 모두 보존하도록 다음 목적지만 허용한다.
 
 - CoreDNS
@@ -67,6 +69,8 @@ Flagger 컨트롤러의 egress 정책은 기존 동작과 새 Discord 통신을 
 - `monitoring`의 Prometheus TCP 9090
 - `flagger-system`의 loadtester
 - `discord.com` TCP 443
+
+Prometheus가 Flagger `/metrics`를 수집할 수 있도록 Flagger ingress TCP 8080은 Prometheus Pod에만 허용한다.
 
 loadtester도 별도 정책으로 Flagger의 webhook 요청만 수신하고, 기존 합성 트래픽 목적지인 `api.ai-auto.kro.kr:443`만 송신하도록 제한한다. 이 작업은 알림을 추가하면서 기존 무제한 egress를 방치하지 않기 위한 Zero-Trust 보완이다.
 
@@ -95,6 +99,8 @@ Alertmanager Pod의 CNP는 Prometheus로부터 TCP 9093 ingress를 허용하고,
 2. 노드 CPU requests 비율: kube-state-metrics의 Pod 요청량을 노드별 allocatable CPU로 나눈 값이 95%를 10분간 초과하면 경보한다.
 3. 인증서 만료: `certmanager_certificate_expiration_timestamp_seconds - time()`이 21일 미만인 상태가 15분 지속되면 경보한다.
 4. Flagger 실패: 공식 메트릭 기준 `flagger_canary_status > 1`이 2분 지속되면 경보한다.
+
+cert-manager chart도 Prometheus annotation만으로는 Prometheus Operator의 selector에 포함되지 않으므로 `prometheus.servicemonitor.enabled`를 활성화하고 `release: kube-prometheus-stack` 라벨을 부여한다. 이 변경 역시 새 Pod를 만들지 않는다.
 
 모든 사용자 정의 규칙에는 요약, 영향, 확인할 리소스를 annotation으로 제공한다. Discord 채널에는 사람이 조치해야 하는 이벤트만 전달하며 로그 전량은 보내지 않는다.
 
