@@ -45,3 +45,29 @@ function Assert-NoMatches {
         throw "[ASSERT] $Because (forbidden pattern: $Pattern)"
     }
 }
+
+function Assert-MatchCount {
+    param(
+        [Parameter(Mandatory)][string]$Actual,
+        [Parameter(Mandatory)][string]$Pattern,
+        [Parameter(Mandatory)][int]$Expected,
+        [Parameter(Mandatory)][string]$Because
+    )
+    $count = [regex]::Matches($Actual, $Pattern).Count
+    if ($count -ne $Expected) {
+        throw "[ASSERT] $Because (expected $Expected matches, found $count; pattern: $Pattern)"
+    }
+}
+
+function Get-RenderedResource {
+    param(
+        [Parameter(Mandatory)][string]$Rendered,
+        [Parameter(Mandatory)][string]$Kind
+    )
+    $pattern = "(?ms)^apiVersion: [^\r\n]+\r?\nkind: " + [regex]::Escape($Kind) + "\r?\n.*?(?=^---\r?$|\z)"
+    $match = [regex]::Match($Rendered, $pattern)
+    if (-not $match.Success) {
+        throw "[MISSING] rendered resource kind $Kind"
+    }
+    $match.Value
+}
