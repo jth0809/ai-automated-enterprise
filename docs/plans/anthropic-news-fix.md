@@ -36,3 +36,13 @@
 - 백엔드/프런트엔드 유닛 테스트 통과 여부 확인.
 - 실제 화면에서 HTML 태그가 보이지 않고 깔끔한 텍스트만 출력되는지 시각적 검증.
 - AI 요약 배지(AI summary badge)가 정상적으로 표시되고 Claude가 요약한 텍스트가 렌더링되는지 확인.
+
+---
+
+## 4. 추가 작업: AI API 호출 효율화 및 Rate Limit 방지 (2026-07-10 추가)
+
+### 🟡 Task 4: NewsService 요약 제한 로직 추가
+- [ ] `apps/backend/springboot-app/src/main/java/com/aienterprise/backend/news/NewsService.java`의 `ingest()` 메서드 수정.
+- [ ] 피드당 모든 기사를 요약하지 않도록, `MAX_SUMMARIES_PER_INGEST = 3` 상수를 도입.
+- [ ] 반복문 내에서 카운터를 두어, 첫 3개의 기사만 `summarizer.summarize()`를 호출하고, 나머지는 요약 없이 저장(`byLink.put(article.link(), article)`)하도록 최적화.
+- [ ] 이 변경사항에 맞춰 `NewsServiceTest.java`를 업데이트하고, 전체 `mvnw test` 통과 확인.

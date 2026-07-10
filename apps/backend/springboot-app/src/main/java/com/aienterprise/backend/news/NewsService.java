@@ -16,6 +16,15 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  */
 public class NewsService {
 
+    /**
+     * Cap on summarizer (Claude API) calls per ingest run. A feed's first
+     * fetch carries its entire history, and summarizing every backlog item
+     * bursts straight into Anthropic's 429 rate limit — wasting spend on
+     * articles nobody scrolls to. Feeds deliver newest-first, so the budget
+     * goes to the freshest items; the rest keep their source excerpt.
+     */
+    static final int MAX_SUMMARIES_PER_INGEST = 3;
+
     private final RssParser parser;
     private final ArticleSummarizer summarizer;
     private final Map<String, Article> byLink = new LinkedHashMap<>();
@@ -30,9 +39,15 @@ public class NewsService {
         List<Article> parsed = parser.parse(feedXml, source);
         lock.writeLock().lock();
         try {
+            int summarized = 0;
             for (Article article : parsed) {
                 if (article.link() != null && !byLink.containsKey(article.link())) {
-                    byLink.put(article.link(), summarizer.summarize(article));
+                    if (summarized < MAX_SUMMARIES_PER_INGEST) {
+                        byLink.put(article.link(), summarizer.summarize(article));
+                        summarized++;
+                    } else {
+                        byLink.put(article.link(), article);
+                    }
                 }
             }
         } finally {
