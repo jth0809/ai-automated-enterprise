@@ -58,7 +58,7 @@ export function NewsFeed() {
     <section className="feed">
       {state.articles.map((article) => {
         const date = formatDate(article.publishedAt);
-        const raw = article.summary ?? article.excerpt;
+        const raw = article.summary ?? article.translatedTitle ?? article.excerpt;
         const stripped = raw ? stripHtml(raw) : raw;
         // Google News excerpts are just the linked headline + outlet name;
         // don't repeat the title as the body.

@@ -40,6 +40,14 @@ public class NewsConfig {
         return summarizer(restClientBuilder, apiKey, model);
     }
 
+    /** Claude headline translator once a key is provisioned; no-op otherwise. */
+    static TitleTranslator titleTranslator(RestClient.Builder builder, String apiKey, String model) {
+        if (apiKey == null || apiKey.isBlank()) {
+            return new DisabledTitleTranslator();
+        }
+        return new AnthropicTitleTranslator(builder, apiKey, model);
+    }
+
     /** Claude summarizer once a key is provisioned; no-op fallback otherwise. */
     static ArticleSummarizer summarizer(RestClient.Builder builder, String apiKey, String model) {
         if (apiKey == null || apiKey.isBlank()) {
@@ -51,8 +59,17 @@ public class NewsConfig {
     }
 
     @Bean
-    public NewsService newsService(RssParser parser, ArticleSummarizer summarizer) {
-        return new NewsService(parser, summarizer);
+    public TitleTranslator articleTitleTranslator(
+            RestClient.Builder restClientBuilder,
+            @Value("${anthropic.api-key:}") String apiKey,
+            @Value("${anthropic.model:claude-opus-4-8}") String model) {
+        return titleTranslator(restClientBuilder, apiKey, model);
+    }
+
+    @Bean
+    public NewsService newsService(
+            RssParser parser, ArticleSummarizer summarizer, TitleTranslator translator) {
+        return new NewsService(parser, summarizer, translator);
     }
 
     @Bean

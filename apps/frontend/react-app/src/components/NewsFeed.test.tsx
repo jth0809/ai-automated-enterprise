@@ -107,6 +107,35 @@ describe("NewsFeed", () => {
     expect(container.querySelector(".news-body")).not.toBeInTheDocument();
   });
 
+  it("shows the translated headline when there is no summary", async () => {
+    vi.stubGlobal(
+      "fetch",
+      mockFetch(200, {
+        count: 1,
+        articles: [
+          {
+            title: "Execs Horrified by Huge AI Bills - Yahoo Finance",
+            link: "https://news.google.com/rss/articles/xyz",
+            source: "news.google.com",
+            publishedAt: null,
+            excerpt:
+              '<a href="https://news.google.com/rss/articles/xyz">Execs Horrified by Huge AI Bills</a>&nbsp;&nbsp;<font color="#6f6f6f">Yahoo Finance</font>',
+            summary: null,
+            translatedTitle: "거액의 AI 청구서에 경악한 경영진들",
+          },
+        ],
+      }),
+    );
+    render(<NewsFeed />);
+
+    await screen.findByRole("link", { name: /execs horrified/i });
+    expect(
+      screen.getByText("거액의 AI 청구서에 경악한 경영진들"),
+    ).toBeInTheDocument();
+    // A translated headline is not an AI summary — no badge.
+    expect(screen.queryByText("AI summary")).not.toBeInTheDocument();
+  });
+
   it("still shows an excerpt that carries real content beyond the title", async () => {
     vi.stubGlobal(
       "fetch",

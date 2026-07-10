@@ -30,6 +30,20 @@ class NewsConfigTest {
     }
 
     @Test
+    void titleTranslatorFallsBackToDisabledWithoutApiKey() {
+        assertThat(NewsConfig.titleTranslator(RestClient.builder(), null, MODEL))
+                .isInstanceOf(DisabledTitleTranslator.class);
+        assertThat(NewsConfig.titleTranslator(RestClient.builder(), " ", MODEL))
+                .isInstanceOf(DisabledTitleTranslator.class);
+    }
+
+    @Test
+    void titleTranslatorUsesAnthropicWhenApiKeyIsPresent() {
+        assertThat(NewsConfig.titleTranslator(RestClient.builder(), "sk-ant-test", MODEL))
+                .isInstanceOf(AnthropicTitleTranslator.class);
+    }
+
+    @Test
     void parsesSourceUrlPairs() {
         List<FeedSpec> specs = NewsConfig.parseFeeds(
                 "Google News|https://news.google.com/rss , Other|https://feeds.example/rss");

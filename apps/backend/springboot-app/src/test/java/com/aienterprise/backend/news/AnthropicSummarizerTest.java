@@ -29,6 +29,7 @@ class AnthropicSummarizerTest {
                 "Example Wire",
                 "2026-07-08T09:00:00Z",
                 "A longer excerpt of the article body.",
+                null,
                 null);
     }
 
