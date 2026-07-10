@@ -35,7 +35,7 @@ public class NewsConfig {
     @Bean
     public ArticleSummarizer articleSummarizer(
             @Value("${anthropic.api-key:}") String apiKey,
-            @Value("${anthropic.model:claude-opus-4-8}") String model) {
+            @Value("${anthropic.model:claude-haiku-4-5-20251001}") String model) {
         return summarizer(RestClient.builder(), apiKey, model);
     }
 
@@ -60,7 +60,7 @@ public class NewsConfig {
     @Bean
     public TitleTranslator articleTitleTranslator(
             @Value("${anthropic.api-key:}") String apiKey,
-            @Value("${anthropic.model:claude-opus-4-8}") String model) {
+            @Value("${anthropic.model:claude-haiku-4-5-20251001}") String model) {
         return titleTranslator(RestClient.builder(), apiKey, model);
     }
 
