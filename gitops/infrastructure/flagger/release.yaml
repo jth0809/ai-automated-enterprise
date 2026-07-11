@@ -33,6 +33,10 @@ spec:
   values:
     meshProvider: gatewayapi:v1
     metricsServer: http://kube-prometheus-stack-prometheus.monitoring:9090
+    serviceMonitor:
+      enabled: true
+      labels:
+        release: kube-prometheus-stack
     # Sized for Always Free ARM A1 (2 OCPU / 12GB total).
     resources:
       requests:

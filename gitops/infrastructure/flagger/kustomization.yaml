@@ -4,3 +4,4 @@ resources:
   - source.yaml
   - release.yaml
   - podmonitor-envoy.yaml
+  - network-policy.yaml
