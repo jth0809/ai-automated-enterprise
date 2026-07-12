@@ -367,6 +367,30 @@ public class TrackerRepository {
                 .update() == 1;
     }
 
+    public long countEvents() {
+        return jdbc.sql("SELECT COUNT(*) FROM event").query(Long.class).single();
+    }
+
+    public List<NodeRow> findAllNodes() {
+        return jdbc.sql(NODE_SELECT + " ORDER BY pillar, code")
+                .query(TrackerRepository::mapNode)
+                .list();
+    }
+
+    public void insertPillarSnapshot(
+            int pillar, LocalDate snapshotDate, double readiness, double logitClipped, String paramsVersion) {
+        jdbc.sql("""
+                INSERT INTO pillar_snapshot (pillar, snapshot_date, readiness, logit_clipped, params_version)
+                VALUES (:pillar, :snapshotDate, :readiness, :logitClipped, :paramsVersion)
+                """)
+                .param("pillar", pillar)
+                .param("snapshotDate", date(snapshotDate))
+                .param("readiness", readiness)
+                .param("logitClipped", logitClipped)
+                .param("paramsVersion", paramsVersion)
+                .update();
+    }
+
     public NodeRow findNodeByCode(String code) {
         return jdbc.sql(NODE_SELECT + " WHERE code = :code")
                 .param("code", code)

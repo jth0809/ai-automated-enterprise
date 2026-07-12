@@ -46,9 +46,12 @@ public class EventMerger {
     }
 
     static String naturalKey(ClassificationRow claim) {
-        long weekBucket = Math.floorDiv(claim.occurredOn().toEpochDay(), 7);
-        return claim.nodeCode() + "|" + claim.eventType() + "|"
-                + normalizeActor(claim.actor()) + "|" + weekBucket;
+        return naturalKey(claim.nodeCode(), claim.eventType(), claim.actor(), claim.occurredOn());
+    }
+
+    public static String naturalKey(String nodeCode, String eventType, String actor, java.time.LocalDate occurredOn) {
+        long weekBucket = Math.floorDiv(occurredOn.toEpochDay(), 7);
+        return nodeCode + "|" + eventType + "|" + normalizeActor(actor) + "|" + weekBucket;
     }
 
     @Scheduled(cron = "${tracker.merge-cron:0 50 * * * *}")
