@@ -7,7 +7,9 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
+import java.util.Set;
 
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.jdbc.core.simple.JdbcClient;
@@ -96,6 +98,70 @@ public class TrackerRepository {
                 .query(Long.class)
                 .list();
         return ids.stream().findFirst();
+    }
+
+    public List<SourceDomainRow> findActiveSourceDomains() {
+        return jdbc.sql("""
+                SELECT s.id AS source_id, s.code AS source_code,
+                       LOWER(d.domain) AS domain, d.purpose
+                  FROM source_domain d
+                  JOIN source_registry s ON s.id = d.source_id
+                 WHERE d.active = 'Y'
+                 ORDER BY s.code, d.domain
+                """)
+                .query((rs, rowNum) -> new SourceDomainRow(
+                        rs.getLong("source_id"),
+                        rs.getString("source_code"),
+                        rs.getString("domain"),
+                        rs.getString("purpose")))
+                .list();
+    }
+
+    public Set<String> findActiveDomains(long sourceId, String purpose) {
+        String normalizedPurpose = normalizeDomainPurpose(purpose);
+        return Set.copyOf(jdbc.sql("""
+                SELECT LOWER(domain)
+                  FROM source_domain
+                 WHERE source_id = :sourceId
+                   AND active = 'Y'
+                   AND purpose IN (:purpose, 'BOTH')
+                 ORDER BY domain
+                """)
+                .param("sourceId", sourceId)
+                .param("purpose", normalizedPurpose)
+                .query(String.class)
+                .list());
+    }
+
+    public boolean isRegisteredFeed(String sourceCode, String host) {
+        if (sourceCode == null || sourceCode.isBlank() || host == null || host.isBlank()) {
+            return false;
+        }
+        return jdbc.sql("""
+                SELECT COUNT(*)
+                  FROM source_registry s
+                  JOIN source_domain d ON d.source_id = s.id
+                 WHERE UPPER(s.code) = UPPER(:sourceCode)
+                   AND s.feed_active = 'Y'
+                   AND d.active = 'Y'
+                   AND d.purpose IN ('FEED', 'BOTH')
+                   AND LOWER(d.domain) = LOWER(:host)
+                """)
+                .param("sourceCode", sourceCode.trim())
+                .param("host", host.trim())
+                .query(Integer.class)
+                .single() == 1;
+    }
+
+    private static String normalizeDomainPurpose(String purpose) {
+        if (purpose == null) {
+            throw new IllegalArgumentException("Domain purpose is required");
+        }
+        String normalized = purpose.trim().toUpperCase(Locale.ROOT);
+        if (!Set.of("FEED", "BODY", "BOTH").contains(normalized)) {
+            throw new IllegalArgumentException("Unknown domain purpose: " + purpose);
+        }
+        return normalized;
     }
 
     public long upsertEventByNaturalKey(String naturalKey, EventRow draft) {
