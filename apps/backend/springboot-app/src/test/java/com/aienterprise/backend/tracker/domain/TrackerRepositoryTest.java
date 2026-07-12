@@ -13,7 +13,9 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
+@SpringBootTest(
+        webEnvironment = SpringBootTest.WebEnvironment.NONE,
+        properties = "tracker.enabled=true")
 @ActiveProfiles("test")
 @Transactional
 class TrackerRepositoryTest {

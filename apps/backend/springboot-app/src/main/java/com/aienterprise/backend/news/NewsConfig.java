@@ -86,7 +86,7 @@ public class NewsConfig {
         return new NewsIngestionScheduler(news, fetcher, parseFeeds(feeds));
     }
 
-    static List<FeedSpec> parseFeeds(String csv) {
+    public static List<FeedSpec> parseFeeds(String csv) {
         List<FeedSpec> specs = new ArrayList<>();
         if (csv == null || csv.isBlank()) {
             return specs;

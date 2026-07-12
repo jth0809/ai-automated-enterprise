@@ -11,12 +11,10 @@ import java.util.Optional;
 
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.jdbc.core.simple.JdbcClient;
-import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.aienterprise.backend.tracker.event.SourceEvidence;
 
-@Repository
 public class TrackerRepository {
 
     private final JdbcClient jdbc;
