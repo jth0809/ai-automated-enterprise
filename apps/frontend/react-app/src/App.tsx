@@ -2,10 +2,12 @@ import { useState } from "react";
 import { GatedResume } from "./components/GatedResume";
 import { NewsFeed } from "./components/NewsFeed";
 import { StatusPanel } from "./components/StatusPanel";
+import { TrackerPage } from "./tracker/TrackerPage";
 
 const TABS = [
   { id: "resume", label: "Résumé" },
   { id: "news", label: "News" },
+  { id: "tracker", label: "Tracker" },
   { id: "status", label: "Status" },
 ] as const;
 
@@ -41,6 +43,7 @@ export default function App() {
       <main className="content">
         {tab === "resume" && <GatedResume />}
         {tab === "news" && <NewsFeed />}
+        {tab === "tracker" && <TrackerPage />}
         {tab === "status" && <StatusPanel />}
       </main>
 

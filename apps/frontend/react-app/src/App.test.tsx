@@ -20,7 +20,19 @@ function stubAllRoutes() {
               database: "UP",
               timestamp: "2026-07-09T00:00:00Z",
             }
-          : { error: "invalid" };
+          : url.includes("/api/tracker/summary")
+            ? {
+                displayedEtaYear: null,
+                etaLow: null,
+                etaHigh: null,
+                label: "현 추세 지속 시나리오 기준 · 모델 내 80% 구간",
+                overallReadiness: null,
+                bottleneckPillar: null,
+                frozen: false,
+              }
+            : url.includes("/api/tracker/pillars") || url.includes("/api/tracker/events")
+              ? []
+              : { error: "invalid" };
       return { ok: true, status: 200, json: async () => body } as Response;
     }),
   );
@@ -38,6 +50,13 @@ describe("App", () => {
     render(<App />);
     fireEvent.click(screen.getByRole("button", { name: /^news$/i }));
     expect(await screen.findByText(/no articles yet/i)).toBeInTheDocument();
+  });
+
+  it("switches to the tracker dashboard tab", async () => {
+    stubAllRoutes();
+    render(<App />);
+    fireEvent.click(screen.getByRole("button", { name: /^tracker$/i }));
+    expect(await screen.findByText("2175+")).toBeInTheDocument();
   });
 
   it("switches to the platform status tab", async () => {
