@@ -15,9 +15,10 @@ spring:
       # instead of the pod crash-looping.
       initialization-fail-timeout: -1
   flyway:
-    # Disabled by default; only enabled in the test profile (application-test.yml).
-    # When run in production, the datasource is injected from Vault and Flyway
-    # will auto-enable. In tests, we explicitly enable it for the H2 in-memory DB.
+    # Disabled by default so the app boots without a reachable database.
+    # Tests enable it via application-test.yml (H2). Production must enable it
+    # explicitly (env SPRING_FLYWAY_ENABLED=true in the deployment) once
+    # tracker migrations ship — it does NOT auto-enable.
     enabled: false
 
 server:
