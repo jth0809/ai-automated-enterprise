@@ -2,7 +2,7 @@
 
 혼재된 관심사를 6개 파트로 분리해, 각 파트의 **검증된 현재 상태 → 격차 → 할 일(우선순위)** 을 기록한다. 1인 운영이라도 "지금 어느 모자를 쓰고 판단하는가"를 구분하기 위한 문서다. 우선순위: P1(지금), P2(다음 분기), P3(Phase 3 크레딧 확보 이후 — [ARCHITECTURE_EVOLUTION.md](ARCHITECTURE_EVOLUTION.md) 연계).
 
-기준 시점: 2026-07-08.
+기준 시점: 2026-07-11.
 
 ---
 
@@ -19,14 +19,14 @@
 
 ### 이벤트 소스는 3곳이고, GitHub Actions는 그중 1곳만 커버한다
 - **CI/저장소 이벤트** (스캔 실패, 빌드 실패, Dependabot, ZAP 이슈) → GitHub 영역.
-- **GitOps/배포 이벤트** (Kustomization/HelmRelease 실패, 카나리 롤백) → **Flux notification-controller — 이미 배포되어 있고 전용 NetworkPolicy(`allow-webhooks`)까지 준비된 상태에서 Provider/Alert CR만 미구성.** 새 시스템 도입 없이 활성화만 하면 된다.
-- **런타임 이벤트** (파드 크래시루프, 노드 자원, 인증서 만료 임박) → Alertmanager — kube-prometheus-stack에 **의도적으로 비활성**(`enabled: false`) 상태. CPU 예산(2.5절 운영 참조) 안에서 최소 구성으로 활성화 가능.
+- **GitOps/배포 이벤트** (Kustomization/HelmRelease 실패, 카나리 롤백) → Flux Provider/Alert와 Flagger AlertProvider를 GitOps로 구성했다. 실제 전달은 Vault 프로비저닝과 운영 검증 전까지 미확인 상태다.
+- **런타임 이벤트** (파드 크래시루프, 노드 자원, 인증서 만료 임박) → 단일 replica·무영속 Alertmanager와 최소 룰셋을 GitOps로 구성했다. 실제 전달은 Vault 프로비저닝과 운영 검증 전까지 미확인 상태다.
 
 ### 할 일
-- [ ] **P1 — GitHub↔Discord 연동** (코드 0줄): Discord 채널 설정에서 GitHub Webhook URL을 발급받아 저장소에 등록. 워크플로 실패·이슈(ZAP 리포트 포함)·Dependabot을 채널 구독.
-- [ ] **P1 — Flux 알림 활성화**: Discord Webhook을 OCI Vault → ExternalSecret으로 주입, `Provider`(discord) + `Alert`(모든 Kustomization/HelmRelease, severity: error) CR을 `gitops/infrastructure/` 신규 레이어로 추가. 배포 실패가 10분 주기 재시도 뒤에 조용히 묻히는 현재 상태를 끝낸다.
-- [ ] **P2 — Flagger 카나리 알림**: `AlertProvider`(discord) CR + Canary `analysis.alerts` — 롤백 발생 시 즉시 통지(이번 주 "no values found" 롤백 2회는 수동 관찰로만 발견했다).
-- [ ] **P2 — Alertmanager 활성화 + 최소 룰셋**: ① `KubePodCrashLooping` ② 노드 CPU requests > 95% ③ `certmanager_certificate_expiration_timestamp_seconds` < 21일(kro.kr/ZeroSSL 갱신 실패 조기 감지) ④ Flagger 카나리 Failed. 이메일 라우팅 포함.
+- [ ] **P1 — GitHub↔Discord 연동**: runbook 작성 완료. **external setting pending** — 저장소 Settings에 base URL + `/github`를 등록하고 실제 delivery를 확인해야 한다. CI 실패는 지원되는 `check_run`/`check_suite`, Dependabot 보안 PR은 `pull_request`로 전달한다. Discord가 지원하지 않는 직접 `dependabot_alert` 전달은 **deferred**다.
+- [ ] **P1 — Flux 알림 활성화**: **GitOps implementation complete; Vault provisioning and runtime delivery verification pending.** OCI Vault 값 등록 후 모든 Kustomization/HelmRelease의 error 이벤트 전달을 확인한다.
+- [ ] **P2 — Flagger 카나리 알림**: **GitOps implementation complete; Vault provisioning and runtime delivery verification pending.** `AlertProvider`와 Canary `analysis.alerts`는 오류만 전송하도록 구성했다.
+- [ ] **P2 — Alertmanager 활성화 + 최소 룰셋**: **GitOps implementation complete; Vault provisioning and runtime delivery verification pending.** `KubePodCrashLooping` 기본 룰과 노드 CPU requests, 인증서 만료, Flagger Failed 룰을 Discord로 라우팅한다. **SMTP/email routing is deferred** until credentials and an explicit egress design are approved.
 - [ ] **P3 — Loki**: "모든 로그"의 올바른 종착지. 알림이 아니라 조회로 소비한다.
 
 ---
@@ -43,7 +43,7 @@
   - **잔여 트레이드오프**: admin bypass가 남는 한 소유자 본인의 스캔 우회는 가능 — 진짜 "구조적 불가"는 팀 확장 후 bypass에서 admin 제거 시 성립.
   - 참고: 개인 저장소는 GitHub Actions 앱을 bypass actor로 API 추가 불가(HTTP 422)라 PAT 분리 경로를 택함. 부가: merge 후 브랜치 자동 삭제 + auto-merge 허용.
 - [x] **P2 — 시크릿 로테이션 runbook** (✅ 2026-07-08 [docs/runbooks/secret-rotation.md](docs/runbooks/secret-rotation.md)): 8개 자격증명 인벤토리 + 위치/주기/절차/blast radius/탐지. GITOPS_PAT·OCI Vault 최상위·ZeroSSL EAB 포함.
-- [ ] **P2 — actuator 외부 노출 차단** (2026-07-08 드릴 중 발견): `https://api.ai-auto.kro.kr/actuator/health`가 공개 응답 — 현재는 health/info만이라 저위험이나 원칙 위반. HTTPRoute에서 `/actuator` 경로 분리 차단 또는 Spring 관리 포트 분리.
+- [x] **P2 — actuator 외부 노출 차단**: Istio AuthorizationPolicy `deny-actuator-external`로 `/actuator`와 하위 경로를 외부에서 차단했다. 내부 Kubernetes probe는 서비스 포트로 유지한다.
 - [ ] **P2 — ZAP full scan 검토**: 현 baseline은 수동적 스캔. active scan은 프로덕션 대상 불가 → 카나리 가중치 0%의 canary 서비스를 대상으로 하거나 P3 스테이징에서.
 - [ ] **P3 — Kyverno `verifyImages`**: 서명 검증 공백 폐쇄 + `cosign attest`로 SBOM 첨부 (Evolution §3.2).
 - [ ] **P3 — 도메인 이전 검토**: kro.kr은 공유 도메인 — 발급 문제는 ZeroSSL로 해소했으나 도메인 자체의 신뢰도·통제권 한계는 남는다.
@@ -69,10 +69,10 @@
 노드 2대 CPU requests 85~91% — **노드 1대 손실 시 전체 워크로드 재스케줄 불가 가능성이 높다(HA 아님).** 관측은 메트릭만(보존 1d/2GB), 로그 중앙화·알림 없음. ATP는 관리형(자동 백업은 OCI 제공). 이번 주 트러블슈팅 지식은 README 운영 표와 세션 기록에 문서화됨.
 
 ### 할 일
-- [ ] **P1 — 알림 활성화** (0절 P1/P2와 동일 — 운영 파트의 최우선 결핍은 "장애를 사람이 모른다"이다).
+- [ ] **P1 — 알림 활성화**: 0절의 GitOps 구현은 완료했으나 Vault 프로비저닝과 실제 전달 확인이 남아 있다.
 - [x] **P1 — 용량 상한 문서화** (✅ 2026-07-08 README "CPU 예산" 절): 노드당 800m 규칙 + 인프라 requests 명시 원칙.
-- [ ] **P1 — flannel 재생성 대응** (2026-07-08 실측 발견): OKE가 `kube-flannel-ds`를 재생성해 노드당 100m을 재잠식(07-07 18:54Z), 이후 카나리 스케줄 실패의 원인. 삭제는 자동 실행 정책상 사용자 승인 필요 — `kubectl -n kube-system delete daemonset kube-flannel-ds`. 재발은 Alertmanager 예산 룰로 감지(0절 P2 룰 ②와 연동).
-- [ ] **P2 — cert 갱신 감시**: ZeroSSL 자동 갱신(만료 2026-10-05)의 첫 사이클을 Alertmanager 룰로 감시. 첫 갱신 성공 확인 전까지는 미검증 경로다.
+- [x] **P1 — flannel 재생성 대응**: `gitops/infrastructure/cilium/flannel-neutralizer.yaml`이 OKE의 재생성 대상과 같은 DaemonSet을 GitOps로 지속 중화한다. 수동 삭제 절차는 사용하지 않는다.
+- [ ] **P2 — cert 갱신 감시**: 21일 전 경보 룰과 ServiceMonitor의 GitOps 구현은 완료했다. ZeroSSL 첫 자동 갱신과 실제 Discord 전달 확인 전까지는 미검증 경로다.
 - [ ] **P2 — node drain 훈련**: 현 2노드에서 어디까지 견디는지 실측(아마 실패할 것이고, 그 실측치가 P3 증설의 근거 데이터가 된다).
 - [ ] **P3 — HA**: 노드 증설 + PDB + topologySpreadConstraints (Evolution §3.1), Prometheus 보존 확대, Loki.
 
@@ -84,8 +84,8 @@
 푸시→빌드→게이트→SBOM→서명→GitOps 커밋→Flux→카나리→promotion 전 구간이 사람 개입 없이 동작함을 반복 실측. 보안 워크플로 5종 그린.
 
 ### 할 일
-- [ ] **P1 — 파이프라인 알림 연결** (0절과 동일): 특히 주간 스케줄 실행(ZAP)은 실패해도 아무도 모른다.
-- [ ] **P2 — 의존성 자동 갱신**: Renovate(또는 Dependabot updates)로 베이스 이미지·GitHub Actions·Helm 차트 버전 PR 자동화. Spring Boot 3.5.3→3.5.16 같은 수동 대응을 상시화하는 대신 게이트가 검증하는 자동 PR로.
+- [ ] **P1 — 파이프라인 알림 연결**: GitHub→Discord runbook은 완료했지만 저장소의 external setting과 실제 delivery 확인이 남아 있다. 주간 ZAP 실패는 check 이벤트와 생성된 issue로 관찰한다. Discord가 지원하지 않는 `workflow_run`/`dependabot_alert` 직접 전달은 별도 후속 경로가 필요하다.
+- [x] **P2 — 의존성 자동 갱신**: `.github/dependabot.yml`에서 Maven, npm, Docker, GitHub Actions를 주간 그룹 PR로 제안하고 기존 보안 게이트로 검증한다.
 - [ ] **P2 — GitOps 태그 커밋 경합 완화**: CI의 `git push` 재시도 루프가 이번 주 두 번 rebase 경합을 만들었다. 백엔드/프런트 동시 빌드 시 실패 여지 — 재시도 간격에 지터 추가 또는 큐잉 검토.
 - [ ] **P3 — 스테이징 환경**: 현재는 카나리가 사실상 스테이징 역할. active DAST·부하 테스트를 위한 격리 환경은 크레딧 확보 후.
 
@@ -113,15 +113,15 @@
 
 - [x] **P1 — 불량 이미지 롤백 드릴** (✅ 2026-07-08 [Round 2](docs/drills/2026-07-08-drills-round2.md)): 600초 정시 자동 롤백, 전 구간 무중단(병행 소크 29,997요청 에러 0으로 교차 증명). 학습: 불량 스펙 revert는 새 리비전으로 인식되지 않아 Canary가 `Failed`로 잔류 — 알림 룰 설계 시 오탐 주의.
 - [x] **P1 — GitOps 드리프트 복원** (✅ 동일): 삭제 후 33초 내 자동 복원(강제 reconcile 시). 비강제 시 상한 10분 — 알림으로 보완할 창.
-- [ ] **P2 — DB 격리 드릴**: 백엔드 CNP의 ATP egress 규칙을 임시 제거(Git 커밋으로) → 앱이 설계대로 기동 유지(`initialization-fail-timeout: -1`, liveness 그룹 프로브) + `/api/status` DOWN 보고를 확인 → revert. 알림(0절) 가동 후에는 감지 시간도 함께 측정.
-- [ ] **P2 — node drain 실측** (운영 P2와 동일 항목): 기대 결과는 "부분 실패"다 — 어떤 파드가 못 뜨는지가 P3 증설의 근거 데이터.
-- [ ] **P2 — 메시 데이터플레인 재시작**: ztunnel/cilium-agent 파드 재시작 중 트래픽 지속성 확인(ambient 모드의 실질 무중단 여부 실측).
+- [ ] **P2 — DB 격리 드릴 (후속 작업으로 deferred)**: 백엔드 CNP의 ATP egress 규칙을 임시 제거(Git 커밋으로) → 앱이 설계대로 기동 유지(`initialization-fail-timeout: -1`, liveness 그룹 프로브) + `/api/status` DOWN 보고를 확인 → revert. 알림의 실제 전달 검증과 별도 운영 승인을 받은 뒤 감지 시간도 함께 측정한다.
+- [ ] **P2 — node drain 실측 (후속 작업으로 deferred)** (운영 P2와 동일 항목): 기대 결과는 "부분 실패"다 — 어떤 파드가 못 뜨는지가 P3 증설의 근거 데이터.
+- [ ] **P2 — 메시 데이터플레인 재시작 (후속 작업으로 deferred)**: ztunnel/cilium-agent 파드 재시작 중 트래픽 지속성 확인(ambient 모드의 실질 무중단 여부 실측).
 - [ ] **P3 — 전체 재구축 드릴(DR)**: terraform 재프로비저닝 + flux bootstrap + out-of-band 시크릿 재생성(ZeroSSL EAB 포함) → RTO 실측. 이 드릴 전까지 "GitOps라서 복구 가능"은 가설이다.
 
 ### 5.3 카오스 엔지니어링 (Chaos)
 원칙: 정상상태 가설 정의 → 최소 폭발반경 → 중단 조건 명시. 스테이징이 없으므로 **P3 전에는 위 5.2의 저위험 드릴이 카오스의 역할을 대신한다.**
 
-- [ ] **P2 — 월간 게임데이(수동 카오스)**: 알림 가동 후 시작. 회당 1개 실험(파드 킬, ATP 지연 주입 — `kubectl debug` + `tc netem`, coredns 1레플리카 축소 등)을 뽑아 MTTD/MTTR을 기록. 산출물은 실험 로그가 아니라 **탐지 공백 목록**(알림 룰 백로그로 환류).
+- [ ] **P2 — 월간 게임데이(수동 카오스, 후속 작업으로 deferred)**: 알림의 실제 전달 검증과 별도 운영 승인을 받은 뒤 시작한다. 회당 1개 실험을 수행해 MTTD/MTTR과 **탐지 공백 목록**을 기록한다.
 - [ ] **P3 — Chaos Mesh 도입**: 노드 증설로 예산 확보 후. 선언적 실험(NetworkChaos/PodChaos/StressChaos)을 GitOps로 관리하고, 카나리 분석 중 카오스를 주입하는 "카오스+프로그레시브 딜리버리" 조합까지.
 - [ ] **P3 — 존/노드 장애 자동화**: HA 구성(PDB/topologySpread) 완료 후에만 의미가 있다 — 현 2노드에서는 결과가 자명(부분 다운)해 실험 가치가 없다.
 
