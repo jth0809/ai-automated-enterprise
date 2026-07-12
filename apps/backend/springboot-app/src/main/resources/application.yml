@@ -14,6 +14,11 @@ spring:
       # Start even when the DB is unreachable; /api/status reports DOWN
       # instead of the pod crash-looping.
       initialization-fail-timeout: -1
+  flyway:
+    # Disabled by default; only enabled in the test profile (application-test.yml).
+    # When run in production, the datasource is injected from Vault and Flyway
+    # will auto-enable. In tests, we explicitly enable it for the H2 in-memory DB.
+    enabled: false
 
 server:
   port: 8080
