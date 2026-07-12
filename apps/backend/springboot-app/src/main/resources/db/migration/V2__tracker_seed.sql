@@ -82,15 +82,15 @@ INSERT INTO parameter_set (
 
 -- ---------------------------------------------------------------------------
 -- rubric_version 'r1.0' — model IDs per task controller resolution #4.
--- Prompt hashes are 64-zero placeholders; Task 10/11 compute and update the
--- real SHA-256 hashes of the finalized gate/classify prompts.
+-- Prompt hashes = SHA-256 of the LF-normalized classpath files
+-- tracker/prompt-gate.txt and tracker/prompt-classify-system.txt.
 -- ---------------------------------------------------------------------------
 INSERT INTO rubric_version (
   version_label, gate_model, classify_model, gate_prompt_sha256, classify_prompt_sha256,
   node_set_version, active
 ) VALUES (
   'r1.0', 'claude-haiku-4-5-20251001', 'claude-opus-4-8',
-  '0000000000000000000000000000000000000000000000000000000000000000',
-  '0000000000000000000000000000000000000000000000000000000000000000',
+  '2762bf328c8bc4d87b47bf590ce4602b14ad4d11f611964d872ec78440077963',
+  '664e6aa3ee3588b5f3b7a2af702a6cc3be5b81f19574be0402fe1f6256498a93',
   'nodes-v0.1', 'Y'
 );

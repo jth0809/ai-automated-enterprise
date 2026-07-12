@@ -134,6 +134,60 @@ public class TrackerRepository {
                 .orElseThrow(() -> new IllegalStateException("Event upsert produced no row: " + naturalKey));
     }
 
+    public void insertClassification(ClassificationRow draft) {
+        jdbc.sql("""
+                INSERT INTO article_classification
+                  (article_id, event_id, node_code, event_type, claimed_level, actor,
+                   occurred_on, publication_path, evidence_quote, quote_verified,
+                   raw_output, rubric_version_id)
+                VALUES
+                  (:articleId, :eventId, :nodeCode, :eventType, :claimedLevel, :actor,
+                   :occurredOn, :publicationPath, :evidenceQuote, :quoteVerified,
+                   :rawOutput, :rubricVersionId)
+                """)
+                .param("articleId", draft.articleId())
+                .param("eventId", draft.eventId())
+                .param("nodeCode", draft.nodeCode())
+                .param("eventType", draft.eventType())
+                .param("claimedLevel", draft.claimedLevel())
+                .param("actor", draft.actor())
+                .param("occurredOn", date(draft.occurredOn()))
+                .param("publicationPath", draft.publicationPath())
+                .param("evidenceQuote", draft.evidenceQuote())
+                .param("quoteVerified", draft.quoteVerified() ? "Y" : "N")
+                .param("rawOutput", draft.rawOutput())
+                .param("rubricVersionId", draft.rubricVersionId())
+                .update();
+    }
+
+    public long activeRubricVersionId() {
+        return jdbc.sql("SELECT id FROM rubric_version WHERE active = 'Y'")
+                .query(Long.class)
+                .single();
+    }
+
+    public boolean nodeCodeExists(String code) {
+        return jdbc.sql("SELECT COUNT(*) FROM capability_node WHERE code = :code")
+                .param("code", code)
+                .query(Integer.class)
+                .single() > 0;
+    }
+
+    public List<String> findRecentNaturalKeys(int limit) {
+        if (limit <= 0) {
+            return List.of();
+        }
+        int safeLimit = Math.min(limit, 100);
+        return jdbc.sql("""
+                SELECT natural_key
+                  FROM event
+                 ORDER BY created_at DESC, id DESC
+                 FETCH FIRST %d ROWS ONLY
+                """.formatted(safeLimit))
+                .query(String.class)
+                .list();
+    }
+
     public void linkClassification(long classificationId, long eventId) {
         int changed = jdbc.sql("UPDATE article_classification SET event_id = :eventId WHERE id = :id")
                 .param("eventId", eventId)

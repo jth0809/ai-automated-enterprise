@@ -1,10 +1,12 @@
 package com.aienterprise.backend.tracker.domain;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -75,6 +77,50 @@ class TrackerRepositoryTest {
         assertEquals(7, repository.findNodeByCode("P1-ORBIT-REFUEL").currentLevel());
         assertEquals(1, jdbc.sql("SELECT COUNT(*) FROM node_state_history WHERE cause_event_id = :eventId")
                 .param("eventId", eventId).query(Integer.class).single());
+    }
+
+    @Test
+    void activeRubricVersionIdReturnsTheSeededActiveRow() {
+        assertEquals(id("rubric_version", "version_label", "r1.0"), repository.activeRubricVersionId());
+    }
+
+    @Test
+    void nodeCodeExistenceChecksTheRegistry() {
+        assertTrue(repository.nodeCodeExists("P1-ORBIT-REFUEL"));
+        assertFalse(repository.nodeCodeExists("P9-NOT-REGISTERED"));
+    }
+
+    @Test
+    void insertedClassificationRoundTripsWithQuoteFlag() {
+        long sourceId = id("source_registry", "code", "NASA");
+        long rubricId = id("rubric_version", "version_label", "r1.0");
+        long articleId = repository.insertArticleIfNew(
+                "https://example.test/classified", "b".repeat(64), sourceId,
+                "A title", Instant.parse("2026-01-01T00:00:00Z"), "Body").orElseThrow();
+
+        repository.insertClassification(new ClassificationRow(
+                0, articleId, null, "P1-ORBIT-REFUEL", "FLIGHT_TEST", 6, "SpaceX",
+                LocalDate.of(2026, 7, 1), "THIRD_PARTY", "a quote", false, "{}", rubricId));
+
+        assertEquals("N", jdbc.sql("SELECT quote_verified FROM article_classification WHERE article_id = :id")
+                .param("id", articleId).query(String.class).single());
+    }
+
+    @Test
+    void recentNaturalKeysAreReturnedNewestFirst() {
+        long nodeId = id("capability_node", "code", "P1-ORBIT-REFUEL");
+        long rubricId = id("rubric_version", "version_label", "r1.0");
+        EventRow draft = EventRow.draft(
+                nodeId, "FLIGHT_TEST", 7, "Example Corp", LocalDate.of(2026, 2, 1),
+                "CLAIMED", LocalDate.of(2026, 5, 2), rubricId);
+        repository.upsertEventByNaturalKey("P1-ORBIT-REFUEL|FLIGHT_TEST|older|2900", draft);
+        repository.upsertEventByNaturalKey("P1-ORBIT-REFUEL|FLIGHT_TEST|newer|2901", draft);
+
+        var keys = repository.findRecentNaturalKeys(20);
+
+        assertEquals(List.of(
+                "P1-ORBIT-REFUEL|FLIGHT_TEST|newer|2901",
+                "P1-ORBIT-REFUEL|FLIGHT_TEST|older|2900"), keys);
     }
 
     private long id(String table, String column, String value) {
