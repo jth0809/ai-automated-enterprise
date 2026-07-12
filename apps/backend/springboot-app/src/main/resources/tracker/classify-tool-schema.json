@@ -1,0 +1,27 @@
+{
+  "type": "object",
+  "required": ["relevant_claims"],
+  "properties": {
+    "relevant_claims": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["node_code", "event_type", "claimed_level", "actor",
+                     "occurred_on", "publication_path", "evidence_quote", "duplicate_hint"],
+        "properties": {
+          "node_code":       { "type": "string", "description": "Capability node code (must be one of the registered codes)" },
+          "event_type":      { "type": "string", "enum": ["THEORY_PAPER", "LAB_RESULT", "PROTOTYPE_DEMO",
+                               "FLIGHT_TEST", "OPERATIONAL_DEPLOYMENT", "COMMERCIALIZATION",
+                               "INSTITUTIONAL_ADVANCE", "SETBACK", "PROGRAM_CANCELLATION",
+                               "ANNOUNCEMENT_ONLY", "RETROSPECTIVE", "ROLLBACK"] },
+          "claimed_level":   { "type": ["integer", "null"], "minimum": 1, "maximum": 9 },
+          "actor":           { "type": "string" },
+          "occurred_on":     { "type": "string", "description": "YYYY-MM-DD, the date the event actually occurred (not the publication date)" },
+          "publication_path": { "type": "string", "enum": ["PRIMARY", "THIRD_PARTY", "WIRE_REPRINT"] },
+          "evidence_quote":  { "type": "string", "description": "A supporting sentence copied verbatim from the article body" },
+          "duplicate_hint":  { "type": "string", "description": "The natural_key of the matching recent event, or 'NEW' if none matches" }
+        }
+      }
+    }
+  }
+}

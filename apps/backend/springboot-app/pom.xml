@@ -58,6 +58,39 @@
       <artifactId>spring-boot-starter-test</artifactId>
       <scope>test</scope>
     </dependency>
+    <!-- Database migrations with Flyway. Boot 4 modularized the Flyway glue
+         out of spring-boot-autoconfigure into this dedicated starter-less
+         module (org.springframework.boot.flyway.autoconfigure.FlywayAutoConfiguration)
+         — flyway-core alone no longer triggers migrate-on-startup. -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-flyway</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.flywaydb</groupId>
+      <artifactId>flyway-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.flywaydb</groupId>
+      <artifactId>flyway-database-oracle</artifactId>
+    </dependency>
+    <!-- Distributed lock manager for scheduled tasks (ShedLock 5.x) -->
+    <dependency>
+      <groupId>net.javacrumbs.shedlock</groupId>
+      <artifactId>shedlock-spring</artifactId>
+      <version>5.14.0</version>
+    </dependency>
+    <dependency>
+      <groupId>net.javacrumbs.shedlock</groupId>
+      <artifactId>shedlock-provider-jdbc-template</artifactId>
+      <version>5.14.0</version>
+    </dependency>
+    <!-- In-memory database for integration tests -->
+    <dependency>
+      <groupId>com.h2database</groupId>
+      <artifactId>h2</artifactId>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <build>

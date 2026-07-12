@@ -601,3 +601,98 @@ body {
     gap: 0.1rem;
   }
 }
+
+/* Tracker dashboard */
+
+.tracker {
+  display: grid;
+  gap: 1.5rem;
+  padding: 1.5rem;
+}
+
+.tracker-loading,
+.tracker-empty,
+.timeline-empty {
+  padding: 1.5rem;
+  color: var(--muted, #667085);
+}
+
+.tracker-frozen {
+  padding: 0.6rem 0.9rem;
+  border-radius: 0.5rem;
+  background: #fff4e5;
+  color: #8a5300;
+  font-size: 0.9rem;
+}
+
+.countdown {
+  text-align: center;
+}
+
+.countdown-year {
+  font-size: 4rem;
+  font-weight: 700;
+  line-height: 1.1;
+  margin: 0;
+}
+
+.countdown-interval {
+  font-size: 1.2rem;
+  color: var(--muted, #667085);
+  margin: 0.25rem 0 0;
+}
+
+.countdown-label {
+  font-size: 0.85rem;
+  color: var(--muted, #667085);
+  margin: 0.5rem 0 0;
+}
+
+.radar {
+  width: min(320px, 90%);
+  margin: 0 auto;
+  display: block;
+}
+
+.radar-grid {
+  fill: none;
+  stroke: #d4d9e2;
+  stroke-width: 1;
+}
+
+.radar-value {
+  fill: rgba(59, 130, 246, 0.25);
+  stroke: #3b82f6;
+  stroke-width: 1.5;
+}
+
+.radar-label {
+  font-size: 9px;
+  fill: #475467;
+}
+
+.radar-label-bottleneck {
+  fill: #b42318;
+  font-weight: 700;
+}
+
+.timeline-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  font-size: 0.85rem;
+  color: var(--muted, #667085);
+  margin: 0.2rem 0 0;
+}
+
+.timeline-node {
+  font-weight: 600;
+}
+
+.timeline-quote {
+  margin: 0.4rem 0 0;
+  padding-left: 0.75rem;
+  border-left: 3px solid #d4d9e2;
+  font-size: 0.9rem;
+  color: #475467;
+}

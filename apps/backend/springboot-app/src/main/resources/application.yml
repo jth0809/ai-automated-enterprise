@@ -14,6 +14,12 @@ spring:
       # Start even when the DB is unreachable; /api/status reports DOWN
       # instead of the pod crash-looping.
       initialization-fail-timeout: -1
+  flyway:
+    # Disabled by default so the app boots without a reachable database.
+    # Tests enable it via application-test.yml (H2). Production must enable it
+    # explicitly (env SPRING_FLYWAY_ENABLED=true in the deployment) once
+    # tracker migrations ship — it does NOT auto-enable.
+    enabled: false
 
 server:
   port: 8080
@@ -58,3 +64,13 @@ news:
 anthropic:
   api-key: ${ANTHROPIC_API_KEY:}
   model: ${ANTHROPIC_MODEL:claude-opus-4-8}
+
+# --- Multiplanetary tracker -------------------------------------------------
+tracker:
+  enabled: ${TRACKER_ENABLED:false}
+  feeds: ${TRACKER_FEEDS:}
+  cost-per-mtok:
+    # Conservative Opus-class defaults. Externalized because provider prices change.
+    input: ${TRACKER_COST_INPUT_PER_MTOK:15}
+    output: ${TRACKER_COST_OUTPUT_PER_MTOK:75}
+    cached-input: ${TRACKER_COST_CACHED_INPUT_PER_MTOK:1.5}

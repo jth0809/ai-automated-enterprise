@@ -1,0 +1,10 @@
+[
+  {"nodeCode": "P1-REUSE-LV", "eventType": "FLIGHT_TEST", "claimedLevel": 5, "actor": "NASA", "occurredOn": "1981-04-12", "verificationLevel": "OFFICIAL", "title": "STS-1: first orbital flight of a partially reusable vehicle"},
+  {"nodeCode": "P2-ECLSS", "eventType": "PROTOTYPE_DEMO", "claimedLevel": 5, "actor": "CAS", "occurredOn": "2018-05-15", "verificationLevel": "PEER_REVIEWED", "title": "Yuegong-365 closed-ecosystem crewed experiment"},
+  {"nodeCode": "P4-NUKE", "eventType": "PROTOTYPE_DEMO", "claimedLevel": 5, "actor": "NASA", "occurredOn": "2018-03-01", "verificationLevel": "OFFICIAL", "title": "Kilopower/KRUSTY ground reactor test"},
+  {"nodeCode": "P1-REUSE-LV", "eventType": "FLIGHT_TEST", "claimedLevel": 6, "actor": "SpaceX", "occurredOn": "2015-12-21", "verificationLevel": "INDEPENDENT", "title": "Falcon 9 first stage ground landing"},
+  {"nodeCode": "P1-REUSE-LV", "eventType": "OPERATIONAL_DEPLOYMENT", "claimedLevel": 7, "actor": "SpaceX", "occurredOn": "2017-03-30", "verificationLevel": "INDEPENDENT", "title": "First commercial reflight of an orbital booster"},
+  {"nodeCode": "P1-REUSE-LV", "eventType": "OPERATIONAL_DEPLOYMENT", "claimedLevel": 9, "actor": "SpaceX", "occurredOn": "2019-11-11", "verificationLevel": "INDEPENDENT", "title": "Booster reuse becomes routine and dominant"},
+  {"nodeCode": "P4-ISRU-PROP", "eventType": "FLIGHT_TEST", "claimedLevel": 6, "actor": "NASA", "occurredOn": "2021-04-20", "verificationLevel": "OFFICIAL", "title": "MOXIE produces oxygen on the Martian surface"},
+  {"nodeCode": "P6-GOV-FRAMEWORK", "eventType": "INSTITUTIONAL_ADVANCE", "claimedLevel": 4, "actor": "NASA", "occurredOn": "2020-10-13", "verificationLevel": "OFFICIAL", "title": "Artemis Accords signed"}
+]
