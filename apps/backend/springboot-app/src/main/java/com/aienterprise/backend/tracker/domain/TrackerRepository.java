@@ -673,6 +673,21 @@ public class TrackerRepository {
                 .list();
     }
 
+    /** Full bodies of quote-verified articles in an event's cluster (fluke input). */
+    public List<String> findVerifiedEvidenceBodies(long eventId) {
+        return jdbc.sql("""
+                SELECT a.body
+                  FROM article_classification c
+                  JOIN article a ON a.id = c.article_id
+                 WHERE c.event_id = :eventId
+                   AND c.quote_verified = 'Y'
+                 ORDER BY c.id
+                """)
+                .param("eventId", eventId)
+                .query(String.class)
+                .list();
+    }
+
     public NodeRow findNodeByCode(String code) {
         return jdbc.sql(NODE_SELECT + " WHERE code = :code")
                 .param("code", code)

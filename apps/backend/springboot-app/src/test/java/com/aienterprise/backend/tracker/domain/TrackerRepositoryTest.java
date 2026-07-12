@@ -99,6 +99,32 @@ class TrackerRepositoryTest {
     }
 
     @Test
+    void verifiedEvidenceBodiesAreProjectedForTheFlukeFilter() {
+        long sourceId = id("source_registry", "code", "NASA");
+        long nodeId = id("capability_node", "code", "P1-ORBIT-REFUEL");
+        long rubricId = id("rubric_version", "version_label", "r1.0");
+        long articleId = repository.insertArticleIfNew(
+                "https://example.test/fluke", "9".repeat(64), sourceId,
+                "Fluke source", Instant.parse("2026-01-01T00:00:00Z"),
+                "Body text for the fluke filter.").orElseThrow();
+        long verifiedId = repository.insertClassification(new ClassificationRow(
+                0, articleId, null, "P1-ORBIT-REFUEL", "FLIGHT_TEST", 6, "SpaceX",
+                LocalDate.of(2026, 1, 30), "THIRD_PARTY", "a quote", true, "{}", rubricId));
+        long unverifiedId = repository.insertClassification(new ClassificationRow(
+                0, articleId, null, "P1-ORBIT-REFUEL", "FLIGHT_TEST", 6, "SpaceX",
+                LocalDate.of(2026, 1, 30), "THIRD_PARTY", "bad quote", false, "{}", rubricId));
+        long eventId = repository.upsertEventByNaturalKey(
+                "P1-ORBIT-REFUEL|FLIGHT_TEST|fluke|2926",
+                EventRow.draft(nodeId, "FLIGHT_TEST", 6, "SpaceX", LocalDate.of(2026, 1, 30),
+                        "CLAIMED", LocalDate.of(2026, 4, 30), rubricId));
+        repository.linkClassification(verifiedId, eventId);
+        repository.linkClassification(unverifiedId, eventId);
+
+        assertEquals(List.of("Body text for the fluke filter."),
+                repository.findVerifiedEvidenceBodies(eventId));
+    }
+
+    @Test
     void reviewMapperPreservesPriorityAndFlukeState() {
         long nodeId = id("capability_node", "code", "P1-ORBIT-REFUEL");
         long rubricId = id("rubric_version", "version_label", "r1.0");

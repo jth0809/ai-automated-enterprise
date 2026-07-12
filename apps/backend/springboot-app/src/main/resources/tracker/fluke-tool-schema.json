@@ -1,0 +1,9 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["verdict", "evidence_quote"],
+  "properties": {
+    "verdict": {"type": "string", "enum": ["MATCH", "MISMATCH"]},
+    "evidence_quote": {"type": "string", "minLength": 1}
+  }
+}
