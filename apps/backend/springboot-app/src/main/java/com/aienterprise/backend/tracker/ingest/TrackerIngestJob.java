@@ -9,6 +9,8 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HexFormat;
 import java.util.List;
+import java.util.Locale;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,6 +67,7 @@ public class TrackerIngestJob {
         long sourceId = repository.findSourceIdForFeed(feed.source(), host)
                 .orElseThrow(() -> new IllegalArgumentException(
                         "Feed is not registered in source_registry: " + feed.source()));
+        Set<String> bodyHosts = repository.findActiveDomains(sourceId, "BODY");
         for (Article article : parser.parse(fetcher.fetch(feed.url()), feed.source())) {
             if (article.link() == null || article.link().isBlank()) {
                 continue;
@@ -76,12 +79,21 @@ public class TrackerIngestJob {
                         sourceId,
                         article.title(),
                         parsePublishedAt(article.publishedAt()),
-                        body(article));
+                        body(article),
+                        extractionStatus(article.link(), bodyHosts));
             } catch (RuntimeException e) {
                 log.warn("tracker article ingestion failed for {} ({}): {}",
                         feed.source(), article.link(), e.toString());
             }
         }
+    }
+
+    /** Links on an active BODY/BOTH domain queue for extraction; the rest keep the RSS summary. */
+    private static String extractionStatus(String link, Set<String> bodyHosts) {
+        String host = URI.create(link).getHost();
+        return host != null && bodyHosts.contains(host.toLowerCase(Locale.ROOT))
+                ? "PENDING"
+                : "SKIPPED";
     }
 
     private static String body(Article article) {

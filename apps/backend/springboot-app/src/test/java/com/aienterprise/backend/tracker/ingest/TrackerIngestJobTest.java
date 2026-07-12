@@ -108,6 +108,28 @@ class TrackerIngestJobTest {
                 .query(Integer.class).single());
     }
 
+    @Test
+    void bodyDomainPolicyDecidesPendingVersusSkippedOnInsert() {
+        List<FeedSpec> feeds = List.of(new FeedSpec("NASA", "https://www.nasa.gov/feed"));
+        FeedFetcher fetcher = url -> """
+                <rss version="2.0"><channel>
+                  <item><title>Allowlisted</title><link>https://www.nasa.gov/story-a</link></item>
+                  <item><title>Off policy</title><link>https://unknown.example/story-b</link></item>
+                </channel></rss>
+                """;
+        TrackerIngestJob job = new TrackerIngestJob(fetcher, new RssParser(), repository, feeds);
+
+        job.runOnce();
+
+        assertEquals("PENDING", extractionStatus("https://www.nasa.gov/story-a"));
+        assertEquals("SKIPPED", extractionStatus("https://unknown.example/story-b"));
+    }
+
+    private String extractionStatus(String url) {
+        return jdbc.sql("SELECT body_extraction_status FROM article WHERE url = :url")
+                .param("url", url).query(String.class).single();
+    }
+
     private int articleCount() {
         return jdbc.sql("SELECT COUNT(*) FROM article").query(Integer.class).single();
     }

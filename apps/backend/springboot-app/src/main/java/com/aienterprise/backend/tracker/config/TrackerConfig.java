@@ -19,7 +19,11 @@ import org.springframework.boot.sql.init.dependency.DependsOnDatabaseInitializat
 import com.aienterprise.backend.news.NewsConfig;
 import com.aienterprise.backend.news.NewsIngestionScheduler.FeedSpec;
 import com.aienterprise.backend.tracker.domain.TrackerRepository;
+import com.aienterprise.backend.tracker.ingest.ArticleBodyExtractor;
+import com.aienterprise.backend.tracker.ingest.ArticlePageFetcher;
 import com.aienterprise.backend.tracker.ingest.BackfillLoader;
+import com.aienterprise.backend.tracker.ingest.JdkPageTransport;
+import com.aienterprise.backend.tracker.ingest.JsoupReadabilityExtractor;
 
 import net.javacrumbs.shedlock.core.LockProvider;
 import net.javacrumbs.shedlock.provider.jdbctemplate.JdbcTemplateLockProvider;
@@ -82,6 +86,16 @@ public class TrackerConfig {
     @Bean
     LockProvider trackerLockProvider(DataSource dataSource) {
         return new JdbcTemplateLockProvider(new JdbcTemplate(dataSource));
+    }
+
+    @Bean
+    ArticlePageFetcher articlePageFetcher() {
+        return new ArticlePageFetcher(new JdkPageTransport());
+    }
+
+    @Bean
+    ArticleBodyExtractor articleBodyExtractor() {
+        return new JsoupReadabilityExtractor();
     }
 
     @Bean

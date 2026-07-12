@@ -33,15 +33,29 @@ public class TrackerRepository {
             String title,
             Instant publishedAt,
             String body) {
+        // Legacy shape: no extraction attempted, matching the V3 backfill.
+        return insertArticleIfNew(url, urlHash, sourceId, title, publishedAt, body, "SKIPPED");
+    }
+
+    public Optional<Long> insertArticleIfNew(
+            String url,
+            String urlHash,
+            long sourceId,
+            String title,
+            Instant publishedAt,
+            String body,
+            String bodyExtractionStatus) {
         if (articleIdByHash(urlHash).isPresent()) {
             return Optional.empty();
         }
         try {
             jdbc.sql("""
                     INSERT INTO article
-                      (source_id, url, url_hash, title, published_at, body, body_extracted, pipeline_status)
+                      (source_id, url, url_hash, title, published_at, body, body_extracted,
+                       pipeline_status, body_extraction_status)
                     VALUES
-                      (:sourceId, :url, :urlHash, :title, :publishedAt, :body, 'N', 'INGESTED')
+                      (:sourceId, :url, :urlHash, :title, :publishedAt, :body, 'N',
+                       'INGESTED', :bodyExtractionStatus)
                     """)
                     .param("sourceId", sourceId)
                     .param("url", url)
@@ -49,6 +63,7 @@ public class TrackerRepository {
                     .param("title", title)
                     .param("publishedAt", publishedAt == null ? null : Timestamp.from(publishedAt))
                     .param("body", body)
+                    .param("bodyExtractionStatus", bodyExtractionStatus)
                     .update();
             return articleIdByHash(urlHash);
         } catch (DuplicateKeyException concurrentDuplicate) {
@@ -61,17 +76,109 @@ public class TrackerRepository {
             return List.of();
         }
         int safeLimit = Math.min(limit, 1_000);
+        // INGESTED rows stay invisible to the gate until extraction reaches a
+        // terminal state; other pipeline statuses are unaffected.
+        String pendingFilter = "INGESTED".equals(status)
+                ? " AND body_extraction_status <> 'PENDING'"
+                : "";
         return jdbc.sql("""
                 SELECT id, source_id, url, url_hash, title, published_at, fetched_at,
-                       body, body_extracted, pipeline_status, fail_count
+                       body, body_extracted, body_extraction_status, pipeline_status, fail_count
                   FROM article
-                 WHERE pipeline_status = :status
+                 WHERE pipeline_status = :status%s
                  ORDER BY fetched_at, id
                  FETCH FIRST %d ROWS ONLY
-                """.formatted(safeLimit))
+                """.formatted(pendingFilter, safeLimit))
                 .param("status", status)
                 .query(TrackerRepository::mapArticle)
                 .list();
+    }
+
+    public List<ExtractionCandidate> findPendingExtractions(int limit) {
+        if (limit <= 0) {
+            return List.of();
+        }
+        int safeLimit = Math.min(limit, 100);
+        record PendingRow(long id, long sourceId, String url) {
+        }
+        List<PendingRow> rows = jdbc.sql("""
+                SELECT id, source_id, url
+                  FROM article
+                 WHERE body_extraction_status = 'PENDING'
+                 ORDER BY fetched_at, id
+                 FETCH FIRST %d ROWS ONLY
+                """.formatted(safeLimit))
+                .query((rs, rowNum) -> new PendingRow(
+                        rs.getLong("id"), rs.getLong("source_id"), rs.getString("url")))
+                .list();
+        java.util.Map<Long, Set<String>> hostsBySource = new java.util.HashMap<>();
+        return rows.stream()
+                .map(row -> new ExtractionCandidate(row.id(), row.url(),
+                        hostsBySource.computeIfAbsent(row.sourceId(),
+                                sourceId -> findActiveDomains(sourceId, "BODY"))))
+                .toList();
+    }
+
+    public void completeExtraction(long id, String text) {
+        int changed = jdbc.sql("""
+                UPDATE article
+                   SET body = :text,
+                       body_extracted = 'Y',
+                       body_extraction_status = 'EXTRACTED',
+                       body_extraction_error = NULL
+                 WHERE id = :id
+                """)
+                .param("text", text)
+                .param("id", id)
+                .update();
+        if (changed != 1) {
+            throw new IllegalArgumentException("Unknown article id: " + id);
+        }
+    }
+
+    public String recordExtractionFailure(long id, String message, int maxAttempts) {
+        int attempts = jdbc.sql("SELECT body_extraction_attempts FROM article WHERE id = :id")
+                .param("id", id)
+                .query(Integer.class)
+                .optional()
+                .orElseThrow(() -> new IllegalArgumentException("Unknown article id: " + id));
+        int nextAttempts = attempts + 1;
+        String status = nextAttempts >= maxAttempts ? "FAILED" : "PENDING";
+        jdbc.sql("""
+                UPDATE article
+                   SET body_extraction_attempts = :attempts,
+                       body_extraction_status = :status,
+                       body_extraction_error = :error
+                 WHERE id = :id
+                """)
+                .param("attempts", nextAttempts)
+                .param("status", status)
+                .param("error", boundedError(message))
+                .param("id", id)
+                .update();
+        return status;
+    }
+
+    public void skipExtraction(long id, String message) {
+        int changed = jdbc.sql("""
+                UPDATE article
+                   SET body_extraction_status = 'SKIPPED',
+                       body_extraction_error = :error
+                 WHERE id = :id
+                """)
+                .param("error", boundedError(message))
+                .param("id", id)
+                .update();
+        if (changed != 1) {
+            throw new IllegalArgumentException("Unknown article id: " + id);
+        }
+    }
+
+    private static String boundedError(String message) {
+        if (message == null || message.isBlank()) {
+            return null;
+        }
+        return message.length() > 1_000 ? message.substring(0, 1_000) : message;
     }
 
     public void updateArticleStatus(long id, String status) {
@@ -668,6 +775,7 @@ public class TrackerRepository {
                 rs.getTimestamp("fetched_at").toInstant(),
                 rs.getString("body"),
                 "Y".equals(rs.getString("body_extracted")),
+                rs.getString("body_extraction_status"),
                 rs.getString("pipeline_status"),
                 rs.getInt("fail_count"));
     }

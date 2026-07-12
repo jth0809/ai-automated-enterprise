@@ -211,6 +211,6 @@ class DeepClassifierTest {
         return new ArticleRow(
                 42, 1, "https://example.test/a", "a".repeat(64), "Orbital refueling milestone",
                 Instant.parse("2026-07-12T00:00:00Z"), Instant.parse("2026-07-12T01:00:00Z"),
-                BODY, false, "GATE_PASSED", 0);
+                BODY, false, "EXTRACTED", "GATE_PASSED", 0);
     }
 }

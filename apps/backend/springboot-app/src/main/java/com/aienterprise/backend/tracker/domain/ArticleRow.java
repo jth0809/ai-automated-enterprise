@@ -12,6 +12,7 @@ public record ArticleRow(
         Instant fetchedAt,
         String body,
         boolean bodyExtracted,
+        String bodyExtractionStatus,
         String pipelineStatus,
         int failCount) {
 }

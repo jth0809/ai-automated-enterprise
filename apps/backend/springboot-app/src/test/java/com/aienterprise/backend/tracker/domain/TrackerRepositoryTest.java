@@ -80,6 +80,25 @@ class TrackerRepositoryTest {
     }
 
     @Test
+    void pendingExtractionsAreOldestFirstWithBodyDomainAllowlist() {
+        long sourceId = id("source_registry", "code", "NASA");
+        long first = repository.insertArticleIfNew(
+                "https://www.nasa.gov/one", "d".repeat(64), sourceId,
+                "One", Instant.parse("2026-07-13T00:00:00Z"), "Body", "PENDING").orElseThrow();
+        long second = repository.insertArticleIfNew(
+                "https://www.nasa.gov/two", "e".repeat(64), sourceId,
+                "Two", Instant.parse("2026-07-13T01:00:00Z"), "Body", "PENDING").orElseThrow();
+
+        var candidates = repository.findPendingExtractions(10);
+
+        assertEquals(List.of(first, second),
+                candidates.stream().map(ExtractionCandidate::id).toList());
+        assertTrue(candidates.get(0).allowedHosts().contains("www.nasa.gov"));
+        assertTrue(candidates.get(0).allowedHosts().contains("science.nasa.gov"),
+                "BODY-purpose domains must be part of the fetch allowlist");
+    }
+
+    @Test
     void activeRubricVersionIdReturnsTheSeededActiveRow() {
         assertEquals(id("rubric_version", "version_label", "r1.0"), repository.activeRubricVersionId());
     }
