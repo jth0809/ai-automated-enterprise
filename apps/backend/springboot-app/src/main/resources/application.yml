@@ -64,3 +64,13 @@ news:
 anthropic:
   api-key: ${ANTHROPIC_API_KEY:}
   model: ${ANTHROPIC_MODEL:claude-opus-4-8}
+
+# --- Multiplanetary tracker -------------------------------------------------
+tracker:
+  enabled: ${TRACKER_ENABLED:false}
+  feeds: ${TRACKER_FEEDS:}
+  cost-per-mtok:
+    # Conservative Opus-class defaults. Externalized because provider prices change.
+    input: ${TRACKER_COST_INPUT_PER_MTOK:15}
+    output: ${TRACKER_COST_OUTPUT_PER_MTOK:75}
+    cached-input: ${TRACKER_COST_CACHED_INPUT_PER_MTOK:1.5}
