@@ -50,7 +50,7 @@ class BodyExtractionJobTest {
     void setUp() {
         fetcher = mock(ArticlePageFetcher.class);
         extractor = mock(ArticleBodyExtractor.class);
-        job = new BodyExtractionJob(fetcher, extractor, repository);
+        job = new BodyExtractionJob(fetcher, extractor, repository, 30);
     }
 
     @Test

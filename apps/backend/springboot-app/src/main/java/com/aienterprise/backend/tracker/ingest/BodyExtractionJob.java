@@ -4,6 +4,7 @@ import java.net.URI;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -25,21 +26,23 @@ import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 public class BodyExtractionJob {
 
     private static final Logger log = LoggerFactory.getLogger(BodyExtractionJob.class);
-    private static final int BATCH_LIMIT = 30;
     private static final int MAX_ATTEMPTS = 3;
     private static final int MAX_ERROR_CHARS = 500;
 
     private final ArticlePageFetcher fetcher;
     private final ArticleBodyExtractor extractor;
     private final TrackerRepository repository;
+    private final int batchSize;
 
     public BodyExtractionJob(
             ArticlePageFetcher fetcher,
             ArticleBodyExtractor extractor,
-            TrackerRepository repository) {
+            TrackerRepository repository,
+            @Value("${tracker.extract-batch-size:30}") int batchSize) {
         this.fetcher = fetcher;
         this.extractor = extractor;
         this.repository = repository;
+        this.batchSize = batchSize;
     }
 
     @Scheduled(cron = "${tracker.extract-cron:0 15 * * * *}")
@@ -49,7 +52,7 @@ public class BodyExtractionJob {
     }
 
     public void processPending() {
-        for (ExtractionCandidate candidate : repository.findPendingExtractions(BATCH_LIMIT)) {
+        for (ExtractionCandidate candidate : repository.findPendingExtractions(batchSize)) {
             try {
                 FetchedPage page = fetcher.fetch(URI.create(candidate.url()), candidate.allowedHosts());
                 repository.completeExtraction(candidate.id(), extractor.extract(page).text());
