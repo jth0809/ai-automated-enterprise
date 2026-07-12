@@ -141,7 +141,7 @@ URL hashing remains the insertion idempotency key. URL canonicalization beyond r
 
 `StateUpdater` continues to calculate impact deterministically. If `ScoreResult.requiresReview()` is false, the existing auto-advance path is unchanged. If it is true, an idempotent review row is created and the event remains unadvanced.
 
-Flyway V3 adds a unique constraint on `review_queue.event_id` and these fields:
+The Phase 1b review migration adds a unique constraint on `(review_queue.event_id, review_queue.reason)` and these fields. This blocks duplicate scheduler inserts for one trigger while preserving a later distinct review type, such as `ARRIVAL_CANDIDATE`, for the same event:
 
 - `priority`: `0` normal, `1` mismatch, `2` filter failure requiring attention.
 - `fluke_status`: `PENDING`, `COMPLETE`, or `FAILED`.
@@ -161,7 +161,7 @@ The forced tool output contains only:
 
 Code verifies the quote with the same whitespace-normalized substring rule used by `DeepClassifier`. An invalid quote is treated as a failed filter attempt, not as a verdict.
 
-Flyway V3 adds `fluke_evaluation` with one successful evaluation per review: review/event ids, verdict, evidence quote, quote-verification flag, raw tool output, model id, prompt SHA-256, rubric version id, and timestamps. This satisfies the global version-stamp invariant and keeps `review_queue.fluke_result` as the denormalized list/sort field.
+The same migration adds `fluke_evaluation` with one successful evaluation per review: review/event ids, verdict, evidence quote, quote-verification flag, raw tool output, model id, prompt SHA-256, rubric version id, and timestamps. This satisfies the global version-stamp invariant and keeps `review_queue.fluke_result` as the denormalized list/sort field.
 
 Both `MATCH` and `MISMATCH` require a human decision. A mismatch changes the reason to `FLUKE_MISMATCH` and raises priority; it never rejects or advances an event automatically.
 
