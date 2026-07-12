@@ -391,6 +391,115 @@ public class TrackerRepository {
                 .update();
     }
 
+    public void replaceSnapshot(SnapshotRow snapshot) {
+        jdbc.sql("DELETE FROM pillar_snapshot WHERE pillar = :pillar AND snapshot_date = :snapshotDate")
+                .param("pillar", snapshot.pillar())
+                .param("snapshotDate", date(snapshot.snapshotDate()))
+                .update();
+        jdbc.sql("""
+                INSERT INTO pillar_snapshot
+                  (pillar, snapshot_date, readiness, logit_clipped, trend_fit, trend_used,
+                   n_events_window, window_years, eta_year, eta_low, eta_high,
+                   displayed_eta_year, params_version)
+                VALUES
+                  (:pillar, :snapshotDate, :readiness, :logitClipped, :trendFit, :trendUsed,
+                   :eventsInWindow, :windowYears, :etaYear, :etaLow, :etaHigh,
+                   :displayedEtaYear, :paramsVersion)
+                """)
+                .param("pillar", snapshot.pillar())
+                .param("snapshotDate", date(snapshot.snapshotDate()))
+                .param("readiness", snapshot.readiness())
+                .param("logitClipped", snapshot.logitClipped())
+                .param("trendFit", snapshot.trendFit())
+                .param("trendUsed", snapshot.trendUsed())
+                .param("eventsInWindow", snapshot.eventsInWindow())
+                .param("windowYears", snapshot.windowYears())
+                .param("etaYear", snapshot.etaYear())
+                .param("etaLow", snapshot.etaLow())
+                .param("etaHigh", snapshot.etaHigh())
+                .param("displayedEtaYear", snapshot.displayedEtaYear())
+                .param("paramsVersion", snapshot.paramsVersion())
+                .update();
+    }
+
+    public List<SnapshotRow> findPillarSnapshots(int pillar) {
+        return jdbc.sql(SNAPSHOT_SELECT + " WHERE pillar = :pillar ORDER BY snapshot_date")
+                .param("pillar", pillar)
+                .query(TrackerRepository::mapSnapshot)
+                .list();
+    }
+
+    public Optional<SnapshotRow> findLatestSnapshot(int pillar) {
+        return jdbc.sql(SNAPSHOT_SELECT + """
+
+                 WHERE pillar = :pillar
+                 ORDER BY snapshot_date DESC
+                 FETCH FIRST 1 ROWS ONLY
+                """)
+                .param("pillar", pillar)
+                .query(TrackerRepository::mapSnapshot)
+                .optional();
+    }
+
+    public Optional<OpsState> findOpsState(String key) {
+        return jdbc.sql("SELECT state_value, updated_at FROM ops_state WHERE state_key = :key")
+                .param("key", key)
+                .query((rs, rowNum) -> new OpsState(
+                        rs.getString("state_value"),
+                        rs.getTimestamp("updated_at").toInstant()))
+                .optional();
+    }
+
+    public void putOpsState(String key, String value) {
+        int changed = jdbc.sql("""
+                UPDATE ops_state
+                   SET state_value = :value, updated_at = CURRENT_TIMESTAMP
+                 WHERE state_key = :key
+                """)
+                .param("value", value)
+                .param("key", key)
+                .update();
+        if (changed == 0) {
+            try {
+                jdbc.sql("INSERT INTO ops_state (state_key, state_value) VALUES (:key, :value)")
+                        .param("key", key)
+                        .param("value", value)
+                        .update();
+            } catch (DuplicateKeyException concurrentInsert) {
+                putOpsState(key, value);
+            }
+        }
+    }
+
+    public List<TimelineRow> findEventTimeline(int limit) {
+        if (limit <= 0) {
+            return List.of();
+        }
+        int safeLimit = Math.min(limit, 200);
+        return jdbc.sql("""
+                SELECT e.occurred_on, n.name_ko, e.event_type,
+                       h.prev_level, h.new_level,
+                       e.impact_score, e.verification_level,
+                       (SELECT COUNT(DISTINCT a.source_id)
+                          FROM article_classification c
+                          JOIN article a ON a.id = c.article_id
+                         WHERE c.event_id = e.id AND c.quote_verified = 'Y') AS source_count,
+                       (SELECT c2.evidence_quote
+                          FROM article_classification c2
+                         WHERE c2.event_id = e.id AND c2.quote_verified = 'Y'
+                         ORDER BY c2.id
+                         FETCH FIRST 1 ROWS ONLY) AS evidence_quote
+                  FROM event e
+                  JOIN capability_node n ON n.id = e.node_id
+                  LEFT JOIN node_state_history h ON h.cause_event_id = e.id
+                 WHERE e.event_status IN ('PROVISIONAL', 'CONFIRMED')
+                 ORDER BY e.occurred_on DESC, e.id DESC
+                 FETCH FIRST %d ROWS ONLY
+                """.formatted(safeLimit))
+                .query(TrackerRepository::mapTimeline)
+                .list();
+    }
+
     public NodeRow findNodeByCode(String code) {
         return jdbc.sql(NODE_SELECT + " WHERE code = :code")
                 .param("code", code)
@@ -534,6 +643,47 @@ public class TrackerRepository {
                 resolved == null ? null : resolved.toInstant());
     }
 
+    private static SnapshotRow mapSnapshot(ResultSet rs, int rowNum) throws SQLException {
+        return new SnapshotRow(
+                rs.getLong("id"),
+                rs.getInt("pillar"),
+                localDate(rs.getDate("snapshot_date")),
+                rs.getDouble("readiness"),
+                rs.getDouble("logit_clipped"),
+                nullableDouble(rs, "trend_fit"),
+                nullableDouble(rs, "trend_used"),
+                nullableInt(rs, "n_events_window"),
+                nullableInt(rs, "window_years"),
+                nullableDouble(rs, "eta_year"),
+                nullableDouble(rs, "eta_low"),
+                nullableDouble(rs, "eta_high"),
+                nullableDouble(rs, "displayed_eta_year"),
+                rs.getString("params_version"));
+    }
+
+    private static TimelineRow mapTimeline(ResultSet rs, int rowNum) throws SQLException {
+        return new TimelineRow(
+                localDate(rs.getDate("occurred_on")),
+                rs.getString("name_ko"),
+                rs.getString("event_type"),
+                nullableInt(rs, "prev_level"),
+                nullableInt(rs, "new_level"),
+                nullableDouble(rs, "impact_score"),
+                rs.getString("verification_level"),
+                rs.getInt("source_count"),
+                rs.getString("evidence_quote"));
+    }
+
+    private static Double nullableDouble(ResultSet rs, String column) throws SQLException {
+        double value = rs.getDouble(column);
+        return rs.wasNull() ? null : value;
+    }
+
+    private static Integer nullableInt(ResultSet rs, String column) throws SQLException {
+        int value = rs.getInt(column);
+        return rs.wasNull() ? null : value;
+    }
+
     private static ClassificationRow mapClassification(ResultSet rs, int rowNum) throws SQLException {
         long eventId = rs.getLong("event_id");
         boolean eventIdNull = rs.wasNull();
@@ -592,6 +742,13 @@ public class TrackerRepository {
             SELECT id, event_id, reason, fluke_result, status, reviewer_note,
                    created_at, resolved_at
               FROM review_queue
+            """;
+
+    private static final String SNAPSHOT_SELECT = """
+            SELECT id, pillar, snapshot_date, readiness, logit_clipped, trend_fit, trend_used,
+                   n_events_window, window_years, eta_year, eta_low, eta_high,
+                   displayed_eta_year, params_version
+              FROM pillar_snapshot
             """;
 
     private static final String NODE_SELECT = """
