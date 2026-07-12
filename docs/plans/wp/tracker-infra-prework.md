@@ -31,6 +31,15 @@
 
 기존 패턴(news.google.com 규칙)을 그대로 확장. 추가 블록 초안:
 
+> **2026-07-13 적용 기록 (Phase 1b Task 7):** 아래 초안이 `network-policy.yaml`에
+> 반영됐다. 단, 실제 적용 집합은 V4 시드의 active `source_domain` 전체와 일치해야
+> 하므로 NASA 본문 호스트 `science.nasa.gov`를 포함한 **16개 호스트**다(초안 15개
+> + science.nasa.gov). 집합 동등성·PR-1 안전 기본값·시크릿 부재는
+> `gitops/apps/backend-springboot/tests/tracker-egress-policy.ps1`이 검증하며,
+> 호스트 변경 시 시드·CNP·검증 스크립트 세 곳을 함께 갱신한다. deployment에는
+> 비밀 아닌 수집 한도(`TRACKER_EXTRACT_CRON`, `TRACKER_EXTRACT_BATCH_SIZE`)와
+> `TRACKER_FLUKE_ENABLED=false`가 추가됐다.
+
 ```yaml
     # Tracker RSS feeds + article body extraction (WP0.4 whitelist).
     # Every TRACKER_FEEDS host MUST appear here or fetches are dropped.

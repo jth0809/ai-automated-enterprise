@@ -54,6 +54,14 @@ spec:
               value: claude-haiku-4-5-20251001
             - name: TRACKER_CLASSIFY_MODEL
               value: claude-opus-4-8
+            # Phase 1b collection bounds (non-secret). The fluke filter stays
+            # dark until its Anthropic contract check passes post-deploy.
+            - name: TRACKER_EXTRACT_CRON
+              value: "0 15 * * * *"
+            - name: TRACKER_EXTRACT_BATCH_SIZE
+              value: "30"
+            - name: TRACKER_FLUKE_ENABLED
+              value: "false"
           envFrom:
             - secretRef:
                 name: backend-springboot-secrets

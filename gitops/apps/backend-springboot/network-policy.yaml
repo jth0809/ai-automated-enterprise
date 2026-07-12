@@ -97,14 +97,28 @@ spec:
         - ports:
             - port: "443"
               protocol: TCP
-    # Multiplanetary tracker feed ingestion (RSS over HTTPS): the four
-    # active source_registry feeds. TRACKER_FEEDS entries for other hosts
-    # also need a rule here, or the fetch is dropped by default-deny.
+    # Multiplanetary tracker collection (RSS/Atom feeds + article body
+    # fetches over HTTPS). This exact-host set mirrors the active
+    # source_domain rows seeded by Flyway V3/V4 — a host is deployable only
+    # when it exists in BOTH places. Verified by
+    # tests/tracker-egress-policy.ps1; update the script with any change.
     - toFQDNs:
         - matchName: www.nasa.gov
+        - matchName: science.nasa.gov
         - matchName: www.esa.int
+        - matchName: global.jaxa.jp
+        - matchName: rss.arxiv.org
+        - matchName: arxiv.org
+        - matchName: export.arxiv.org
         - matchName: spacenews.com
         - matchName: www.nasaspaceflight.com
+        - matchName: spaceflightnow.com
+        - matchName: www.planetary.org
+        - matchName: phys.org
+        - matchName: www.space.com
+        - matchName: feeds.arstechnica.com
+        - matchName: arstechnica.com
+        - matchName: www.universetoday.com
       toPorts:
         - ports:
             - port: "443"
