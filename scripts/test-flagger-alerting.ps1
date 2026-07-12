@@ -2,7 +2,11 @@
 
 $backend = Build-Kustomization "gitops/apps/backend-springboot"
 $flagger = Build-Kustomization "gitops/infrastructure/flagger"
+$flaggerReleaseSource = Read-RepoFile "gitops/infrastructure/flagger/release.yaml"
+$flaggerNamespace = Get-RenderedResource $flagger "Namespace"
 $canary = Get-RenderedResource $backend "Canary"
+$flaggerAuthorization = Get-RenderedResourceByName -Rendered $flagger -Kind "AuthorizationPolicy" -Name "allow-prometheus-to-flagger"
+$loadtesterAuthorization = Get-RenderedResourceByName -Rendered $flagger -Kind "AuthorizationPolicy" -Name "allow-flagger-to-loadtester"
 $discordWebhookUrlPattern = '(?i)https?://(?:www\.)?discord(?:app)?\.com/api/webhooks/[^\s''"<>]+'
 
 Assert-Matches $backend "(?m)^\s+key: DISCORD_ALERTS_WEBHOOK_URL\r?$" "Flagger must use the approved OCI Vault key"
@@ -14,8 +18,16 @@ Assert-MatchCount $canary "(?m)^\s+severity: error\r?$" 1 "Canary failure alert 
 Assert-NoMatches $canary "(?m)^\s+severity: (?!error)" "Canary must not emit non-error alerts"
 Assert-NoMatches $backend $discordWebhookUrlPattern "Backend manifests must not contain a Discord webhook URL"
 
+Assert-Matches $flaggerNamespace "(?m)^\s+istio\.io/dataplane-mode: ambient\r?$" "Flagger workloads must use Ambient mTLS"
+Assert-Matches $flagger "(?ms)^kind: ServiceAccount\r?$.*?^  name: flagger-loadtester\r?$" "loadtester needs a dedicated workload identity"
+Assert-Matches $flaggerReleaseSource "(?m)^\s+serviceAccountName: flagger-loadtester\r?$" "loadtester must use its dedicated service account"
 Assert-Matches $flagger "(?ms)serviceMonitor:.*?enabled: true.*?release: kube-prometheus-stack" "Flagger metrics must be selected"
 Assert-MatchCount $flagger "(?m)^kind: CiliumNetworkPolicy\r?$" 2 "Flagger workloads must have exactly two Cilium policies"
+Assert-MatchCount $flagger "(?m)^kind: AuthorizationPolicy\r?$" 2 "Flagger workloads must have exactly two identity policies"
+Assert-MatchCount $flaggerAuthorization "(?m)^\s+- monitoring/kube-prometheus-stack-prometheus\r?$" 1 "only Prometheus may scrape Flagger"
+Assert-MatchCount $flaggerAuthorization '(?m)^\s+- "8080"\r?$' 1 "Flagger identity policy must expose only metrics port 8080"
+Assert-MatchCount $loadtesterAuthorization "(?m)^\s+- flagger-system/flagger\r?$" 1 "only the Flagger controller may call loadtester"
+Assert-MatchCount $loadtesterAuthorization '(?m)^\s+- "8080"\r?$' 1 "loadtester identity policy must expose only webhook port 8080"
 Assert-Matches $flagger "(?ms)kind: CiliumNetworkPolicy.*?name: flagger-controller.*?endpointSelector:.*?app\.kubernetes\.io/name: flagger.*?app\.kubernetes\.io/instance: flagger" "Controller policy must select the Flagger controller endpoints"
 Assert-Matches $flagger "(?ms)kind: CiliumNetworkPolicy.*?name: flagger-loadtester.*?endpointSelector:.*?app: loadtester" "Loadtester policy must select loadtester endpoints"
 Assert-MatchCount $flagger "(?m)^\s+- matchName: discord\.com\r?$" 1 "Flagger Discord egress must be FQDN-scoped exactly once"
@@ -23,11 +35,12 @@ Assert-MatchCount $flagger "(?m)^\s+- matchName: api\.ai-auto\.kro\.kr\r?$" 1 "L
 Assert-MatchCount $flagger "(?m)^\s+- kube-apiserver\r?$" 1 "Flagger must retain API access exactly once"
 Assert-MatchCount $flagger "(?m)^\s+k8s-app: kube-dns\r?$" 2 "Both workloads must retain DNS endpoint access"
 Assert-MatchCount $flagger "(?m)^\s+app\.kubernetes\.io/name: prometheus\r?$" 2 "Prometheus access must be limited to the selected Prometheus endpoint"
-Assert-MatchCount $flagger "(?m)^\s+app: loadtester\r?$" 2 "Controller/loadtester access must select only the loadtester endpoint"
+Assert-MatchCount $flagger "(?m)^\s+app: loadtester\r?$" 3 "Cilium and Istio policies must select only the loadtester endpoint"
 Assert-MatchCount $flagger '(?m)^\s+- port: "53"\r?$' 4 "DNS egress must expose UDP and TCP port 53 for both workloads"
 Assert-MatchCount $flagger '(?m)^\s+- port: "443"\r?$' 3 "API and intended external egress must expose TCP port 443 only"
 Assert-MatchCount $flagger '(?m)^\s+- port: "9090"\r?$' 1 "Flagger must retain Prometheus access on port 9090"
 Assert-MatchCount $flagger '(?m)^\s+- port: "8080"\r?$' 3 "Controller and loadtester access must use explicit port 8080 rules"
+Assert-MatchCount $flagger '(?m)^\s+- port: "15008"\r?$' 4 "all ambient Flagger paths must allow HBONE"
 Assert-NoMatches $flagger $discordWebhookUrlPattern "Flagger manifests must not contain a Discord webhook URL"
 
 Write-Host "Flagger alerting contracts passed"

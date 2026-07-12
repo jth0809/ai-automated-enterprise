@@ -71,3 +71,21 @@ function Get-RenderedResource {
     }
     $match.Value
 }
+
+function Get-RenderedResourceByName {
+    param(
+        [Parameter(Mandatory)][string]$Rendered,
+        [Parameter(Mandatory)][string]$Kind,
+        [Parameter(Mandatory)][string]$Name
+    )
+    $documents = [regex]::Split($Rendered, "(?m)^---\r?\n")
+    foreach ($document in $documents) {
+        if (
+            $document -match ("(?m)^kind: " + [regex]::Escape($Kind) + "\r?$") -and
+            $document -match ("(?m)^  name: " + [regex]::Escape($Name) + "\r?$")
+        ) {
+            return $document.Trim()
+        }
+    }
+    throw "[MISSING] rendered resource $Kind/$Name"
+}

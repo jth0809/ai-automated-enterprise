@@ -6,19 +6,20 @@
 - 기준 브랜치: `origin/main` (`63115be`)
 - 구현 브랜치: `codex/discord-alerting-p1-p2`
 - 범위: 현재 자격증명 없이 선언적으로 구현할 수 있는 P1~P2 알림 경로
+- 구현 상태(2026-07-11): **GitOps implementation complete; Vault provisioning and runtime delivery verification pending.** GitHub→Discord 외부 설정도 운영자가 runbook에 따라 완료하기 전까지 pending이다.
 
 ## 목표
 
 1. Flux의 Kustomization/HelmRelease 오류를 Discord로 통지한다.
 2. Flagger 카나리 실패와 롤백을 Discord로 통지한다.
 3. 최소 Alertmanager 한 개를 활성화하여 런타임 경보를 Discord로 통지한다.
-4. 새 외부 통신은 CiliumNetworkPolicy로 DNS와 `discord.com:443`만 명시적으로 허용한다.
+4. 새 외부 통신은 CiliumNetworkPolicy로 DNS와 `discord.com:443`만 명시적으로 허용한다. Ambient 내부 통신은 HBONE TCP 15008을 CNP에 포함하고 Istio AuthorizationPolicy로 서비스 계정과 원래 서비스 포트를 제한한다.
 5. 평문 비밀값, 수동 프로덕션 `kubectl apply`, 신규 상주 릴레이 서비스를 사용하지 않는다.
 
 ## 비목표와 후속 범위
 
 - SMTP 자격증명이 없으므로 이메일 라우팅은 이번 변경에서 제외한다.
-- GitHub 저장소의 Discord Webhook 등록은 저장소 밖의 일회성 설정이므로 runbook으로 제공하되 자동 실행하지 않는다.
+- GitHub 저장소의 Discord Webhook 등록은 저장소 밖의 일회성 설정이므로 runbook으로 제공하되 자동 실행하지 않는다. Discord `/github`가 지원하는 check/issue/PR/release 이벤트만 선택하며, 지원하지 않는 `workflow_run`과 `dependabot_alert` 직접 전달은 후속 범위로 남긴다.
 - ZAP active scan, node drain, DB/메시 장애훈련, 스트레스 테스트, 월간 게임데이는 운영 영향과 별도 승인 절차가 필요하므로 후속 작업으로 남긴다.
 - Testcontainers 추가, GitOps 태그 push 경합 완화 등 알림과 독립적인 개발·파이프라인 P1~P2는 각각 별도 설계와 구현 계획으로 진행한다.
 - Actuator 외부 차단, Flannel 중화, Dependabot 구성처럼 코드상 이미 완료된 항목은 중복 구현하지 않는다. 백로그 문구는 실제 상태에 맞춰 별도 정리할 수 있다.
@@ -58,7 +59,7 @@ OCI Vault: DISCORD_ALERTS_WEBHOOK_URL
 
 ## Flagger 카나리 알림
 
-`backend` 네임스페이스에 별도의 ExternalSecret과 `AlertProvider`를 추가한다. 기존 Canary의 `analysis.alerts`에는 `severity: error`인 Discord provider 참조를 추가하여 실패·롤백 이벤트만 통지하고 정상 분석 단계의 소음은 보내지 않는다.
+`backend` 네임스페이스에 별도의 ExternalSecret과 `AlertProvider`를 추가한다. 기존 Canary의 `analysis.alerts`에는 `severity: error`인 Discord provider 참조를 추가하여 실패·롤백 이벤트만 통지하고 정상 분석 단계의 소음은 보내지 않는다. `flagger-system` 네임스페이스를 ambient에 등록하여 Prometheus·loadtester와의 내부 통신도 mTLS 경로에 포함한다. loadtester에는 토큰 자동 마운트를 끈 전용 ServiceAccount를 부여한다.
 
 현재 Flagger chart의 `serviceMonitor.enabled` 기본값은 `false`다. `flagger_canary_status` 규칙이 실제 데이터를 받도록 ServiceMonitor를 활성화하고 kube-prometheus-stack의 selector가 요구하는 `release: kube-prometheus-stack` 라벨을 부여한다. 이는 Service와 ServiceMonitor만 추가하며 새 Pod를 만들지 않는다.
 
@@ -70,9 +71,11 @@ Flagger 컨트롤러의 egress 정책은 기존 동작과 새 Discord 통신을 
 - `flagger-system`의 loadtester
 - `discord.com` TCP 443
 
-Prometheus가 Flagger `/metrics`를 수집할 수 있도록 Flagger ingress TCP 8080은 Prometheus Pod에만 허용한다.
+Prometheus가 Flagger `/metrics`를 수집할 수 있도록 Flagger ingress TCP 8080과 Ambient HBONE TCP 15008을 허용하고, Istio AuthorizationPolicy가 `monitoring/kube-prometheus-stack-prometheus` 서비스 계정만 원래 8080 포트에 접근하도록 강제한다. loadtester도 `flagger-system/flagger` 서비스 계정의 원래 8080 포트 요청만 허용한다.
 
 loadtester도 별도 정책으로 Flagger의 webhook 요청만 수신하고, 기존 합성 트래픽 목적지인 `api.ai-auto.kro.kr:443`만 송신하도록 제한한다. 이 작업은 알림을 추가하면서 기존 무제한 egress를 방치하지 않기 위한 Zero-Trust 보완이다.
+
+Prometheus의 Istio AuthorizationPolicy는 원래 TCP 9090에 대해 Flagger controller, Grafana, Prometheus 자체 서비스 계정만 허용한다. 이로써 Flagger의 분석 질의는 유지하면서 다른 ambient workload의 임의 질의는 거부한다.
 
 ## Alertmanager와 경보 규칙
 
@@ -83,6 +86,7 @@ loadtester도 별도 정책으로 Flagger의 webhook 요청만 수신하고, 기
 - 영구 볼륨: 없음
 - request: CPU `10m`, memory `32Mi`
 - limit: memory `128Mi`
+- ServiceAccount와 Alertmanager Pod의 API token 자동 마운트: 비활성
 - 기본 receiver: Discord
 - group wait: 30초
 - group interval: 5분
@@ -91,16 +95,16 @@ loadtester도 별도 정책으로 Flagger의 webhook 요청만 수신하고, 기
 
 Webhook URL은 `alertmanager.alertmanagerSpec.secrets`를 통해 파일로 마운트하고 `discord_configs.webhook_url_file`로 읽는다. Helm values 또는 Alertmanager 설정에 URL을 직접 넣지 않는다.
 
-Alertmanager Pod의 CNP는 Prometheus로부터 TCP 9093 ingress를 허용하고, egress는 CoreDNS와 `discord.com:443`만 허용한다. 단일 replica이므로 Alertmanager gossip용 외부 peer egress는 열지 않는다.
+Alertmanager Pod의 CNP는 정확한 Prometheus Pod로부터 Alertmanager TCP 9093, kube-prometheus-stack 75.18.1 기본 ServiceMonitor가 수집하는 config-reloader 메트릭 TCP 8080, Ambient HBONE TCP 15008만 허용한다. Istio AuthorizationPolicy는 `monitoring/kube-prometheus-stack-prometheus` 서비스 계정의 원래 9093/8080 요청만 승인한다. egress는 CoreDNS와 `discord.com:443`만 허용하며, 단일 replica이므로 Alertmanager gossip용 외부 peer egress는 열지 않는다.
 
 경보 규칙은 다음과 같다.
 
 1. `KubePodCrashLooping`: kube-prometheus-stack의 기존 기본 규칙을 재사용하며 중복 정의하지 않는다.
-2. 노드 CPU requests 비율: kube-state-metrics의 Pod 요청량을 노드별 allocatable CPU로 나눈 값이 95%를 10분간 초과하면 경보한다.
+2. 노드 CPU requests 비율: 관리형 OKE에서는 kube-scheduler 메트릭을 수집할 수 없으므로 kube-state-metrics를 사용하되, Pending/Running Pod만 포함한 요청량을 노드별 allocatable CPU로 나눈 값이 95%를 10분간 초과하면 경보한다.
 3. 인증서 만료: `certmanager_certificate_expiration_timestamp_seconds - time()`이 21일 미만인 상태가 15분 지속되면 경보한다.
 4. Flagger 실패: 공식 메트릭 기준 `flagger_canary_status > 1`이 2분 지속되면 경보한다.
 
-cert-manager chart도 Prometheus annotation만으로는 Prometheus Operator의 selector에 포함되지 않으므로 `prometheus.servicemonitor.enabled`를 활성화하고 `release: kube-prometheus-stack` 라벨을 부여한다. 이 변경 역시 새 Pod를 만들지 않는다.
+cert-manager chart도 Prometheus annotation만으로는 Prometheus Operator의 selector에 포함되지 않으므로 `prometheus.servicemonitor.enabled`를 활성화하고 `release: kube-prometheus-stack` 라벨을 부여한다. `honorLabels: true`로 Certificate의 원래 namespace 라벨을 보존하고 discovery relabeling으로 controller만 수집하여 불필요한 cainjector/webhook scrape를 막는다. cert-manager 네임스페이스는 ambient에 등록한다. controller CNP는 정확한 Prometheus Pod의 TCP 9402, HBONE TCP 15008, 기존 동작에 필요한 CoreDNS, Kubernetes API, Let's Encrypt/ZeroSSL ACME HTTPS, 두 공개 hostname의 HTTP-01 self-check만 허용한다. Istio AuthorizationPolicy는 Prometheus 서비스 계정의 원래 9402 요청만 승인한다. 이 변경 역시 새 Pod를 만들지 않는다.
 
 모든 사용자 정의 규칙에는 요약, 영향, 확인할 리소스를 annotation으로 제공한다. Discord 채널에는 사람이 조치해야 하는 이벤트만 전달하며 로그 전량은 보내지 않는다.
 

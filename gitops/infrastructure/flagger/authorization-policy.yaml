@@ -1,0 +1,40 @@
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: allow-prometheus-to-flagger
+  namespace: flagger-system
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: flagger
+      app.kubernetes.io/instance: flagger
+  action: ALLOW
+  rules:
+    - from:
+        - source:
+            serviceAccounts:
+              - monitoring/kube-prometheus-stack-prometheus
+      to:
+        - operation:
+            ports:
+              - "8080"
+---
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: allow-flagger-to-loadtester
+  namespace: flagger-system
+spec:
+  selector:
+    matchLabels:
+      app: loadtester
+  action: ALLOW
+  rules:
+    - from:
+        - source:
+            serviceAccounts:
+              - flagger-system/flagger
+      to:
+        - operation:
+            ports:
+              - "8080"
