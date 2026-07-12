@@ -28,6 +28,11 @@ spec:
     threshold: 5
     maxWeight: 50
     stepWeight: 10
+    alerts:
+      - name: backend-canary-failed
+        severity: error
+        providerRef:
+          name: discord
     metrics:
       # interval is the rate() window in the templates, not the check
       # cadence. The gateway PodMonitor scrapes every 30s, so a 1m window

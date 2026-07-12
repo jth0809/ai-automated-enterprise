@@ -1,0 +1,57 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: platform-actionable-alerts
+  namespace: monitoring
+  labels:
+    release: kube-prometheus-stack
+spec:
+  groups:
+    - name: platform-capacity
+      rules:
+        - alert: NodeCPURequestsHigh
+          expr: |
+            # OKE does not expose managed kube-scheduler metrics. Mirror the
+            # stack's active-pod recording rule so completed Jobs do not count.
+            sum by (node) (
+              kube_pod_container_resource_requests{resource="cpu",unit="core",node!=""}
+              * on (namespace, pod, uid) group_left()
+                max by (namespace, pod, uid) (
+                  kube_pod_status_phase{phase=~"Pending|Running"} == 1
+                )
+            )
+            /
+            sum by (node) (kube_node_status_allocatable{resource="cpu",unit="core"})
+            > 0.95
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Node {{ $labels.node }} CPU requests exceed 95%"
+            description: "Scheduled CPU requests remain at {{ $value | humanizePercentage }} of allocatable CPU."
+            runbook: "Reduce requests or capacity pressure through GitOps before scheduling more workloads."
+    - name: platform-certificates
+      rules:
+        - alert: CertificateExpiringSoon
+          expr: |
+            (certmanager_certificate_expiration_timestamp_seconds - time() < 1814400)
+            and
+            (certmanager_certificate_expiration_timestamp_seconds - time() > 0)
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Certificate {{ $labels.namespace }}/{{ $labels.name }} expires within 21 days"
+            description: "Investigate issuer and renewal status."
+            runbook: "Inspect Certificate, CertificateRequest, Challenge, and issuer events."
+    - name: platform-flagger
+      rules:
+        - alert: FlaggerCanaryFailed
+          expr: flagger_canary_status > 1
+          for: 2m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Flagger canary {{ $labels.namespace }}/{{ $labels.name }} is failed"
+            description: "Failure persisted after the immediate native Flagger event."
+            runbook: "Inspect Canary status and repair with a new Git commit."

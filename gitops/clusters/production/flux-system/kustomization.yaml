@@ -3,6 +3,7 @@ kind: Kustomization
 resources:
 - gotk-components.yaml
 - gotk-sync.yaml
+- notification-egress.yaml
 patches:
 # Nodes are CPU-request saturated (840m allocatable); the flux default of
 # 100m starves OKE-managed daemonsets. Notification traffic here is tiny.
@@ -23,3 +24,15 @@ patches:
             resources:
               requests:
                 cpu: 25m
+- target:
+    kind: NetworkPolicy
+    name: allow-egress
+  patch: |-
+    - op: replace
+      path: /spec/podSelector
+      value:
+        matchExpressions:
+          - key: app
+            operator: NotIn
+            values:
+              - notification-controller
