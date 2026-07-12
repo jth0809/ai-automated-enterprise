@@ -65,6 +65,49 @@ class TrackerIngestJobTest {
         assertEquals(1, articleCount());
     }
 
+    @Test
+    void atomEntriesAreIngestedWithIsoPublishedTime() {
+        List<FeedSpec> feeds = List.of(new FeedSpec("NASA", "https://www.nasa.gov/atom"));
+        FeedFetcher fetcher = url -> """
+                <feed xmlns="http://www.w3.org/2005/Atom">
+                  <entry><title>Transfer demo</title>
+                    <link rel="alternate" href="https://nasa.test/atom-a"/>
+                    <published>2026-07-12T01:02:03Z</published>
+                    <summary>Propellant moved between tanks.</summary>
+                  </entry>
+                </feed>
+                """;
+        TrackerIngestJob job = new TrackerIngestJob(fetcher, new RssParser(), repository, feeds);
+
+        job.runOnce();
+
+        assertEquals(1, articleCount());
+        assertEquals(java.time.Instant.parse("2026-07-12T01:02:03Z"),
+                jdbc.sql("SELECT published_at FROM article WHERE url = 'https://nasa.test/atom-a'")
+                        .query(java.sql.Timestamp.class).single().toInstant());
+    }
+
+    @Test
+    void oneFailingArticleDoesNotAbortRemainingArticlesInTheFeed() {
+        // First item's URL exceeds the article.url column width (1000), so its
+        // insert fails at the database; the second item must still land.
+        String oversizedLink = "https://nasa.test/" + "x".repeat(1_500);
+        List<FeedSpec> feeds = List.of(new FeedSpec("NASA", "https://www.nasa.gov/feed"));
+        FeedFetcher fetcher = url -> """
+                <rss version="2.0"><channel>
+                  <item><title>Broken row</title><link>%s</link></item>
+                  <item><title>Good row</title><link>https://nasa.test/good</link></item>
+                </channel></rss>
+                """.formatted(oversizedLink);
+        TrackerIngestJob job = new TrackerIngestJob(fetcher, new RssParser(), repository, feeds);
+
+        job.runOnce();
+
+        assertEquals(1, articleCount());
+        assertEquals(1, jdbc.sql("SELECT COUNT(*) FROM article WHERE url = 'https://nasa.test/good'")
+                .query(Integer.class).single());
+    }
+
     private int articleCount() {
         return jdbc.sql("SELECT COUNT(*) FROM article").query(Integer.class).single();
     }
