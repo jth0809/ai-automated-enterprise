@@ -11,6 +11,7 @@ import java.util.Optional;
 
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.jdbc.core.simple.JdbcClient;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.aienterprise.backend.tracker.event.SourceEvidence;
@@ -134,7 +135,8 @@ public class TrackerRepository {
                 .orElseThrow(() -> new IllegalStateException("Event upsert produced no row: " + naturalKey));
     }
 
-    public void insertClassification(ClassificationRow draft) {
+    public long insertClassification(ClassificationRow draft) {
+        GeneratedKeyHolder keys = new GeneratedKeyHolder();
         jdbc.sql("""
                 INSERT INTO article_classification
                   (article_id, event_id, node_code, event_type, claimed_level, actor,
@@ -157,6 +159,57 @@ public class TrackerRepository {
                 .param("quoteVerified", draft.quoteVerified() ? "Y" : "N")
                 .param("rawOutput", draft.rawOutput())
                 .param("rubricVersionId", draft.rubricVersionId())
+                .update(keys, "id");
+        Number key = keys.getKey();
+        if (key == null) {
+            throw new IllegalStateException("Classification insert produced no generated key");
+        }
+        return key.longValue();
+    }
+
+    public List<ClassificationRow> findUnmergedClassifications(int limit) {
+        if (limit <= 0) {
+            return List.of();
+        }
+        int safeLimit = Math.min(limit, 1_000);
+        return jdbc.sql("""
+                SELECT id, article_id, event_id, node_code, event_type, claimed_level, actor,
+                       occurred_on, publication_path, evidence_quote, quote_verified,
+                       raw_output, rubric_version_id
+                  FROM article_classification
+                 WHERE quote_verified = 'Y'
+                   AND event_id IS NULL
+                 ORDER BY id
+                 FETCH FIRST %d ROWS ONLY
+                """.formatted(safeLimit))
+                .query(TrackerRepository::mapClassification)
+                .list();
+    }
+
+    public void updateEventVerification(long eventId, String verificationLevel) {
+        int changed = jdbc.sql("""
+                UPDATE event
+                   SET verification_level = :level,
+                       updated_at = CURRENT_TIMESTAMP
+                 WHERE id = :id
+                """)
+                .param("level", verificationLevel)
+                .param("id", eventId)
+                .update();
+        if (changed != 1) {
+            throw new IllegalArgumentException("Unknown event id: " + eventId);
+        }
+    }
+
+    public int expireProvisionalEvents(LocalDate today) {
+        return jdbc.sql("""
+                UPDATE event
+                   SET event_status = 'EXPIRED',
+                       updated_at = CURRENT_TIMESTAMP
+                 WHERE event_status = 'PROVISIONAL'
+                   AND provisional_expires_on < :today
+                """)
+                .param("today", date(today))
                 .update();
     }
 
@@ -305,6 +358,27 @@ public class TrackerRepository {
                 "Y".equals(rs.getString("body_extracted")),
                 rs.getString("pipeline_status"),
                 rs.getInt("fail_count"));
+    }
+
+    private static ClassificationRow mapClassification(ResultSet rs, int rowNum) throws SQLException {
+        long eventId = rs.getLong("event_id");
+        boolean eventIdNull = rs.wasNull();
+        int claimedLevel = rs.getInt("claimed_level");
+        boolean levelNull = rs.wasNull();
+        return new ClassificationRow(
+                rs.getLong("id"),
+                rs.getLong("article_id"),
+                eventIdNull ? null : eventId,
+                rs.getString("node_code"),
+                rs.getString("event_type"),
+                levelNull ? null : claimedLevel,
+                rs.getString("actor"),
+                localDate(rs.getDate("occurred_on")),
+                rs.getString("publication_path"),
+                rs.getString("evidence_quote"),
+                "Y".equals(rs.getString("quote_verified")),
+                rs.getString("raw_output"),
+                rs.getLong("rubric_version_id"));
     }
 
     private static NodeRow mapNode(ResultSet rs, int rowNum) throws SQLException {
