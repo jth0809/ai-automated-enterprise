@@ -43,6 +43,17 @@ spec:
               value: "6379"
             - name: JAVA_TOOL_OPTIONS
               value: "-XX:MaxRAMPercentage=75.0"
+            # Tracker schema (Flyway V1/V2) applies on deploy; the tracker
+            # itself stays dark until the PR-2 flip to "true" after the
+            # schema/startup check (phase 1a rollout plan, task 17).
+            - name: SPRING_FLYWAY_ENABLED
+              value: "true"
+            - name: TRACKER_ENABLED
+              value: "false"
+            - name: TRACKER_GATE_MODEL
+              value: claude-haiku-4-5-20251001
+            - name: TRACKER_CLASSIFY_MODEL
+              value: claude-opus-4-8
           envFrom:
             - secretRef:
                 name: backend-springboot-secrets

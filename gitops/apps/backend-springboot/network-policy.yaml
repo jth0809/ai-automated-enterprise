@@ -97,9 +97,22 @@ spec:
         - ports:
             - port: "443"
               protocol: TCP
-    # Anthropic Messages API (AI news summarization). Scoped to the single
-    # FQDN the AnthropicSummarizer calls — without this rule the backend
-    # times out reaching api.anthropic.com under default-deny.
+    # Multiplanetary tracker feed ingestion (RSS over HTTPS): the four
+    # active source_registry feeds. TRACKER_FEEDS entries for other hosts
+    # also need a rule here, or the fetch is dropped by default-deny.
+    - toFQDNs:
+        - matchName: www.nasa.gov
+        - matchName: www.esa.int
+        - matchName: spacenews.com
+        - matchName: www.nasaspaceflight.com
+      toPorts:
+        - ports:
+            - port: "443"
+              protocol: TCP
+    # Anthropic Messages API (AI news summarization + tracker gate/classify).
+    # Scoped to the single FQDN the AnthropicSummarizer and the tracker's
+    # AnthropicClient call — without this rule the backend times out
+    # reaching api.anthropic.com under default-deny.
     - toFQDNs:
         - matchName: api.anthropic.com
       toPorts:
