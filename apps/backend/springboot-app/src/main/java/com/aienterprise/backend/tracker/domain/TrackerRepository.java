@@ -81,6 +81,22 @@ public class TrackerRepository {
         }
     }
 
+    public Optional<Long> findSourceIdForFeed(String sourceCode, String host) {
+        List<Long> ids = jdbc.sql("""
+                SELECT id
+                  FROM source_registry
+                 WHERE UPPER(code) = UPPER(:sourceCode)
+                    OR LOWER(site_domain) = LOWER(:host)
+                 ORDER BY CASE WHEN UPPER(code) = UPPER(:sourceCode) THEN 0 ELSE 1 END
+                 FETCH FIRST 1 ROWS ONLY
+                """)
+                .param("sourceCode", sourceCode)
+                .param("host", host)
+                .query(Long.class)
+                .list();
+        return ids.stream().findFirst();
+    }
+
     public long upsertEventByNaturalKey(String naturalKey, EventRow draft) {
         Optional<Long> existing = eventIdByNaturalKey(naturalKey);
         if (existing.isPresent()) {
