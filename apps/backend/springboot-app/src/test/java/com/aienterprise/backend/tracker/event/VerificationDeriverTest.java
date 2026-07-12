@@ -51,6 +51,13 @@ class VerificationDeriverTest {
     }
 
     @Test
+    void agencyAndOneIndependentTierTwoSourceTogetherAreIndependent() {
+        assertEquals(INDEPENDENT, VerificationDeriver.derive(List.of(
+                ev(1, 1, "AGENCY", "PRIMARY"),
+                ev(3, 2, "SPECIALIZED_MEDIA", "THIRD_PARTY"))));
+    }
+
+    @Test
     void duplicateSourceIdsCountOnlyOnce() {
         assertEquals(CLAIMED, VerificationDeriver.derive(List.of(
                 ev(3, 2, "SPECIALIZED_MEDIA", "THIRD_PARTY"),

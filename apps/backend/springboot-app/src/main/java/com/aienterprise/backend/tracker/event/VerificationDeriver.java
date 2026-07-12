@@ -11,7 +11,7 @@ public final class VerificationDeriver {
 
     public static VerificationLevel derive(List<SourceEvidence> cluster) {
         VerificationLevel result = VerificationLevel.CLAIMED;
-        Set<Long> independentTierTwoSources = new HashSet<>();
+        Set<Long> independentReliableSources = new HashSet<>();
 
         for (SourceEvidence evidence : cluster) {
             if (evidence.tier() == 1 && equals(evidence.sourceType(), "AGENCY")) {
@@ -20,12 +20,12 @@ public final class VerificationDeriver {
             if (evidence.tier() == 1 && equals(evidence.sourceType(), "JOURNAL")) {
                 result = max(result, VerificationLevel.PEER_REVIEWED);
             }
-            if (evidence.tier() == 2 && !equals(evidence.publicationPath(), "WIRE_REPRINT")) {
-                independentTierTwoSources.add(evidence.sourceId());
+            if (evidence.tier() <= 2 && !equals(evidence.publicationPath(), "WIRE_REPRINT")) {
+                independentReliableSources.add(evidence.sourceId());
             }
         }
 
-        if (independentTierTwoSources.size() >= 2) {
+        if (independentReliableSources.size() >= 2) {
             result = VerificationLevel.INDEPENDENT;
         }
         return result;
