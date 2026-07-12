@@ -269,6 +269,104 @@ public class TrackerRepository {
                 .list();
     }
 
+    public EventRow findEventById(long id) {
+        return jdbc.sql(EVENT_SELECT + " WHERE id = :id")
+                .param("id", id)
+                .query(TrackerRepository::mapEvent)
+                .optional()
+                .orElseThrow(() -> new IllegalArgumentException("Unknown event id: " + id));
+    }
+
+    public List<EventRow> findEventsForScoring(int limit) {
+        if (limit <= 0) {
+            return List.of();
+        }
+        int safeLimit = Math.min(limit, 1_000);
+        return jdbc.sql(EVENT_SELECT + """
+
+                 WHERE event_status = 'PROVISIONAL'
+                   AND state_advanced = 'N'
+                   AND verification_level IN ('PEER_REVIEWED', 'OFFICIAL', 'INDEPENDENT')
+                   AND NOT EXISTS (SELECT 1 FROM review_queue r
+                                    WHERE r.event_id = event.id AND r.status = 'PENDING')
+                 ORDER BY id
+                 FETCH FIRST %d ROWS ONLY
+                """.formatted(safeLimit))
+                .query(TrackerRepository::mapEvent)
+                .list();
+    }
+
+    public void recordEventScore(long eventId, double impactScore, int novelty) {
+        int changed = jdbc.sql("""
+                UPDATE event
+                   SET impact_score = :impact, novelty = :novelty, updated_at = CURRENT_TIMESTAMP
+                 WHERE id = :id
+                """)
+                .param("impact", impactScore)
+                .param("novelty", novelty)
+                .param("id", eventId)
+                .update();
+        if (changed != 1) {
+            throw new IllegalArgumentException("Unknown event id: " + eventId);
+        }
+    }
+
+    public void markEventConfirmed(long eventId) {
+        setEventStatus(eventId, "CONFIRMED", "Y");
+    }
+
+    public void markEventRejected(long eventId) {
+        setEventStatus(eventId, "REJECTED", "N");
+    }
+
+    public long insertReview(long eventId, String reason) {
+        GeneratedKeyHolder keys = new GeneratedKeyHolder();
+        jdbc.sql("INSERT INTO review_queue (event_id, reason) VALUES (:eventId, :reason)")
+                .param("eventId", eventId)
+                .param("reason", reason)
+                .update(keys, "id");
+        Number key = keys.getKey();
+        if (key == null) {
+            throw new IllegalStateException("Review insert produced no generated key");
+        }
+        return key.longValue();
+    }
+
+    public Optional<ReviewRow> findReviewById(long id) {
+        return jdbc.sql(REVIEW_SELECT + " WHERE id = :id")
+                .param("id", id)
+                .query(TrackerRepository::mapReview)
+                .optional();
+    }
+
+    public List<ReviewRow> findPendingReviews(int limit) {
+        if (limit <= 0) {
+            return List.of();
+        }
+        int safeLimit = Math.min(limit, 1_000);
+        return jdbc.sql(REVIEW_SELECT + """
+
+                 WHERE status = 'PENDING'
+                 ORDER BY created_at, id
+                 FETCH FIRST %d ROWS ONLY
+                """.formatted(safeLimit))
+                .query(TrackerRepository::mapReview)
+                .list();
+    }
+
+    public boolean resolveReview(long reviewId, String status, String note) {
+        return jdbc.sql("""
+                UPDATE review_queue
+                   SET status = :status, reviewer_note = :note, resolved_at = CURRENT_TIMESTAMP
+                 WHERE id = :id
+                   AND status = 'PENDING'
+                """)
+                .param("status", status)
+                .param("note", note)
+                .param("id", reviewId)
+                .update() == 1;
+    }
+
     public NodeRow findNodeByCode(String code) {
         return jdbc.sql(NODE_SELECT + " WHERE code = :code")
                 .param("code", code)
@@ -336,7 +434,22 @@ public class TrackerRepository {
                 .optional();
     }
 
-    private NodeRow findNodeById(long id) {
+    private void setEventStatus(long eventId, String status, String stateAdvanced) {
+        int changed = jdbc.sql("""
+                UPDATE event
+                   SET event_status = :status, state_advanced = :advanced, updated_at = CURRENT_TIMESTAMP
+                 WHERE id = :id
+                """)
+                .param("status", status)
+                .param("advanced", stateAdvanced)
+                .param("id", eventId)
+                .update();
+        if (changed != 1) {
+            throw new IllegalArgumentException("Unknown event id: " + eventId);
+        }
+    }
+
+    public NodeRow findNodeById(long id) {
         return jdbc.sql(NODE_SELECT + " WHERE id = :id")
                 .param("id", id)
                 .query(TrackerRepository::mapNode)
@@ -358,6 +471,43 @@ public class TrackerRepository {
                 "Y".equals(rs.getString("body_extracted")),
                 rs.getString("pipeline_status"),
                 rs.getInt("fail_count"));
+    }
+
+    private static EventRow mapEvent(ResultSet rs, int rowNum) throws SQLException {
+        int claimedLevel = rs.getInt("claimed_level");
+        boolean levelNull = rs.wasNull();
+        double impact = rs.getDouble("impact_score");
+        boolean impactNull = rs.wasNull();
+        int novelty = rs.getInt("novelty");
+        boolean noveltyNull = rs.wasNull();
+        return new EventRow(
+                rs.getLong("id"),
+                rs.getString("natural_key"),
+                rs.getLong("node_id"),
+                rs.getString("event_type"),
+                levelNull ? null : claimedLevel,
+                rs.getString("actor"),
+                localDate(rs.getDate("occurred_on")),
+                rs.getString("verification_level"),
+                rs.getString("event_status"),
+                localDate(rs.getDate("provisional_expires_on")),
+                impactNull ? null : impact,
+                noveltyNull ? null : novelty,
+                "Y".equals(rs.getString("state_advanced")),
+                rs.getLong("rubric_version_id"));
+    }
+
+    private static ReviewRow mapReview(ResultSet rs, int rowNum) throws SQLException {
+        Timestamp resolved = rs.getTimestamp("resolved_at");
+        return new ReviewRow(
+                rs.getLong("id"),
+                rs.getLong("event_id"),
+                rs.getString("reason"),
+                rs.getString("fluke_result"),
+                rs.getString("status"),
+                rs.getString("reviewer_note"),
+                rs.getTimestamp("created_at").toInstant(),
+                resolved == null ? null : resolved.toInstant());
     }
 
     private static ClassificationRow mapClassification(ResultSet rs, int rowNum) throws SQLException {
@@ -406,6 +556,19 @@ public class TrackerRepository {
     private static LocalDate localDate(Date value) {
         return value == null ? null : value.toLocalDate();
     }
+
+    private static final String EVENT_SELECT = """
+            SELECT id, natural_key, node_id, event_type, claimed_level, actor, occurred_on,
+                   verification_level, event_status, provisional_expires_on,
+                   impact_score, novelty, state_advanced, rubric_version_id
+              FROM event
+            """;
+
+    private static final String REVIEW_SELECT = """
+            SELECT id, event_id, reason, fluke_result, status, reviewer_note,
+                   created_at, resolved_at
+              FROM review_queue
+            """;
 
     private static final String NODE_SELECT = """
             SELECT id, code, pillar, name_ko, scale_type, current_level,
