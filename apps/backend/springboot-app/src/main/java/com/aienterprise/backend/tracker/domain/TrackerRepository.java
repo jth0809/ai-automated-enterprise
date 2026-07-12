@@ -813,6 +813,10 @@ public class TrackerRepository {
                 rs.getString("fluke_result"),
                 rs.getString("status"),
                 rs.getString("reviewer_note"),
+                rs.getInt("priority"),
+                rs.getString("fluke_status"),
+                rs.getInt("fluke_fail_count"),
+                rs.getString("fluke_last_error"),
                 rs.getTimestamp("created_at").toInstant(),
                 resolved == null ? null : resolved.toInstant());
     }
@@ -914,6 +918,7 @@ public class TrackerRepository {
 
     private static final String REVIEW_SELECT = """
             SELECT id, event_id, reason, fluke_result, status, reviewer_note,
+                   priority, fluke_status, fluke_fail_count, fluke_last_error,
                    created_at, resolved_at
               FROM review_queue
             """;

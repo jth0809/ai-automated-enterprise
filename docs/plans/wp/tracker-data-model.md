@@ -348,3 +348,14 @@ CREATE TABLE prediction (                               -- [P4] 마이크로 예
 1. **event_type enum에 `INSTITUTIONAL_ADVANCE` 추가 (12종)** — 컨셉 6절의 11종에는 필라 6의 *전진* 사건(조약 채택, 시범 계약 등)에 맞는 유형이 없음이 설계 중 발견됨. 승인 시 컨셉 6절에 소급 반영.
 2. **노드의 수치 신뢰도 필드 생략** — 컨셉 4절의 "신뢰도"는 verification_level로 충분히 표현된다고 판정(YAGNI). 반대 시 `confidence NUMBER(3,2)` 추가.
 3. **마이그레이션 도구: Flyway 채택 권고** — Spring Boot 표준, `db/migration/V1__tracker_core.sql`부터 시작 (WP1.1에서 도입).
+
+## Phase 1b 추가 (V5 — fluke filter/review audit, 2026-07-13)
+
+- `review_queue` 확장: `priority NUMBER(1) 0..2` (0 일반, 1 mismatch, 2 필터 실패),
+  `fluke_status ('PENDING','COMPLETE','FAILED')`, `fluke_fail_count NUMBER(2)`,
+  `fluke_last_error VARCHAR2(1000)`. `(event_id, reason)` 유니크 — 동일 트리거의
+  중복 인큐를 차단하되 같은 사건의 다른 검수 유형(예: ARRIVAL_CANDIDATE)은 허용.
+- `fluke_evaluation` 신설: 검수당 성공 평가 1건(UNIQUE review_id). verdict
+  ('MATCH','MISMATCH'), 코드 검증된 evidence_quote(quote_verified), raw_output,
+  model_id, prompt_sha256, rubric_version_id, created_at — 전역 버전 스탬프
+  불변식을 충족한다. `review_queue.fluke_result`는 목록/정렬용 비정규화 필드로 유지.

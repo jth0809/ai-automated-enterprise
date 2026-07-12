@@ -79,6 +79,60 @@ class TrackerPhase1bSchemaTest {
                 .update());
     }
 
+    @Test
+    void flukeReviewAuditSchemaExists() {
+        assertColumn("REVIEW_QUEUE", "PRIORITY");
+        assertColumn("REVIEW_QUEUE", "FLUKE_STATUS");
+        assertColumn("REVIEW_QUEUE", "FLUKE_FAIL_COUNT");
+        assertColumn("REVIEW_QUEUE", "FLUKE_LAST_ERROR");
+
+        Integer table = jdbc.sql("""
+                SELECT COUNT(*)
+                  FROM INFORMATION_SCHEMA.TABLES
+                 WHERE TABLE_NAME = 'FLUKE_EVALUATION'
+                """)
+                .query(Integer.class)
+                .single();
+        assertEquals(1, table);
+    }
+
+    @Test
+    void oneReviewPerEventAndReasonWhileDistinctReasonsCoexist() {
+        long eventId = insertEvent("P1-ORBIT-REFUEL|FLIGHT_TEST|schema-8|2926");
+        insertReview(eventId, "HIGH_IMPACT");
+
+        assertThrows(DuplicateKeyException.class, () -> insertReview(eventId, "HIGH_IMPACT"));
+
+        insertReview(eventId, "ARRIVAL_CANDIDATE");
+        assertEquals(2, jdbc.sql("SELECT COUNT(*) FROM review_queue WHERE event_id = :id")
+                .param("id", eventId).query(Integer.class).single());
+    }
+
+    private long insertEvent(String naturalKey) {
+        jdbc.sql("""
+                INSERT INTO event
+                  (natural_key, node_id, event_type, claimed_level, actor, occurred_on,
+                   verification_level, event_status, rubric_version_id)
+                VALUES
+                  (:key,
+                   (SELECT id FROM capability_node WHERE code = 'P1-ORBIT-REFUEL'),
+                   'FLIGHT_TEST', 6, 'SpaceX', DATE '2026-01-30',
+                   'OFFICIAL', 'PROVISIONAL',
+                   (SELECT id FROM rubric_version WHERE version_label = 'r1.0'))
+                """)
+                .param("key", naturalKey)
+                .update();
+        return jdbc.sql("SELECT id FROM event WHERE natural_key = :key")
+                .param("key", naturalKey).query(Long.class).single();
+    }
+
+    private void insertReview(long eventId, String reason) {
+        jdbc.sql("INSERT INTO review_queue (event_id, reason) VALUES (:eventId, :reason)")
+                .param("eventId", eventId)
+                .param("reason", reason)
+                .update();
+    }
+
     private void assertColumn(String table, String column) {
         Integer count = jdbc.sql("""
                 SELECT COUNT(*)

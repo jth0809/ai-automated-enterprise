@@ -99,6 +99,23 @@ class TrackerRepositoryTest {
     }
 
     @Test
+    void reviewMapperPreservesPriorityAndFlukeState() {
+        long nodeId = id("capability_node", "code", "P1-ORBIT-REFUEL");
+        long rubricId = id("rubric_version", "version_label", "r1.0");
+        long eventId = repository.upsertEventByNaturalKey(
+                "P1-ORBIT-REFUEL|FLIGHT_TEST|mapper|2926",
+                EventRow.draft(nodeId, "FLIGHT_TEST", 7, "SpaceX", LocalDate.of(2026, 1, 30),
+                        "OFFICIAL", LocalDate.of(2026, 4, 30), rubricId));
+        long reviewId = repository.insertReview(eventId, "HIGH_IMPACT");
+
+        var review = repository.findReviewById(reviewId).orElseThrow();
+
+        assertEquals(0, review.priority());
+        assertEquals("PENDING", review.flukeStatus());
+        assertEquals(0, review.flukeFailCount());
+    }
+
+    @Test
     void activeRubricVersionIdReturnsTheSeededActiveRow() {
         assertEquals(id("rubric_version", "version_label", "r1.0"), repository.activeRubricVersionId());
     }
