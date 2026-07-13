@@ -13,7 +13,9 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.aienterprise.backend.tracker.api.TrackerAdminController.Decision;
+import com.aienterprise.backend.tracker.domain.EvidenceKind;
 import com.aienterprise.backend.tracker.domain.EventRow;
+import com.aienterprise.backend.tracker.domain.HistoricalEvidenceRow;
 import com.aienterprise.backend.tracker.domain.TrackerRepository;
 
 @SpringBootTest(
@@ -142,10 +144,38 @@ class TrackerAdminControllerTest {
         assertEquals(8, item.claimedLevel());
         assertEquals("HIGH_IMPACT", item.reason());
         assertEquals(1, item.sourceCount());
+        assertEquals(EvidenceKind.VERBATIM, item.evidence().get(0).kind());
         assertEquals("The vehicle completed the test.",
                 item.evidence().get(0).evidenceQuote());
         assertEquals("Refueling milestone story", item.evidence().get(0).articleTitle());
         assertEquals("https://spacenews.test/case", item.evidence().get(0).articleUrl());
+    }
+
+    @Test
+    void pendingReviewExposesHistoricalReferenceWithoutQuotationField() {
+        long eventId = event("historical-reference");
+        long sourceId = jdbc.sql("SELECT id FROM source_registry WHERE code = 'NASA'")
+                .query(Long.class).single();
+        repository.insertHistoricalEvidence(HistoricalEvidenceRow.draft(
+                "BF-ADMIN-HISTORICAL", "HC-ADMIN-HISTORICAL", "MONTH",
+                eventId, sourceId, "https://www.nasa.gov/historical-reference",
+                "mission facts section", LocalDate.of(2026, 7, 13), "d".repeat(64),
+                "PRIMARY", "Reviewer-authored historical fact summary.",
+                "Fact and rubric reviewed."));
+        repository.insertReview(eventId, "LEVEL_JUMP");
+
+        var item = controller.reviewQueue("test-secret").getBody().get(0);
+
+        assertEquals(1, item.sourceCount());
+        assertEquals(1, item.evidence().size());
+        var evidence = item.evidence().get(0);
+        assertEquals(EvidenceKind.HISTORICAL_REFERENCE, evidence.kind());
+        assertEquals("National Aeronautics and Space Administration", evidence.sourceLabel());
+        assertEquals("https://www.nasa.gov/historical-reference", evidence.url());
+        assertEquals(null, evidence.evidenceQuote());
+        assertEquals("Reviewer-authored historical fact summary.", evidence.factSummary());
+        assertEquals("mission facts section", evidence.locator());
+        assertEquals(LocalDate.of(2026, 7, 13), evidence.accessedOn());
     }
 
     @Test

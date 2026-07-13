@@ -21,8 +21,22 @@ export interface PillarSummary {
   momentum: number | null;
 }
 
+export type EvidenceKind = "VERBATIM" | "HISTORICAL_REFERENCE";
+export type OccurredOnPrecision = "DAY" | "MONTH" | "YEAR";
+
+export interface TrackerEvidence {
+  kind: EvidenceKind;
+  sourceLabel: string;
+  url: string;
+  evidenceQuote: string | null;
+  factSummary: string | null;
+  locator: string | null;
+  accessedOn: string | null;
+}
+
 export interface TimelineEvent {
   occurredOn: string;
+  occurredOnPrecision?: OccurredOnPrecision;
   nodeName: string;
   eventType: string;
   levelFrom: number | null;
@@ -31,6 +45,7 @@ export interface TimelineEvent {
   verificationLevel: string;
   sourceCount: number;
   evidenceQuote: string | null;
+  primaryEvidence?: TrackerEvidence | null;
 }
 
 export async function getSummary(): Promise<Summary> {
@@ -51,10 +66,18 @@ export async function getEvents(limit = 50): Promise<TimelineEvent[]> {
   return (await res.json()) as TimelineEvent[];
 }
 
-export interface ReviewEvidence {
-  articleTitle: string | null;
-  articleUrl: string;
-  evidenceQuote: string;
+export type ReviewEvidence = TrackerEvidence;
+
+interface ReviewEvidenceWire {
+  kind?: EvidenceKind;
+  sourceLabel?: string | null;
+  url?: string;
+  evidenceQuote?: string | null;
+  factSummary?: string | null;
+  locator?: string | null;
+  accessedOn?: string | null;
+  articleTitle?: string | null;
+  articleUrl?: string;
 }
 
 export interface ReviewCase {
@@ -93,7 +116,26 @@ export async function getReviews(token: string): Promise<ReviewCase[]> {
     headers: { "X-Tracker-Admin-Token": token },
   });
   if (!res.ok) throw new ReviewApiError(res.status);
-  return (await res.json()) as ReviewCase[];
+  const cases = (await res.json()) as Array<
+    Omit<ReviewCase, "evidence"> & { evidence: ReviewEvidenceWire[] }
+  >;
+  return cases.map(item => ({
+    ...item,
+    evidence: item.evidence.map(normalizeReviewEvidence),
+  }));
+}
+
+function normalizeReviewEvidence(evidence: ReviewEvidenceWire): ReviewEvidence {
+  const url = evidence.url ?? evidence.articleUrl ?? "";
+  return {
+    kind: evidence.kind ?? "VERBATIM",
+    sourceLabel: evidence.sourceLabel ?? evidence.articleTitle ?? url,
+    url,
+    evidenceQuote: evidence.evidenceQuote ?? null,
+    factSummary: evidence.factSummary ?? null,
+    locator: evidence.locator ?? null,
+    accessedOn: evidence.accessedOn ?? null,
+  };
 }
 
 export async function decideReview(

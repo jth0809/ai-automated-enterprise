@@ -1,10 +1,186 @@
 [
-  {"nodeCode": "P1-REUSE-LV", "eventType": "FLIGHT_TEST", "claimedLevel": 5, "actor": "NASA", "occurredOn": "1981-04-12", "verificationLevel": "OFFICIAL", "title": "STS-1: first orbital flight of a partially reusable vehicle"},
-  {"nodeCode": "P2-ECLSS", "eventType": "PROTOTYPE_DEMO", "claimedLevel": 5, "actor": "CAS", "occurredOn": "2018-05-15", "verificationLevel": "PEER_REVIEWED", "title": "Yuegong-365 closed-ecosystem crewed experiment"},
-  {"nodeCode": "P4-NUKE", "eventType": "PROTOTYPE_DEMO", "claimedLevel": 5, "actor": "NASA", "occurredOn": "2018-03-01", "verificationLevel": "OFFICIAL", "title": "Kilopower/KRUSTY ground reactor test"},
-  {"nodeCode": "P1-REUSE-LV", "eventType": "FLIGHT_TEST", "claimedLevel": 6, "actor": "SpaceX", "occurredOn": "2015-12-21", "verificationLevel": "INDEPENDENT", "title": "Falcon 9 first stage ground landing"},
-  {"nodeCode": "P1-REUSE-LV", "eventType": "OPERATIONAL_DEPLOYMENT", "claimedLevel": 7, "actor": "SpaceX", "occurredOn": "2017-03-30", "verificationLevel": "INDEPENDENT", "title": "First commercial reflight of an orbital booster"},
-  {"nodeCode": "P1-REUSE-LV", "eventType": "OPERATIONAL_DEPLOYMENT", "claimedLevel": 9, "actor": "SpaceX", "occurredOn": "2019-11-11", "verificationLevel": "INDEPENDENT", "title": "Booster reuse becomes routine and dominant"},
-  {"nodeCode": "P4-ISRU-PROP", "eventType": "FLIGHT_TEST", "claimedLevel": 6, "actor": "NASA", "occurredOn": "2021-04-20", "verificationLevel": "OFFICIAL", "title": "MOXIE produces oxygen on the Martian surface"},
-  {"nodeCode": "P6-GOV-FRAMEWORK", "eventType": "INSTITUTIONAL_ADVANCE", "claimedLevel": 4, "actor": "NASA", "occurredOn": "2020-10-13", "verificationLevel": "OFFICIAL", "title": "Artemis Accords signed"}
+  {
+    "backfillId": "BF-SAMPLE-001",
+    "candidateId": "HC-SAMPLE-1981-STS1",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P1-REUSE-LV",
+    "eventType": "FLIGHT_TEST",
+    "claimedLevel": 5,
+    "actor": "NASA",
+    "occurredOn": "1981-04-12",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "STS-1 synthetic fixture",
+    "rubricJustification": "Synthetic test fixture boundary.",
+    "evidenceRefs": [
+      "HC-SAMPLE-1981-STS1#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Synthetic fact and rubric checks."
+    }
+  },
+  {
+    "backfillId": "BF-SAMPLE-002",
+    "candidateId": "HC-SAMPLE-2018-ECLSS",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P2-ECLSS",
+    "eventType": "PROTOTYPE_DEMO",
+    "claimedLevel": 5,
+    "actor": "CAS",
+    "occurredOn": "2018-05-15",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "Closed-ecosystem synthetic fixture",
+    "rubricJustification": "Synthetic test fixture boundary.",
+    "evidenceRefs": [
+      "HC-SAMPLE-2018-ECLSS#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Synthetic fact and rubric checks."
+    }
+  },
+  {
+    "backfillId": "BF-SAMPLE-003",
+    "candidateId": "HC-SAMPLE-2018-KRUSTY",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P4-NUKE",
+    "eventType": "PROTOTYPE_DEMO",
+    "claimedLevel": 5,
+    "actor": "NASA",
+    "occurredOn": "2018-03-01",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "KRUSTY synthetic fixture",
+    "rubricJustification": "Synthetic test fixture boundary.",
+    "evidenceRefs": [
+      "HC-SAMPLE-2018-KRUSTY#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Synthetic fact and rubric checks."
+    }
+  },
+  {
+    "backfillId": "BF-SAMPLE-004",
+    "candidateId": "HC-SAMPLE-2015-FALCON9",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P1-REUSE-LV",
+    "eventType": "FLIGHT_TEST",
+    "claimedLevel": 6,
+    "actor": "SpaceX",
+    "occurredOn": "2015-12-21",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "Landing synthetic fixture",
+    "rubricJustification": "Synthetic test fixture boundary.",
+    "evidenceRefs": [
+      "HC-SAMPLE-2015-FALCON9#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Synthetic fact and rubric checks."
+    }
+  },
+  {
+    "backfillId": "BF-SAMPLE-005",
+    "candidateId": "HC-SAMPLE-2017-FALCON9",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P1-REUSE-LV",
+    "eventType": "OPERATIONAL_DEPLOYMENT",
+    "claimedLevel": 7,
+    "actor": "SpaceX",
+    "occurredOn": "2017-03-30",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "Reflight synthetic fixture",
+    "rubricJustification": "Synthetic test fixture boundary.",
+    "evidenceRefs": [
+      "HC-SAMPLE-2017-FALCON9#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Synthetic fact and rubric checks."
+    }
+  },
+  {
+    "backfillId": "BF-SAMPLE-006",
+    "candidateId": "HC-SAMPLE-2019-FALCON9",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P1-REUSE-LV",
+    "eventType": "OPERATIONAL_DEPLOYMENT",
+    "claimedLevel": 9,
+    "actor": "SpaceX",
+    "occurredOn": "2019-11-11",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "Routine reuse synthetic fixture",
+    "rubricJustification": "Synthetic test fixture boundary.",
+    "evidenceRefs": [
+      "HC-SAMPLE-2019-FALCON9#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Synthetic fact and rubric checks."
+    }
+  },
+  {
+    "backfillId": "BF-SAMPLE-007",
+    "candidateId": "HC-SAMPLE-2021-MOXIE",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P4-ISRU-PROP",
+    "eventType": "FLIGHT_TEST",
+    "claimedLevel": 6,
+    "actor": "NASA",
+    "occurredOn": "2021-04-20",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "MOXIE synthetic fixture",
+    "rubricJustification": "Synthetic test fixture boundary.",
+    "evidenceRefs": [
+      "HC-SAMPLE-2021-MOXIE#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Synthetic fact and rubric checks."
+    }
+  },
+  {
+    "backfillId": "BF-SAMPLE-008",
+    "candidateId": "HC-SAMPLE-2020-ACCORDS",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P6-GOV-FRAMEWORK",
+    "eventType": "INSTITUTIONAL_ADVANCE",
+    "claimedLevel": 4,
+    "actor": "NASA",
+    "occurredOn": "2020-10-13",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "Accords synthetic fixture",
+    "rubricJustification": "Synthetic test fixture boundary.",
+    "evidenceRefs": [
+      "HC-SAMPLE-2020-ACCORDS#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Synthetic fact and rubric checks."
+    }
+  }
 ]

@@ -392,6 +392,15 @@ public class TrackerRepository {
                 .single();
     }
 
+    public long rubricVersionIdByLabel(String versionLabel) {
+        return jdbc.sql("SELECT id FROM rubric_version WHERE version_label = :versionLabel")
+                .param("versionLabel", versionLabel)
+                .query(Long.class)
+                .optional()
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Unknown rubric version: " + versionLabel));
+    }
+
     public boolean nodeCodeExists(String code) {
         return jdbc.sql("SELECT COUNT(*) FROM capability_node WHERE code = :code")
                 .param("code", code)
@@ -485,7 +494,11 @@ public class TrackerRepository {
     }
 
     public void markEventConfirmed(long eventId) {
-        setEventStatus(eventId, "CONFIRMED", "Y");
+        markEventConfirmed(eventId, true);
+    }
+
+    public void markEventConfirmed(long eventId, boolean stateAdvanced) {
+        setEventStatus(eventId, "CONFIRMED", stateAdvanced ? "Y" : "N");
     }
 
     public void markEventRejected(long eventId) {
@@ -610,7 +623,8 @@ public class TrackerRepository {
     /**
      * Pending review cases with full decision context, priority-desc then
      * oldest-first. One bounded case query plus one bounded evidence query,
-     * grouped in Java — no N+1. Only quote-verified evidence is exposed.
+     * grouped in Java — no N+1. Live quotations and approved historical
+     * references are exposed as distinct evidence kinds.
      */
     public List<ReviewCase> findPendingReviewCases(int limit) {
         if (limit <= 0) {
@@ -639,10 +653,13 @@ public class TrackerRepository {
         record EvidenceRow(long eventId, long sourceId, ReviewEvidence evidence) {
         }
         List<Long> eventIds = skeletons.stream().map(ReviewCase::eventId).distinct().toList();
-        List<EvidenceRow> evidenceRows = jdbc.sql("""
-                SELECT c.event_id, a.source_id, a.title, a.url, c.evidence_quote
+        List<EvidenceRow> evidenceRows = new java.util.ArrayList<>(jdbc.sql("""
+                SELECT c.event_id, a.source_id,
+                       COALESCE(a.title, s.name) AS source_label,
+                       a.url, c.evidence_quote
                   FROM article_classification c
                   JOIN article a ON a.id = c.article_id
+                  JOIN source_registry s ON s.id = a.source_id
                  WHERE c.quote_verified = 'Y'
                    AND c.event_id IN (:eventIds)
                  ORDER BY c.id
@@ -652,10 +669,38 @@ public class TrackerRepository {
                         rs.getLong("event_id"),
                         rs.getLong("source_id"),
                         new ReviewEvidence(
-                                rs.getString("title"),
+                                EvidenceKind.VERBATIM,
+                                rs.getString("source_label"),
                                 rs.getString("url"),
-                                rs.getString("evidence_quote"))))
-                .list();
+                                rs.getString("evidence_quote"),
+                                null,
+                                null,
+                                null)))
+                .list());
+        evidenceRows.addAll(jdbc.sql("""
+                SELECT h.event_id, h.source_id, s.name, h.url,
+                       h.fact_summary, h.locator, h.accessed_on
+                  FROM historical_evidence h
+                  JOIN source_registry s ON s.id = h.source_id
+                 WHERE h.event_id IN (:eventIds)
+                   AND h.fact_review_status = 'APPROVED'
+                   AND h.rubric_review_status = 'APPROVED'
+                   AND h.reference_status = 'APPROVED'
+                 ORDER BY h.id
+                """)
+                .param("eventIds", eventIds)
+                .query((rs, rowNum) -> new EvidenceRow(
+                        rs.getLong("event_id"),
+                        rs.getLong("source_id"),
+                        new ReviewEvidence(
+                                EvidenceKind.HISTORICAL_REFERENCE,
+                                rs.getString("name"),
+                                rs.getString("url"),
+                                null,
+                                rs.getString("fact_summary"),
+                                rs.getString("locator"),
+                                localDate(rs.getDate("accessed_on")))))
+                .list());
 
         java.util.Map<Long, List<ReviewEvidence>> evidenceByEvent = new java.util.HashMap<>();
         java.util.Map<Long, Set<Long>> sourcesByEvent = new java.util.HashMap<>();
@@ -751,6 +796,108 @@ public class TrackerRepository {
         return jdbc.sql("SELECT COUNT(*) FROM event").query(Long.class).single();
     }
 
+    public Set<Long> findNodeIdsWithConfirmedState() {
+        return Set.copyOf(jdbc.sql("""
+                SELECT DISTINCT node_id FROM event
+                 WHERE event_status = 'CONFIRMED'
+                   AND state_advanced = 'Y'
+                """).query(Long.class).list());
+    }
+
+    public Optional<BackfillImportRow> findBackfillImport(String datasetVersion) {
+        return jdbc.sql("""
+                SELECT dataset_version, dataset_sha256, node_set_version,
+                       rubric_version_id, imported_at, record_count
+                  FROM backfill_import
+                 WHERE dataset_version = :datasetVersion
+                """)
+                .param("datasetVersion", datasetVersion)
+                .query((rs, rowNum) -> new BackfillImportRow(
+                        rs.getString("dataset_version"),
+                        rs.getString("dataset_sha256"),
+                        rs.getString("node_set_version"),
+                        rs.getLong("rubric_version_id"),
+                        rs.getTimestamp("imported_at").toInstant(),
+                        rs.getInt("record_count")))
+                .optional();
+    }
+
+    public long sourceIdByCode(String sourceCode) {
+        return jdbc.sql("SELECT id FROM source_registry WHERE code = :sourceCode")
+                .param("sourceCode", sourceCode)
+                .query(Long.class)
+                .optional()
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Unknown source code: " + sourceCode));
+    }
+
+    public SourceEvidence sourceEvidenceByCode(String sourceCode, String publicationPath) {
+        return jdbc.sql("""
+                SELECT id, tier, source_type
+                  FROM source_registry
+                 WHERE code = :sourceCode
+                """)
+                .param("sourceCode", sourceCode)
+                .query((rs, rowNum) -> new SourceEvidence(
+                        rs.getLong("id"),
+                        rs.getInt("tier"),
+                        rs.getString("source_type"),
+                        publicationPath))
+                .optional()
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Unknown source code: " + sourceCode));
+    }
+
+    public void insertHistoricalEvidence(HistoricalEvidenceRow row) {
+        jdbc.sql("""
+                INSERT INTO historical_evidence
+                  (backfill_id, candidate_id, occurred_on_precision,
+                   event_id, source_id, url, locator, accessed_on,
+                   content_sha256, publication_path, fact_summary,
+                   fact_review_status, rubric_review_status,
+                   reference_status, reviewer_note)
+                VALUES
+                  (:backfillId, :candidateId, :occurredOnPrecision,
+                   :eventId, :sourceId, :url, :locator, :accessedOn,
+                   :contentSha256, :publicationPath, :factSummary,
+                   :factReviewStatus, :rubricReviewStatus,
+                   :referenceStatus, :reviewerNote)
+                """)
+                .param("backfillId", row.backfillId())
+                .param("candidateId", row.candidateId())
+                .param("occurredOnPrecision", row.occurredOnPrecision())
+                .param("eventId", row.eventId())
+                .param("sourceId", row.sourceId())
+                .param("url", row.url())
+                .param("locator", row.locator())
+                .param("accessedOn", date(row.accessedOn()))
+                .param("contentSha256", row.contentSha256())
+                .param("publicationPath", row.publicationPath())
+                .param("factSummary", row.factSummary())
+                .param("factReviewStatus", row.factReviewStatus())
+                .param("rubricReviewStatus", row.rubricReviewStatus())
+                .param("referenceStatus", row.referenceStatus())
+                .param("reviewerNote", row.reviewerNote())
+                .update();
+    }
+
+    public void recordBackfillImport(BackfillImportRow row) {
+        jdbc.sql("""
+                INSERT INTO backfill_import
+                  (dataset_version, dataset_sha256, node_set_version,
+                   rubric_version_id, record_count)
+                VALUES
+                  (:datasetVersion, :datasetSha256, :nodeSetVersion,
+                   :rubricVersionId, :recordCount)
+                """)
+                .param("datasetVersion", row.datasetVersion())
+                .param("datasetSha256", row.datasetSha256())
+                .param("nodeSetVersion", row.nodeSetVersion())
+                .param("rubricVersionId", row.rubricVersionId())
+                .param("recordCount", row.recordCount())
+                .update();
+    }
+
     public List<NodeRow> findAllNodes() {
         return jdbc.sql(NODE_SELECT + " ORDER BY pillar, code")
                 .query(TrackerRepository::mapNode)
@@ -769,6 +916,16 @@ public class TrackerRepository {
                 .param("logitClipped", logitClipped)
                 .param("paramsVersion", paramsVersion)
                 .update();
+    }
+
+    public void replacePillarSnapshot(
+            int pillar, LocalDate snapshotDate, double readiness,
+            double logitClipped, String paramsVersion) {
+        jdbc.sql("DELETE FROM pillar_snapshot WHERE pillar = :pillar AND snapshot_date = :snapshotDate")
+                .param("pillar", pillar)
+                .param("snapshotDate", date(snapshotDate))
+                .update();
+        insertPillarSnapshot(pillar, snapshotDate, readiness, logitClipped, paramsVersion);
     }
 
     public void replaceSnapshot(SnapshotRow snapshot) {
@@ -856,19 +1013,20 @@ public class TrackerRepository {
             return List.of();
         }
         int safeLimit = Math.min(limit, 200);
-        return jdbc.sql("""
-                SELECT e.occurred_on, n.name_ko, e.event_type,
+        record TimelineSkeleton(
+                long eventId,
+                LocalDate occurredOn,
+                String nodeName,
+                String eventType,
+                Integer levelFrom,
+                Integer levelTo,
+                Double impactScore,
+                String verificationLevel) {
+        }
+        List<TimelineSkeleton> skeletons = jdbc.sql("""
+                SELECT e.id AS event_id, e.occurred_on, n.name_ko, e.event_type,
                        h.prev_level, h.new_level,
-                       e.impact_score, e.verification_level,
-                       (SELECT COUNT(DISTINCT a.source_id)
-                          FROM article_classification c
-                          JOIN article a ON a.id = c.article_id
-                         WHERE c.event_id = e.id AND c.quote_verified = 'Y') AS source_count,
-                       (SELECT c2.evidence_quote
-                          FROM article_classification c2
-                         WHERE c2.event_id = e.id AND c2.quote_verified = 'Y'
-                         ORDER BY c2.id
-                         FETCH FIRST 1 ROWS ONLY) AS evidence_quote
+                       e.impact_score, e.verification_level
                   FROM event e
                   JOIN capability_node n ON n.id = e.node_id
                   LEFT JOIN node_state_history h ON h.cause_event_id = e.id
@@ -876,8 +1034,107 @@ public class TrackerRepository {
                  ORDER BY e.occurred_on DESC, e.id DESC
                  FETCH FIRST %d ROWS ONLY
                 """.formatted(safeLimit))
-                .query(TrackerRepository::mapTimeline)
+                .query((rs, rowNum) -> new TimelineSkeleton(
+                        rs.getLong("event_id"),
+                        localDate(rs.getDate("occurred_on")),
+                        rs.getString("name_ko"),
+                        rs.getString("event_type"),
+                        nullableInt(rs, "prev_level"),
+                        nullableInt(rs, "new_level"),
+                        nullableDouble(rs, "impact_score"),
+                        rs.getString("verification_level")))
                 .list();
+        if (skeletons.isEmpty()) {
+            return List.of();
+        }
+
+        record EvidenceRow(
+                long eventId,
+                long sourceId,
+                String occurredOnPrecision,
+                ReviewEvidence evidence) {
+        }
+        List<Long> eventIds = skeletons.stream().map(TimelineSkeleton::eventId).toList();
+        List<EvidenceRow> evidenceRows = new java.util.ArrayList<>(jdbc.sql("""
+                SELECT c.event_id, a.source_id,
+                       COALESCE(a.title, s.name) AS source_label,
+                       a.url, c.evidence_quote
+                  FROM article_classification c
+                  JOIN article a ON a.id = c.article_id
+                  JOIN source_registry s ON s.id = a.source_id
+                 WHERE c.quote_verified = 'Y'
+                   AND c.event_id IN (:eventIds)
+                 ORDER BY c.id
+                """)
+                .param("eventIds", eventIds)
+                .query((rs, rowNum) -> new EvidenceRow(
+                        rs.getLong("event_id"),
+                        rs.getLong("source_id"),
+                        null,
+                        new ReviewEvidence(
+                                EvidenceKind.VERBATIM,
+                                rs.getString("source_label"),
+                                rs.getString("url"),
+                                rs.getString("evidence_quote"),
+                                null,
+                                null,
+                                null)))
+                .list());
+        evidenceRows.addAll(jdbc.sql("""
+                SELECT h.event_id, h.source_id, h.occurred_on_precision,
+                       s.name, h.url, h.fact_summary, h.locator, h.accessed_on
+                  FROM historical_evidence h
+                  JOIN source_registry s ON s.id = h.source_id
+                 WHERE h.event_id IN (:eventIds)
+                   AND h.fact_review_status = 'APPROVED'
+                   AND h.rubric_review_status = 'APPROVED'
+                   AND h.reference_status = 'APPROVED'
+                 ORDER BY h.id
+                """)
+                .param("eventIds", eventIds)
+                .query((rs, rowNum) -> new EvidenceRow(
+                        rs.getLong("event_id"),
+                        rs.getLong("source_id"),
+                        rs.getString("occurred_on_precision"),
+                        new ReviewEvidence(
+                                EvidenceKind.HISTORICAL_REFERENCE,
+                                rs.getString("name"),
+                                rs.getString("url"),
+                                null,
+                                rs.getString("fact_summary"),
+                                rs.getString("locator"),
+                                localDate(rs.getDate("accessed_on")))))
+                .list());
+
+        java.util.Map<Long, List<ReviewEvidence>> evidenceByEvent = new java.util.HashMap<>();
+        java.util.Map<Long, Set<Long>> sourcesByEvent = new java.util.HashMap<>();
+        java.util.Map<Long, String> precisionByEvent = new java.util.HashMap<>();
+        for (EvidenceRow row : evidenceRows) {
+            evidenceByEvent.computeIfAbsent(row.eventId(), key -> new java.util.ArrayList<>())
+                    .add(row.evidence());
+            sourcesByEvent.computeIfAbsent(row.eventId(), key -> new java.util.HashSet<>())
+                    .add(row.sourceId());
+            if (row.occurredOnPrecision() != null) {
+                precisionByEvent.putIfAbsent(row.eventId(), row.occurredOnPrecision());
+            }
+        }
+        return skeletons.stream().map(skeleton -> {
+            List<ReviewEvidence> evidence = evidenceByEvent.getOrDefault(
+                    skeleton.eventId(), List.of());
+            ReviewEvidence primary = evidence.isEmpty() ? null : evidence.getFirst();
+            return new TimelineRow(
+                    skeleton.occurredOn(),
+                    precisionByEvent.getOrDefault(skeleton.eventId(), "DAY"),
+                    skeleton.nodeName(),
+                    skeleton.eventType(),
+                    skeleton.levelFrom(),
+                    skeleton.levelTo(),
+                    skeleton.impactScore(),
+                    skeleton.verificationLevel(),
+                    sourcesByEvent.getOrDefault(skeleton.eventId(), Set.of()).size(),
+                    primary == null ? null : primary.evidenceQuote(),
+                    primary);
+        }).toList();
     }
 
     /** Full bodies of quote-verified articles in an event's cluster (fluke input). */
@@ -920,6 +1177,7 @@ public class TrackerRepository {
                        verification_level = :verification,
                        node_status = 'ACTIVE',
                        dormant_since = NULL,
+                       program_end_date = NULL,
                        updated_at = CURRENT_TIMESTAMP
                  WHERE id = :nodeId
                 """)
@@ -946,6 +1204,39 @@ public class TrackerRepository {
                 .param("causeEventId", causeEventId)
                 .param("rubricVersionId", rubricVersionId)
                 .update();
+    }
+
+    public void recordProgramEndDate(long nodeId, LocalDate programEndDate) {
+        int changed = jdbc.sql("""
+                UPDATE capability_node
+                   SET program_end_date = :programEndDate,
+                       node_status = 'ACTIVE',
+                       dormant_since = NULL,
+                       updated_at = CURRENT_TIMESTAMP
+                 WHERE id = :nodeId
+                """)
+                .param("programEndDate", date(programEndDate))
+                .param("nodeId", nodeId)
+                .update();
+        if (changed != 1) {
+            throw new IllegalArgumentException("Unknown capability node id: " + nodeId);
+        }
+    }
+
+    public void markNodeDormant(long nodeId, LocalDate dormantSince) {
+        int changed = jdbc.sql("""
+                UPDATE capability_node
+                   SET node_status = 'DORMANT',
+                       dormant_since = :dormantSince,
+                       updated_at = CURRENT_TIMESTAMP
+                 WHERE id = :nodeId
+                """)
+                .param("dormantSince", date(dormantSince))
+                .param("nodeId", nodeId)
+                .update();
+        if (changed != 1) {
+            throw new IllegalArgumentException("Unknown capability node id: " + nodeId);
+        }
     }
 
     private Optional<Long> articleIdByHash(String urlHash) {
@@ -1059,19 +1350,6 @@ public class TrackerRepository {
                 nullableDouble(rs, "eta_high"),
                 nullableDouble(rs, "displayed_eta_year"),
                 rs.getString("params_version"));
-    }
-
-    private static TimelineRow mapTimeline(ResultSet rs, int rowNum) throws SQLException {
-        return new TimelineRow(
-                localDate(rs.getDate("occurred_on")),
-                rs.getString("name_ko"),
-                rs.getString("event_type"),
-                nullableInt(rs, "prev_level"),
-                nullableInt(rs, "new_level"),
-                nullableDouble(rs, "impact_score"),
-                rs.getString("verification_level"),
-                rs.getInt("source_count"),
-                rs.getString("evidence_quote"));
     }
 
     private static Double nullableDouble(ResultSet rs, String column) throws SQLException {

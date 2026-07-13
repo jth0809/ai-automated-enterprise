@@ -29,8 +29,7 @@ class TrackerConfigTest {
                     "spring.datasource.url=jdbc:h2:mem:tracker-config;MODE=Oracle;DB_CLOSE_DELAY=-1",
                     "spring.datasource.username=sa",
                     "spring.datasource.password=",
-                    "spring.flyway.enabled=true",
-                    "tracker.backfill-on-boot=false");
+                    "spring.flyway.enabled=true");
 
     @Test
     void trackerBeansAreAbsentWhenFeatureFlagIsDisabledByDefault() {
@@ -56,5 +55,24 @@ class TrackerConfigTest {
                             new FeedSpec("NASA", "https://www.nasa.gov/news-release/feed/"),
                             new FeedSpec("SPACENEWS", "https://spacenews.com/feed/"));
                 });
+    }
+
+    @Test
+    void backfillRunnerStaysOffInTestsButRemainsAvailableForTheDemoProfile() {
+        runner.withUserConfiguration(TrackerConfig.class)
+                .withPropertyValues(
+                        "tracker.enabled=true",
+                        "tracker.backfill-on-boot=true",
+                        "spring.profiles.active=test")
+                .run(context -> assertThat(context)
+                        .doesNotHaveBean("trackerBackfillRunner"));
+
+        runner.withUserConfiguration(TrackerConfig.class)
+                .withPropertyValues(
+                        "tracker.enabled=true",
+                        "tracker.backfill-on-boot=true",
+                        "spring.profiles.active=test,demo")
+                .run(context -> assertThat(context)
+                        .hasBean("trackerBackfillRunner"));
     }
 }

@@ -52,11 +52,11 @@ class TrackerSchemaTest {
     }
 
     @Test
-    void sourceRegistryHasExactlySixteenSeededRows() {
+    void sourceRegistryHasExactlyTwentySeededAndHistoricalRows() {
         Integer count = jdbcClient.sql("SELECT COUNT(*) FROM source_registry")
                 .query(Integer.class)
                 .single();
-        assertEquals(16, count);
+        assertEquals(20, count);
     }
 
     @Test

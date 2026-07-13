@@ -17,13 +17,17 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.aienterprise.backend.tracker.ingest.BackfillLoader;
 import com.aienterprise.backend.tracker.math.SnapshotJob;
+import com.aienterprise.backend.tracker.domain.EvidenceKind;
+import com.aienterprise.backend.tracker.domain.ReviewEvidence;
 
 @SpringBootTest(
         webEnvironment = SpringBootTest.WebEnvironment.NONE,
         properties = {
                 "tracker.enabled=true",
                 "tracker.backfill-on-boot=false",
-                "tracker.backfill-resource=tracker/backfill-sample.json"})
+                "tracker.backfill-resource=tracker/backfill-sample.json",
+                "tracker.backfill-candidates-resource=tracker/backfill/historical-candidates-import.jsonl",
+                "tracker.backfill-dataset-version=backfill-test-v1"})
 @ActiveProfiles("test")
 @Transactional
 class TrackerControllerTest {
@@ -76,10 +80,15 @@ class TrackerControllerTest {
         List<Map<String, Object>> events = controller.events(50).getBody();
 
         assertEquals(8, events.size());
-        assertEquals(Set.of("occurredOn", "nodeName", "eventType", "levelFrom", "levelTo",
-                "impactScore", "verificationLevel", "sourceCount", "evidenceQuote"),
+        assertEquals(Set.of("occurredOn", "occurredOnPrecision", "nodeName", "eventType",
+                "levelFrom", "levelTo", "impactScore", "verificationLevel",
+                "sourceCount", "evidenceQuote", "primaryEvidence"),
                 events.get(0).keySet());
         assertEquals(LocalDate.of(2021, 4, 20), events.get(0).get("occurredOn"));
         assertTrue(events.stream().allMatch(e -> e.get("sourceCount") != null));
+        ReviewEvidence evidence = (ReviewEvidence) events.get(0).get("primaryEvidence");
+        assertEquals(EvidenceKind.HISTORICAL_REFERENCE, evidence.kind());
+        assertEquals(null, evidence.evidenceQuote());
+        assertTrue(evidence.factSummary().startsWith("Reviewer-authored"));
     }
 }

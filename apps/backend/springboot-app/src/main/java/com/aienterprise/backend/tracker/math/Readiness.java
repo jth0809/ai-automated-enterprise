@@ -25,10 +25,13 @@ public final class Readiness {
         LocalDate asOf = LocalDate.now(ZoneOffset.UTC);
         double readiness = 0;
         for (NodeRow node : nodes) {
+            LocalDate dormancyOrigin = node.programEndDate() == null
+                    ? node.dormantSince()
+                    : node.programEndDate();
             readiness += node.weight() * nodeReadiness(
                     node.currentLevel(),
                     "DORMANT".equals(node.nodeStatus()),
-                    node.dormantSince(),
+                    dormancyOrigin,
                     node.scaleType(),
                     params,
                     asOf);
@@ -36,7 +39,7 @@ public final class Readiness {
         return readiness;
     }
 
-    static double nodeReadiness(
+    public static double nodeReadiness(
             int level,
             boolean dormant,
             LocalDate dormantSince,

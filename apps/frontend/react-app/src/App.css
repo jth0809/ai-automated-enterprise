@@ -697,6 +697,42 @@ body {
   color: #475467;
 }
 
+.timeline-evidence,
+.review-evidence {
+  margin-top: 0.65rem;
+}
+
+.evidence-kind {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.evidence-summary {
+  margin: 0.3rem 0 0;
+  padding: 0.65rem 0.75rem;
+  border-radius: 0.45rem;
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: 0.9rem;
+}
+
+.evidence-source {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.75rem;
+  margin: 0.3rem 0 0;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+}
+
+.evidence-source a {
+  color: var(--accent-strong);
+  font-weight: 600;
+}
+
 /* Tracker review queue (admin) */
 
 .review-section {

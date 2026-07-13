@@ -23,7 +23,9 @@ import com.aienterprise.backend.tracker.ingest.BackfillLoader;
         properties = {
                 "tracker.enabled=true",
                 "tracker.backfill-on-boot=false",
-                "tracker.backfill-resource=tracker/backfill-sample.json"})
+                "tracker.backfill-resource=tracker/backfill-sample.json",
+                "tracker.backfill-candidates-resource=tracker/backfill/historical-candidates-import.jsonl",
+                "tracker.backfill-dataset-version=backfill-test-v1"})
 @ActiveProfiles("test")
 @Transactional
 class SnapshotJobTest {

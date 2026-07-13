@@ -4,6 +4,7 @@ import java.time.LocalDate;
 
 public record TimelineRow(
         LocalDate occurredOn,
+        String occurredOnPrecision,
         String nodeName,
         String eventType,
         Integer levelFrom,
@@ -11,5 +12,6 @@ public record TimelineRow(
         Double impactScore,
         String verificationLevel,
         int sourceCount,
-        String evidenceQuote) {
+        String evidenceQuote,
+        ReviewEvidence primaryEvidence) {
 }

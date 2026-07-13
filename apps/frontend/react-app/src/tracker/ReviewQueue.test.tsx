@@ -26,9 +26,13 @@ function reviewCase(overrides: Record<string, unknown> = {}) {
     sourceCount: 2,
     evidence: [
       {
-        articleTitle: "Refueling milestone story",
-        articleUrl: "https://spacenews.test/case",
+        kind: "VERBATIM",
+        sourceLabel: "Refueling milestone story",
+        url: "https://spacenews.test/case",
         evidenceQuote: EXACT_QUOTE,
+        factSummary: null,
+        locator: null,
+        accessedOn: null,
       },
     ],
     status: "PENDING",
@@ -80,11 +84,67 @@ describe("ReviewQueue", () => {
 
     expect(screen.getByText("6 → 8")).toBeInTheDocument();
     expect(screen.getByText(EXACT_QUOTE)).toBeInTheDocument();
+    expect(screen.getByText("원문 인용")).toBeInTheDocument();
     expect(screen.getByText("MISMATCH")).toBeInTheDocument();
     const link = screen.getByRole("link", { name: /refueling milestone story/i });
     expect(link).toHaveAttribute("href", "https://spacenews.test/case");
     expect(link).toHaveAttribute("target", "_blank");
+    expect(link).toHaveAttribute("rel", "noreferrer");
     expect(calls[0].init?.headers).toMatchObject({ "X-Tracker-Admin-Token": "secret" });
+  });
+
+  it("renders reviewed historical facts as summaries, never quotations", async () => {
+    const stub = stubFetch(200, [
+      reviewCase({
+        evidence: [
+          {
+            kind: "HISTORICAL_REFERENCE",
+            sourceLabel: "NASA",
+            url: "https://www.nasa.gov/history/apollo-11-mission-overview/",
+            evidenceQuote: null,
+            factSummary: "Apollo 11 completed the first crewed lunar landing in 1969.",
+            locator: "Mission overview",
+            accessedOn: "2026-07-13",
+          },
+        ],
+      }),
+    ]);
+    const { container } = render(<ReviewQueue />);
+    fireEvent.change(screen.getByLabelText(/admin token/i), {
+      target: { value: "secret" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /load reviews/i }));
+
+    expect(await screen.findByText("인간 검수 사실 요약")).toBeInTheDocument();
+    const summary = screen.getByText(/first crewed lunar landing/i);
+    expect(summary.tagName).toBe("P");
+    expect(summary.closest("blockquote")).toBeNull();
+    expect(container.querySelector("blockquote")).toBeNull();
+    expect(screen.getByText("Mission overview")).toBeInTheDocument();
+    expect(screen.getByText("확인일 2026-07-13")).toBeInTheDocument();
+    const link = screen.getByRole("link", { name: "NASA" });
+    expect(link).toHaveAttribute("target", "_blank");
+    expect(link).toHaveAttribute("rel", "noreferrer");
+    expect(stub.impl).toHaveBeenCalledTimes(1);
+  });
+
+  it("normalizes the previous verbatim evidence field names during rollout", async () => {
+    await renderLoadedQueue([
+      reviewCase({
+        evidence: [
+          {
+            articleTitle: "Legacy evidence title",
+            articleUrl: "https://spacenews.test/legacy",
+            evidenceQuote: "Legacy verified quote.",
+          },
+        ],
+      }),
+    ]);
+
+    expect(screen.getByText("원문 인용")).toBeInTheDocument();
+    expect(screen.getByText("Legacy verified quote.")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Legacy evidence title" }))
+      .toHaveAttribute("href", "https://spacenews.test/legacy");
   });
 
   it("does not submit a rejection without a note", async () => {

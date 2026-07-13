@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { ReviewCase } from "./api";
+import type { ReviewCase, ReviewEvidence } from "./api";
 
 interface ReviewCaseCardProps {
   item: ReviewCase;
@@ -12,6 +12,38 @@ function flukeBadge(item: ReviewCase): string {
   if (item.flukeStatus === "FAILED") return "FILTER FAILED";
   if (item.flukeStatus === "COMPLETE" && item.flukeResult) return item.flukeResult;
   return "FILTER PENDING";
+}
+
+function EvidenceDetails({ evidence }: { evidence: ReviewEvidence }) {
+  if (evidence.kind === "HISTORICAL_REFERENCE") {
+    return (
+      <div className="review-evidence review-reference">
+        <p className="evidence-kind">인간 검수 사실 요약</p>
+        {evidence.factSummary !== null && (
+          <p className="evidence-summary">{evidence.factSummary}</p>
+        )}
+        <p className="evidence-source">
+          <a href={evidence.url} target="_blank" rel="noreferrer">
+            {evidence.sourceLabel}
+          </a>
+          {evidence.locator !== null && <span>{evidence.locator}</span>}
+          {evidence.accessedOn !== null && <span>확인일 {evidence.accessedOn}</span>}
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="review-evidence review-verbatim">
+      <p className="evidence-kind">원문 인용</p>
+      <p className="evidence-source">
+        <a href={evidence.url} target="_blank" rel="noreferrer">
+          {evidence.sourceLabel}
+        </a>
+      </p>
+      {evidence.evidenceQuote !== null && <blockquote>{evidence.evidenceQuote}</blockquote>}
+    </div>
+  );
 }
 
 /**
@@ -56,12 +88,7 @@ export function ReviewCaseCard({ item, busy, error, onDecide }: ReviewCaseCardPr
         <span>sources {item.sourceCount}</span>
       </p>
       {item.evidence.map((evidence, i) => (
-        <div key={i} className="review-evidence">
-          <a href={evidence.articleUrl} target="_blank" rel="noreferrer">
-            {evidence.articleTitle ?? evidence.articleUrl}
-          </a>
-          <blockquote>{evidence.evidenceQuote}</blockquote>
-        </div>
+        <EvidenceDetails key={`${evidence.kind}-${evidence.url}-${i}`} evidence={evidence} />
       ))}
       <div className="review-actions">
         <label className="review-note">

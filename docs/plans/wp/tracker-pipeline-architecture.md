@@ -123,8 +123,8 @@ com.aienterprise.backend.tracker
 |---|---|
 | `GET /api/tracker/summary` | { displayedEtaYear, etaLow, etaHigh, label:"현 추세 지속 시나리오 기준 · 모델 내 80% 구간", overallReadiness, bottleneckPillar, frozen:bool } |
 | `GET /api/tracker/pillars` | [ { pillar, name, readiness, etaYear, momentum } ×6 ] |
-| `GET /api/tracker/events?limit=50` | 타임라인: [ { occurredOn, nodeName, eventType, levelFrom, levelTo, impactScore, verificationLevel, sourceCount, evidenceQuote } ] |
-| `GET /api/tracker/admin/review` (인증) | 검수 큐 목록 — Phase 1b부터 **ReviewCase 프로젝션**: 검수 행 + 사건/노드/현재·제안 레벨 + 검증 수준·임팩트 + 플루크 상태·판정 + 출처 수 + 인용 검증된 증거(제목·URL·인용). priority DESC → 오래된 순 |
+| `GET /api/tracker/events?limit=50` | 타임라인: `occurredOnPrecision`, 중복 제거한 `sourceCount`, 타입이 지정된 `primaryEvidence` 포함. `evidenceQuote`는 한 릴리스 동안 실시간 증거 호환 필드로 유지 |
+| `GET /api/tracker/admin/review` (인증) | 검수 큐 목록 — Phase 1b부터 **ReviewCase 프로젝션**: 검수 행 + 사건/노드/현재·제안 레벨 + 검증 수준·임팩트 + 플루크 상태·판정 + 실시간 `VERBATIM` 또는 검수된 `HISTORICAL_REFERENCE` 증거. priority DESC → 오래된 순 |
 | `POST /api/tracker/admin/review/{id}` (인증) | { decision: APPROVE\|REJECT, note } — Phase 1b부터 REJECT는 공백 아닌 note 필수, note ≤2000자, PENDING 외 결정은 409 |
 
 인증은 기존 resume 도메인의 접근 코드 패턴 또는 헤더 시크릿 재사용 — WP1.6 상세 플랜에서 확정. 공개 조회는 무인증(대시보드 공개 제품).
@@ -137,4 +137,24 @@ tracker.gate-model       (기본 claude-haiku-4-5-20251001)
 tracker.classify-model   (기본 claude-opus-4-8)
 anthropic.api-key        (기존 키 재사용)
 tracker.enabled          (기본 false — P1 배포 시 true 전환)
+tracker.backfill-resource            (기본 tracker/backfill-v1.json)
+tracker.backfill-candidates-resource (기본 tracker/historical-candidates-v1.jsonl)
+tracker.backfill-dataset-version      (기본 backfill-v1; 변경 불가능한 데이터셋 식별자)
 ```
+
+## 9. 참조형 역사 백필 계약 (nodes-v1.0 / r2.0)
+
+역사 백필은 런타임 기사 수집과 별도인 로컬·불변 데이터셋이다. 승인된 입력은 노드 중립 후보 210건과 노드 매핑 120건이며, 가져오기 중 네트워크·LLM·플루크 필터를 호출하지 않는다. 데이터셋 버전과 정규화된 콘텐츠의 SHA-256을 `backfill_import`에 기록하므로 같은 버전·같은 해시는 no-op이고, 같은 버전·다른 해시는 전체 가져오기를 거부한다.
+
+`historical_evidence`에는 URL, 출처 ID, 로케이터, 확인일, 콘텐츠 지문, 발행 경로, 검수자가 작성한 사실 요약만 저장한다. 원문 본문·인용·발췌·출처 제목·HTML·PDF·이미지·첨부는 저장하지 않는다. 사실 검수와 루브릭 검수가 모두 `APPROVED`인 매핑만 허용하며, 검증 수준은 등록 출처의 tier/type과 publication path에서 다시 계산한다.
+
+가져오기는 `occurredOn` 순으로 다음 전이를 재생한다.
+
+- 정상 진행 사건은 입증된 레벨까지 전진하고 취소·휴면 상태를 해제한다.
+- `ROLLBACK`은 Pillar 6에서 OFFICIAL 이상 근거가 있을 때만 더 낮은 레벨로 이동한다.
+- `PROGRAM_CANCELLATION`은 레벨을 바꾸지 않고 프로그램 종료일을 기록한다.
+- `SETBACK`, `ANNOUNCEMENT_ONLY`, `RETROSPECTIVE`는 레벨을 바꾸지 않는다.
+- 연말 스냅샷은 당시 레벨과 프로그램 종료 후 15년 휴면 감쇠를 반영해 다시 만든다.
+- 가져오기 전에 이미 확정된 실시간 상태 전이가 있는 노드는 현재 상태를 보존하고, 역사 사건·참조·연말 스냅샷만 추가한다.
+
+API와 UI는 증거 유형을 명시적으로 구분한다. 실시간 기사 증거는 `VERBATIM`/`원문 인용`으로만 인용 스타일을 사용한다. 역사 증거는 `HISTORICAL_REFERENCE`/`인간 검수 사실 요약`으로 표시하며, 사실 요약을 인용문처럼 렌더링하거나 누락된 요약을 `evidenceQuote`로 대체하지 않는다.

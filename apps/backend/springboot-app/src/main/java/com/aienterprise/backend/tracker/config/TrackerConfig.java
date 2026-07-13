@@ -12,6 +12,7 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.boot.sql.init.dependency.DependsOnDatabaseInitialization;
@@ -100,7 +101,8 @@ public class TrackerConfig {
 
     @Bean
     @ConditionalOnProperty(prefix = "tracker", name = "backfill-on-boot", havingValue = "true", matchIfMissing = true)
+    @Profile("!test | demo")
     ApplicationRunner trackerBackfillRunner(ObjectProvider<BackfillLoader> backfillLoader) {
-        return args -> backfillLoader.ifAvailable(BackfillLoader::loadIfEmpty);
+        return args -> backfillLoader.ifAvailable(BackfillLoader::loadDatasetIfNeeded);
     }
 }
