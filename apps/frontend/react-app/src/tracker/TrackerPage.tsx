@@ -3,6 +3,7 @@ import { getEvents, getPillars, getSummary } from "./api";
 import type { PillarSummary, Summary, TimelineEvent } from "./api";
 import { Countdown } from "./Countdown";
 import { EventTimeline } from "./EventTimeline";
+import { PillarEtaList } from "./PillarEtaList";
 import { PillarRadar } from "./PillarRadar";
 import { ReviewQueue } from "./ReviewQueue";
 
@@ -47,8 +48,10 @@ export function TrackerPage() {
         etaLow={data.summary.etaLow}
         etaHigh={data.summary.etaHigh}
         label={data.summary.label}
+        pillars={data.pillars}
       />
       <PillarRadar pillars={data.pillars} bottleneck={data.summary.bottleneckPillar} />
+      <PillarEtaList pillars={data.pillars} bottleneck={data.summary.bottleneckPillar} />
       <EventTimeline events={data.events} />
       <details className="review-section">
         <summary>검수 큐 (admin)</summary>

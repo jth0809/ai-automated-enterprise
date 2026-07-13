@@ -1,0 +1,29 @@
+import { render, screen } from "@testing-library/react";
+import { describe, expect, it } from "vitest";
+import { PillarEtaList } from "./PillarEtaList";
+import type { PillarSummary } from "./api";
+
+const PILLARS: PillarSummary[] = [
+  { pillar: 1, name: "수송", readiness: 0.32, etaYear: null, momentum: -0.0015 },
+  { pillar: 2, name: "생명 유지", readiness: 0.13, etaYear: 2150.7, momentum: 0.029 },
+  { pillar: 4, name: "자원·에너지", readiness: 0.19, etaYear: 2087.1, momentum: 0.052 },
+];
+
+describe("PillarEtaList", () => {
+  it("shows each pillar's resolved ETA or an unresolved marker", () => {
+    render(<PillarEtaList pillars={PILLARS} bottleneck={1} />);
+
+    expect(screen.getByText("수송")).toBeInTheDocument();
+    expect(screen.getByText("2151")).toBeInTheDocument(); // rounded 2150.7
+    expect(screen.getByText("2087")).toBeInTheDocument();
+    // unresolved pillars render the beyond-horizon marker, not a fabricated year
+    expect(screen.getByText("2175+")).toBeInTheDocument();
+  });
+
+  it("marks the bottleneck pillar", () => {
+    const { container } = render(<PillarEtaList pillars={PILLARS} bottleneck={1} />);
+    const rows = container.querySelectorAll("li.pillar-eta-bottleneck");
+    expect(rows).toHaveLength(1);
+    expect(rows[0].textContent).toContain("수송");
+  });
+});
