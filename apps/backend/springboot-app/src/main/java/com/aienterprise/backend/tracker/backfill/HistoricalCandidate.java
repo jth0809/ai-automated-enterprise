@@ -9,6 +9,7 @@ public record HistoricalCandidate(
         List<String> candidateTopics,
         String actor,
         LocalDate occurredOn,
+        String occurredOnPrecision,
         List<HistoricalEvidenceReference> evidence,
         String discoveryStatus,
         String discoveryNote) {

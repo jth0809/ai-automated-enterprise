@@ -65,6 +65,7 @@ Use this exact record shape:
   "claimedLevel": 5,
   "actor": "SpaceX",
   "occurredOn": "2015-12-21",
+  "occurredOnPrecision": "DAY",
   "expectedVerificationLevel": "INDEPENDENT",
   "eventTitle": "First-stage post-flight landing demonstration",
   "rubricJustification": "Partial-system flight evidence; not full-vehicle reuse.",
@@ -82,7 +83,7 @@ Use this exact record shape:
 
 - [ ] **Step 2: Map candidates pillar by pillar**
 
-Assign node, event type, and level only from `tracker-nodes-v1.md`. One candidate may produce multiple node claims with distinct `backfillId` and justification. Do not let one evidence reference support a claim outside the fact stated in its `factSummary`.
+Assign node, event type, and level only from `tracker-nodes-v1.md`. One candidate may produce multiple node claims with distinct `backfillId` and justification. Do not let one evidence reference support a claim outside the fact stated in its `factSummary`. Copy `occurredOn` and `occurredOnPrecision` from the candidate without increasing date precision. Month and year anchors remain explicitly marked through import, API serialization, and UI rendering.
 
 - [ ] **Step 3: Include non-progress events**
 
@@ -161,6 +162,7 @@ public record BackfillClaim(
         Integer claimedLevel,
         String actor,
         LocalDate occurredOn,
+        String occurredOnPrecision,
         String expectedVerificationLevel,
         String eventTitle,
         String rubricJustification,

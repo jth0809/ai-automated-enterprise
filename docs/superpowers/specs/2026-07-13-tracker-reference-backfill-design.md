@@ -86,6 +86,7 @@ stored per line for diff-friendly review.
   "candidateTopics": ["reusable launch", "launch economics"],
   "actor": "SpaceX",
   "occurredOn": "2015-12-21",
+  "occurredOnPrecision": "DAY",
   "evidence": [
     {
       "sourceCode": "SPACEX",
@@ -106,6 +107,10 @@ Constraints:
 
 - `eventTitle` and `factSummary` are independently authored factual text, not
   copied source titles or paraphrases that preserve distinctive expression.
+- `occurredOnPrecision` is required and is one of `DAY`, `MONTH`, or `YEAR`.
+  Month-only evidence uses the first day of that month as a sorting anchor;
+  year-only evidence uses January 1. The precision field prevents either anchor
+  from being presented as a source-supported exact date.
 - `factSummary` is at most 500 characters and contains only the fact used by
   the tracker.
 - `locator` is at most 300 characters and identifies a page, heading, table,
@@ -130,6 +135,8 @@ After `nodes-v1.0` approval, candidates are mapped into
 `src/main/resources/tracker/backfill-v1.json`. The file remains a flat list of
 node claims because one historical event may support multiple capability nodes.
 Each claim retains its candidate ID and evidence references.
+Mapped claims preserve both `occurredOn` and `occurredOnPrecision` unchanged
+from their source candidate.
 
 ```json
 {
@@ -142,6 +149,7 @@ Each claim retains its candidate ID and evidence references.
   "claimedLevel": 5,
   "actor": "SpaceX",
   "occurredOn": "2015-12-21",
+  "occurredOnPrecision": "DAY",
   "expectedVerificationLevel": "INDEPENDENT",
   "eventTitle": "First-stage post-flight landing demonstration",
   "rubricJustification": "Partial-system flight evidence; not full-vehicle reuse.",

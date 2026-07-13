@@ -105,6 +105,7 @@ public record HistoricalCandidate(
         List<String> candidateTopics,
         String actor,
         LocalDate occurredOn,
+        String occurredOnPrecision,
         List<HistoricalEvidenceReference> evidence,
         String discoveryStatus,
         String discoveryNote) {}
@@ -122,7 +123,10 @@ public record CorpusReport(
         List<String> errors) {}
 ```
 
-Normalize no source text. Validation is structural only.
+Normalize no source text. Validation is structural only. Require
+`occurredOnPrecision` as `DAY`, `MONTH`, or `YEAR`. `MONTH` requires a day-1
+sorting anchor and `YEAR` requires a January-1 sorting anchor so research never
+invents a more exact historical date than the cited source supports.
 
 - [ ] **Step 6: Run tests and verify GREEN**
 

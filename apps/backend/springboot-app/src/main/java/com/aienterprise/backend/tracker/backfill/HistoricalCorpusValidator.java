@@ -30,11 +30,13 @@ public final class HistoricalCorpusValidator {
             "DISCOVERED", "READY_FOR_MAPPING", "REJECTED");
     private static final Set<String> PUBLICATION_PATHS = Set.of(
             "PRIMARY", "THIRD_PARTY", "WIRE_REPRINT");
+    private static final Set<String> DATE_PRECISIONS = Set.of(
+            "DAY", "MONTH", "YEAR");
     private static final Set<String> PROHIBITED_KEYS = Set.of(
             "quote", "evidencequote", "excerpt", "body", "html", "sourcetitle");
     private static final Set<String> CANDIDATE_FIELDS = Set.of(
             "candidateId", "eventTitle", "candidateTopics", "actor", "occurredOn",
-            "evidence", "discoveryStatus", "discoveryNote");
+            "occurredOnPrecision", "evidence", "discoveryStatus", "discoveryNote");
     private static final Set<String> EVIDENCE_FIELDS = Set.of(
             "sourceCode", "url", "locator", "accessedOn", "contentSha256",
             "publicationPath", "factSummary");
@@ -90,6 +92,10 @@ public final class HistoricalCorpusValidator {
                 List<String> topics = candidateTopics(candidate, lineNumber, errors);
                 String actor = boundedText(candidate, "actor", 200, lineNumber, errors);
                 LocalDate occurredOn = date(candidate, "occurredOn", lineNumber, errors);
+                String occurredOnPrecision = requiredText(
+                        candidate, "occurredOnPrecision", lineNumber, errors);
+                validateOccurredOnPrecision(
+                        occurredOn, occurredOnPrecision, lineNumber, errors);
                 List<HistoricalEvidenceReference> evidence = evidence(candidate, lineNumber, errors);
                 String status = requiredText(candidate, "discoveryStatus", lineNumber, errors);
                 String discoveryNote = boundedText(candidate, "discoveryNote", 1000, lineNumber, errors);
@@ -106,7 +112,8 @@ public final class HistoricalCorpusValidator {
                 }
 
                 if (candidateId != null && eventTitle != null && actor != null
-                        && occurredOn != null && status != null && discoveryNote != null
+                        && occurredOn != null && occurredOnPrecision != null
+                        && status != null && discoveryNote != null
                         && !topics.isEmpty() && !evidence.isEmpty()) {
                     new HistoricalCandidate(
                             candidateId,
@@ -114,6 +121,7 @@ public final class HistoricalCorpusValidator {
                             topics,
                             actor,
                             occurredOn,
+                            occurredOnPrecision,
                             evidence,
                             status,
                             discoveryNote);
@@ -124,6 +132,30 @@ public final class HistoricalCorpusValidator {
         }
 
         return new CorpusReport(totalCount, readyCount, rejectedCount, errors);
+    }
+
+    private static void validateOccurredOnPrecision(
+            LocalDate occurredOn,
+            String precision,
+            int lineNumber,
+            List<String> errors) {
+        if (precision == null) {
+            return;
+        }
+        if (!DATE_PRECISIONS.contains(precision)) {
+            error(errors, lineNumber, "invalid occurredOnPrecision " + precision);
+            return;
+        }
+        if (occurredOn == null) {
+            return;
+        }
+        if ("MONTH".equals(precision) && occurredOn.getDayOfMonth() != 1) {
+            error(errors, lineNumber, "MONTH precision requires day 1");
+        }
+        if ("YEAR".equals(precision)
+                && (occurredOn.getMonthValue() != 1 || occurredOn.getDayOfMonth() != 1)) {
+            error(errors, lineNumber, "YEAR precision requires January 1");
+        }
     }
 
     private static List<String> candidateTopics(JsonNode candidate, int lineNumber, List<String> errors) {

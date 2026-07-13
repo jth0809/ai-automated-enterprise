@@ -128,6 +128,49 @@ class HistoricalCorpusValidatorTest {
     }
 
     @Test
+    void occurredOnPrecisionIsRequired() {
+        ObjectNode candidate = validCandidate();
+        candidate.remove("occurredOnPrecision");
+
+        assertHasError(validate(candidate), "occurredOnPrecision must not be blank");
+    }
+
+    @Test
+    void occurredOnPrecisionOutsideContractFails() {
+        ObjectNode candidate = validCandidate();
+        candidate.put("occurredOnPrecision", "DECADE");
+
+        assertHasError(validate(candidate), "invalid occurredOnPrecision");
+    }
+
+    @Test
+    void monthPrecisionUsesFirstDayAsSortingAnchor() {
+        ObjectNode candidate = validCandidate();
+        candidate.put("occurredOn", "2013-01-01");
+        candidate.put("occurredOnPrecision", "MONTH");
+
+        assertTrue(validate(candidate).errors().isEmpty());
+    }
+
+    @Test
+    void monthPrecisionRejectsInventedDay() {
+        ObjectNode candidate = validCandidate();
+        candidate.put("occurredOn", "2013-01-15");
+        candidate.put("occurredOnPrecision", "MONTH");
+
+        assertHasError(validate(candidate), "MONTH precision requires day 1");
+    }
+
+    @Test
+    void yearPrecisionRejectsInventedMonthOrDay() {
+        ObjectNode candidate = validCandidate();
+        candidate.put("occurredOn", "1973-07-01");
+        candidate.put("occurredOnPrecision", "YEAR");
+
+        assertHasError(validate(candidate), "YEAR precision requires January 1");
+    }
+
+    @Test
     void invalidAccessedOnDateFails() {
         ObjectNode candidate = validCandidate();
         evidence(candidate).put("accessedOn", "2026-02-30");
@@ -249,6 +292,7 @@ class HistoricalCorpusValidatorTest {
         candidate.putArray("candidateTopics").add("reusable launch").add("launch economics");
         candidate.put("actor", "SpaceX");
         candidate.put("occurredOn", "2015-12-21");
+        candidate.put("occurredOnPrecision", "DAY");
         ObjectNode evidence = candidate.putArray("evidence").addObject();
         evidence.put("sourceCode", "SPACEX");
         evidence.put("url", "https://example.org/mission-record");
