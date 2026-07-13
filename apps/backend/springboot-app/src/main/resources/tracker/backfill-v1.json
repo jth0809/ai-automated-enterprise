@@ -2758,5 +2758,419 @@
       "rubric": "APPROVED",
       "reviewerNote": "Fact metadata checked; P6-INSURANCE-STD level 3 boundary checked separately in this mapping pass."
     }
+  },
+  {
+    "backfillId": "BF-P1-021",
+    "candidateId": "HC-2018-FALCON-HEAVY-DEMO",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P1-REUSE-LV",
+    "eventType": "FLIGHT_TEST",
+    "claimedLevel": 5,
+    "actor": "SpaceX",
+    "occurredOn": "2018-02-06",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "Falcon Heavy reached orbit with partial booster recovery",
+    "rubricJustification": "Falcon Heavy reached orbit and recovered two side boosters while the center core was lost; partial-stack reuse caps at L5 (integrated stage prototypes reflown in relevant environment).",
+    "evidenceRefs": [
+      "HC-2018-FALCON-HEAVY-DEMO#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Mapped 2026-07-13: previously-collected candidate mapped with graded credit per node TRL/EGL anchors."
+    }
+  },
+  {
+    "backfillId": "BF-P1-022",
+    "candidateId": "HC-2021-FALCON9-100-RECOVERIES",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P1-REUSE-LV",
+    "eventType": "OPERATIONAL_DEPLOYMENT",
+    "claimedLevel": 5,
+    "actor": "SpaceX",
+    "occurredOn": "2021-12-21",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "Falcon first-stage recovery reached a three-digit operational count",
+    "rubricJustification": "Repeated first-stage recovery reached a three-digit operational count; first-stage-only reuse earns capped partial credit (L5), not full-vehicle-reuse credit.",
+    "evidenceRefs": [
+      "HC-2021-FALCON9-100-RECOVERIES#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Mapped 2026-07-13: previously-collected candidate mapped with graded credit per node TRL/EGL anchors."
+    }
+  },
+  {
+    "backfillId": "BF-P1-023",
+    "candidateId": "HC-2019-CREW-DRAGON-AUTONOMOUS-DOCKING",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P1-ORBIT-LOGISTICS",
+    "eventType": "FLIGHT_TEST",
+    "claimedLevel": 5,
+    "actor": "SpaceX and NASA",
+    "occurredOn": "2019-03-03",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "An uncrewed Crew Dragon autonomously docked with the ISS",
+    "rubricJustification": "Uncrewed Crew Dragon executed autonomous rendezvous and docking to the ISS with cargo handoff; integrated cargo-handling/interface prototype in a relevant environment (L5).",
+    "evidenceRefs": [
+      "HC-2019-CREW-DRAGON-AUTONOMOUS-DOCKING#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Mapped 2026-07-13: previously-collected candidate mapped with graded credit per node TRL/EGL anchors."
+    }
+  },
+  {
+    "backfillId": "BF-P1-024",
+    "candidateId": "HC-2021-PERSEVERANCE-MARS-LANDING",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P1-EDL-HEAVY",
+    "eventType": "FLIGHT_TEST",
+    "claimedLevel": 5,
+    "actor": "NASA",
+    "occurredOn": "2021-02-18",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "Perseverance landed in Jezero Crater",
+    "rubricJustification": "Modern precision Mars EDL delivered a rover well below 10 t; scored L5 as a subscale integrated relevant-environment landing, not operational 10 t+ delivery.",
+    "evidenceRefs": [
+      "HC-2021-PERSEVERANCE-MARS-LANDING#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Mapped 2026-07-13: previously-collected candidate mapped with graded credit per node TRL/EGL anchors."
+    }
+  },
+  {
+    "backfillId": "BF-P1-025",
+    "candidateId": "HC-2019-ORION-AA2-ABORT-TEST",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P1-CREW-SAFE",
+    "eventType": "FLIGHT_TEST",
+    "claimedLevel": 5,
+    "actor": "NASA",
+    "occurredOn": "2019-07-02",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "Orion demonstrated its ascent launch-abort sequence",
+    "rubricJustification": "Ascent Abort-2 exercised the full-scale launch-abort separation sequence under representative flight conditions (integrated abort/rescue prototype, L5); not yet qualified operational rescue.",
+    "evidenceRefs": [
+      "HC-2019-ORION-AA2-ABORT-TEST#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Mapped 2026-07-13: previously-collected candidate mapped with graded credit per node TRL/EGL anchors."
+    }
+  },
+  {
+    "backfillId": "BF-P3-021",
+    "candidateId": "HC-2016-BEAM-FULL-EXPANSION",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P3-CONSTRUCT",
+    "eventType": "PROTOTYPE_DEMO",
+    "claimedLevel": 3,
+    "actor": "NASA and Bigelow Aerospace",
+    "occurredOn": "2016-05-28",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "BEAM expanded to full size while attached to the ISS",
+    "rubricJustification": "Expandable habitat module deployed to full size on the ISS; structural/habitat-concept process proof (L3). Orbital periodic-access demo, not a surface-constructed occupied habitat.",
+    "evidenceRefs": [
+      "HC-2016-BEAM-FULL-EXPANSION#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Mapped 2026-07-13: previously-collected candidate mapped with graded credit per node TRL/EGL anchors."
+    }
+  },
+  {
+    "backfillId": "BF-P3-022",
+    "candidateId": "HC-2021-ISS-IROSA-FIRST-INTEGRATION",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P3-POWER",
+    "eventType": "PROTOTYPE_DEMO",
+    "claimedLevel": 3,
+    "actor": "NASA and European Space Agency",
+    "occurredOn": "2021-06-20",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "The first ISS roll-out solar array was connected to an operating power channel",
+    "rubricJustification": "Roll-out solar array integrated into an operating power channel; grid conversion/architecture proof (L3). Mature orbital grid upgrade, not a validated planetary surface grid.",
+    "evidenceRefs": [
+      "HC-2021-ISS-IROSA-FIRST-INTEGRATION#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Mapped 2026-07-13: previously-collected candidate mapped with graded credit per node TRL/EGL anchors."
+    }
+  },
+  {
+    "backfillId": "BF-P3-023",
+    "candidateId": "HC-2021-LCRD-OPTICAL-RELAY-LAUNCH",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P3-COMMS",
+    "eventType": "PROTOTYPE_DEMO",
+    "claimedLevel": 3,
+    "actor": "NASA and U.S. Space Force",
+    "occurredOn": "2021-12-07",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "NASA launched its first two-way optical communications relay payload",
+    "rubricJustification": "First two-way optical communications relay payload activated; protocol/network proof (L3). No planetary-surface endpoint or delay/outage-managed settlement service yet.",
+    "evidenceRefs": [
+      "HC-2021-LCRD-OPTICAL-RELAY-LAUNCH#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Mapped 2026-07-13: previously-collected candidate mapped with graded credit per node TRL/EGL anchors."
+    }
+  },
+  {
+    "backfillId": "BF-P3-024",
+    "candidateId": "HC-2024-LN1-LUNAR-NAVIGATION-BEACON",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P3-COMMS",
+    "eventType": "FLIGHT_TEST",
+    "claimedLevel": 3,
+    "actor": "NASA and Intuitive Machines",
+    "occurredOn": "2024-03-14",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "Lunar Node-1 operated as a navigation beacon on the Moon",
+    "rubricJustification": "Lunar Node-1 operated as a positioning beacon on the Moon's surface; surface network/protocol proof (L3). Brief uncrewed beacon, not an operational multi-node lunar network.",
+    "evidenceRefs": [
+      "HC-2024-LN1-LUNAR-NAVIGATION-BEACON#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Mapped 2026-07-13: previously-collected candidate mapped with graded credit per node TRL/EGL anchors."
+    }
+  },
+  {
+    "backfillId": "BF-P4-021",
+    "candidateId": "HC-2025-BLUE-GHOST-LPV-LUNAR-SOIL-COLLECTION",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P4-ISRU-PROP",
+    "eventType": "FLIGHT_TEST",
+    "claimedLevel": 3,
+    "actor": "NASA, Honeybee Robotics, and Firefly Aerospace",
+    "occurredOn": "2025-03-14",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "Lunar PlanetVac collected and transferred regolith on the Moon",
+    "rubricJustification": "PlanetVac pneumatically collected and transferred lunar regolith on the surface; critical acquisition/handling proof (L3). No separation or conversion into a useful consumable yet.",
+    "evidenceRefs": [
+      "HC-2025-BLUE-GHOST-LPV-LUNAR-SOIL-COLLECTION#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Mapped 2026-07-13: previously-collected candidate mapped with graded credit per node TRL/EGL anchors."
+    }
+  },
+  {
+    "backfillId": "BF-P5-021",
+    "candidateId": "HC-2016-CURIOSITY-AEGIS-ROUTINE-USE",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P5-AUTONOMY",
+    "eventType": "OPERATIONAL_DEPLOYMENT",
+    "claimedLevel": 5,
+    "actor": "NASA and JPL",
+    "occurredOn": "2016-07-14",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "Curiosity began routine autonomous laser-target selection with AEGIS",
+    "rubricJustification": "Routine autonomous laser-target selection operated on Mars in relevant environment (integrated autonomous decision loop in operation, L5). Science targeting only; ground retained rover control.",
+    "evidenceRefs": [
+      "HC-2016-CURIOSITY-AEGIS-ROUTINE-USE#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Mapped 2026-07-13: previously-collected candidate mapped with graded credit per node TRL/EGL anchors."
+    }
+  },
+  {
+    "backfillId": "BF-P5-022",
+    "candidateId": "HC-2024-CADRE-GROUND-COOPERATIVE-TESTS",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P5-AUTONOMY",
+    "eventType": "PROTOTYPE_DEMO",
+    "claimedLevel": 4,
+    "actor": "NASA and JPL",
+    "occurredOn": "2024-05-01",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "CADRE rovers completed cooperative autonomy and environmental ground tests",
+    "rubricJustification": "Multi-robot cooperative autonomy completed integrated ground qualification (approaching integrated system, below flight relevant-environment; L4). Not yet operated on the lunar surface.",
+    "evidenceRefs": [
+      "HC-2024-CADRE-GROUND-COOPERATIVE-TESTS#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Mapped 2026-07-13: previously-collected candidate mapped with graded credit per node TRL/EGL anchors."
+    }
+  },
+  {
+    "backfillId": "BF-P5-023",
+    "candidateId": "HC-2020-RRM3-DUAL-ARM-HOSE-OPERATIONS",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P5-MAINTENANCE",
+    "eventType": "PROTOTYPE_DEMO",
+    "claimedLevel": 4,
+    "actor": "NASA and Canadian Space Agency",
+    "occurredOn": "2020-10-22",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "Two ISS robotic arms cooperated in hose and inspection operations",
+    "rubricJustification": "Two ISS robotic arms cooperated in prepared hose and inspection servicing operations (integrated remote servicing, below autonomous; L4). Teleoperated, not autonomous fault recovery.",
+    "evidenceRefs": [
+      "HC-2020-RRM3-DUAL-ARM-HOSE-OPERATIONS#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Mapped 2026-07-13: previously-collected candidate mapped with graded credit per node TRL/EGL anchors."
+    }
+  },
+  {
+    "backfillId": "BF-P6-021",
+    "candidateId": "HC-2016-CRS2-THREE-PROVIDER-AWARDS",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P6-LAUNCH-MARKET",
+    "eventType": "INSTITUTIONAL_ADVANCE",
+    "claimedLevel": 5,
+    "actor": "NASA, Orbital ATK, Sierra Nevada, and SpaceX",
+    "occurredOn": "2016-01-14",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "NASA selected three providers for the second ISS cargo contract round",
+    "rubricJustification": "A second competitive cargo-resupply round bound three providers to recurring ISS logistics revenue; revenue mechanism operating repeatedly across a multi-provider market (L5).",
+    "evidenceRefs": [
+      "HC-2016-CRS2-THREE-PROVIDER-AWARDS#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Mapped 2026-07-13: previously-collected candidate mapped with graded credit per node TRL/EGL anchors."
+    }
+  },
+  {
+    "backfillId": "BF-P6-022",
+    "candidateId": "HC-2022-AX1-FIRST-PRIVATE-ASTRONAUT-MISSION",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P6-LAUNCH-MARKET",
+    "eventType": "COMMERCIALIZATION",
+    "claimedLevel": 5,
+    "actor": "Axiom Space, SpaceX, NASA, and ISS partners",
+    "occurredOn": "2022-04-25",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "The first private astronaut mission to the ISS completed safely",
+    "rubricJustification": "First privately organized and paid astronaut mission to the ISS opened a commercial human transport transaction; revenue-producing service for one bounded market (L5).",
+    "evidenceRefs": [
+      "HC-2022-AX1-FIRST-PRIVATE-ASTRONAUT-MISSION#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Mapped 2026-07-13: previously-collected candidate mapped with graded credit per node TRL/EGL anchors."
+    }
+  },
+  {
+    "backfillId": "BF-P6-023",
+    "candidateId": "HC-2020-ARTEMIS-ACCORDS-FIRST-SIGNINGS",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P6-GOV-FRAMEWORK",
+    "eventType": "INSTITUTIONAL_ADVANCE",
+    "claimedLevel": 3,
+    "actor": "NASA and seven international partners",
+    "occurredOn": "2020-10-13",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "Eight countries signed the founding Artemis Accords",
+    "rubricJustification": "Eight founding states signed the Artemis Accords; formal draft instrument of nonbinding principles (L3), not a binding treaty, regulator, or enforcement mechanism.",
+    "evidenceRefs": [
+      "HC-2020-ARTEMIS-ACCORDS-FIRST-SIGNINGS#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Mapped 2026-07-13: previously-collected candidate mapped with graded credit per node TRL/EGL anchors."
+    }
+  },
+  {
+    "backfillId": "BF-P6-024",
+    "candidateId": "HC-2024-ARTEMIS-ACCORDS-FIFTY-SIGNATORIES",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P6-GOV-FRAMEWORK",
+    "eventType": "INSTITUTIONAL_ADVANCE",
+    "claimedLevel": 4,
+    "actor": "Artemis Accords signatory governments",
+    "occurredOn": "2024-12-11",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "Artemis Accords participation reached fifty signatory countries",
+    "rubricJustification": "Artemis Accords participation broadened to fifty signatories; widening adoption of the nonbinding framework (L4), still short of an adopted legally effective settlement-governance regime.",
+    "evidenceRefs": [
+      "HC-2024-ARTEMIS-ACCORDS-FIFTY-SIGNATORIES#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Mapped 2026-07-13: previously-collected candidate mapped with graded credit per node TRL/EGL anchors."
+    }
+  },
+  {
+    "backfillId": "BF-P6-025",
+    "candidateId": "HC-2020-LUNAR-RESOURCE-PURCHASE-AWARDS",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P6-GOV-FRAMEWORK",
+    "eventType": "INSTITUTIONAL_ADVANCE",
+    "claimedLevel": 3,
+    "actor": "NASA and four commercial proposals",
+    "occurredOn": "2020-12-03",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "NASA awarded small contracts to purchase collected lunar material",
+    "rubricJustification": "NASA awarded contracts to purchase in-situ collected lunar material, establishing a formal space-resource transaction instrument (bounded pilot, L3), not a recurring resource market.",
+    "evidenceRefs": [
+      "HC-2020-LUNAR-RESOURCE-PURCHASE-AWARDS#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Mapped 2026-07-13: previously-collected candidate mapped with graded credit per node TRL/EGL anchors."
+    }
   }
 ]
