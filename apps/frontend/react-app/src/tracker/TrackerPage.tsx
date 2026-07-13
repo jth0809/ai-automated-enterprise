@@ -4,6 +4,7 @@ import type { PillarSummary, Summary, TimelineEvent } from "./api";
 import { Countdown } from "./Countdown";
 import { EventTimeline } from "./EventTimeline";
 import { PillarRadar } from "./PillarRadar";
+import { ReviewQueue } from "./ReviewQueue";
 
 interface TrackerData {
   summary: Summary;
@@ -49,6 +50,10 @@ export function TrackerPage() {
       />
       <PillarRadar pillars={data.pillars} bottleneck={data.summary.bottleneckPillar} />
       <EventTimeline events={data.events} />
+      <details className="review-section">
+        <summary>검수 큐 (admin)</summary>
+        <ReviewQueue />
+      </details>
     </div>
   );
 }
