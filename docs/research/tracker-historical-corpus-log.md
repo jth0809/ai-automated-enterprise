@@ -1,6 +1,6 @@
 # Tracker Historical Corpus Research Log
 
-Status: Pillars 1–6 complete; 190 candidates ready for mapping.
+Status: Pillars 1–6 complete; exactly 210 candidates ready for mapping.
 
 This log tracks discovery queries, opened sources, source decisions, rejection
 reasons, and corpus counts. It never stores source titles, quotations, excerpts,
@@ -15,14 +15,17 @@ article bodies, HTML, PDF, images, or other source content.
 | P3 habitat and infrastructure | 25–35 | 30 |
 | P4 resources and energy | 25–35 | 30 |
 | P5 robotics and autonomy | 25–35 | 30 |
-| P6 economics and governance | 40–60 | 30 |
-| **Total discovery corpus** | **180–250** | **190** |
+| P6 economics and governance | 40–60 | 50 |
+| **Total discovery corpus** | **exactly 210** | **210** |
 
 The pillar figures are topic-family discovery targets, not node assignments.
 One candidate may carry multiple topic tags but contributes once to the total.
-P6 retained 30 high-confidence candidates rather than filling its initial 40–60
-allocation with weak or duplicative evidence; the required total corpus target is
-met at 190 and the mapping review can reject or request focused follow-up research.
+The first P6 pass retained 30 high-confidence candidates rather than adding weak
+or duplicative evidence. After `nodes-v1.0` approval, the operating target was
+clarified from the broad 180–250 range to exactly 210. Two focused P6 batches add
+20 official-record candidates covering commercial service progression,
+international operating agreements, program retirement, and safety setbacks.
+The corpus remains node-neutral; the added records contain no node code or level.
 
 ## Research policy
 
@@ -62,6 +65,8 @@ met at 190 and the mapping review can reject or request focused follow-up resear
 | P6-01 | P6 economics and governance | Commercial launch licensing, cargo and crew contracts, certification, and licensed cadence | 8 | 10 | 0 | Laws, development agreements, demonstrations, recurring services, contract ceilings, certification, and aggregate operation counts remain distinct. |
 | P6-02 | P6 economics and governance | Multilateral treaties, national resource laws, sustainability guidance, and Artemis cooperation | 7 | 10 | 0 | Congress.gov returned 403 and was replaced by GovInfo; binding scope, national jurisdiction, voluntary guidance, and nonbinding accords are explicit. |
 | P6-03 | P6 economics and governance | Launch risk sharing, interoperability standards, commercial destination funding, pricing, and lunar delivery | 10 | 10 | 0 | Both PDFs remained below 1.3 MiB; plans, prices, awards, standards, and one-off missions are not treated as operational markets. |
+| P6-04 | P6 economics and governance | Commercial cargo, lunar delivery, Gateway logistics, and human lander procurement progression | 8 | 10 | 0 | Eight official NASA records cover contracts, demonstrations, operational cargo, provider pools, and lander development while preserving award-versus-operation boundaries. |
+| P6-05 | P6 economics and governance | International operating frameworks, repeated private missions, infrastructure retirement, and safety setbacks | 10 | 10 | 0 | Ten official NASA records add governance and negative evidence; agreements, repeat visits, procurements, cancellation, and certification setbacks remain distinct from commissioned settlement capability. |
 
 ## Source decisions
 
@@ -140,3 +145,10 @@ met at 190 and the mapping review can reject or request focused follow-up resear
 | 2026-07-13 | P6 batch 3 source review and transient fingerprinting | 10 candidates, 10 accepted URLs, largest response 1.3 MiB, no source bytes retained |
 | 2026-07-13 | P6 batch 3 final fact review | Insurance scope, standards/adoption, policy/demand, award/operation, and mission/ecosystem boundaries confirmed |
 | 2026-07-13 | P6 completion corpus validation | 42/42 focused tests; 190 READY records, 0 rejected, 0 errors; 180–250 target met |
+| 2026-07-13 | Exact corpus-count contract RED test | Expected 210 candidates and observed the intended failure at the prior 190-record state |
+| 2026-07-13 | P6 batch 4 source review and transient fingerprinting | 10 candidates, 8 accepted NASA URLs, every response below 0.29 MiB, no source bytes retained |
+| 2026-07-13 | P6 batch 4 final fact review | Contract, demonstration, operational-service, provider-pool, and development-award boundaries confirmed |
+| 2026-07-13 | P6 batch 5 source review and transient fingerprinting | 10 candidates, 10 accepted NASA URLs, every response below 0.29 MiB, no source bytes retained |
+| 2026-07-13 | P6 batch 5 final fact review | Governance, contribution, repeat-mission, retirement, cancellation, and crew-certification boundaries confirmed |
+| 2026-07-13 | Exact 210-candidate corpus validation | 42/42 focused tests; 210 READY records, 0 discovered, 0 rejected, 0 errors; 5 catalog sources |
+| 2026-07-13 | Full backend regression after exact-count corpus completion | 242 tests, 0 failures, 0 errors, 0 skipped |
