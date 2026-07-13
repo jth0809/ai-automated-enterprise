@@ -1,6 +1,6 @@
 # Tracker Historical Corpus Research Log
 
-Status: Pillars 1–4 complete; 130 candidates ready for mapping.
+Status: Pillars 1–5 complete; 160 candidates ready for mapping.
 
 This log tracks discovery queries, opened sources, source decisions, rejection
 reasons, and corpus counts. It never stores source titles, quotations, excerpts,
@@ -14,9 +14,9 @@ article bodies, HTML, PDF, images, or other source content.
 | P2 life support and human health | 30–40 | 30 |
 | P3 habitat and infrastructure | 25–35 | 30 |
 | P4 resources and energy | 25–35 | 30 |
-| P5 robotics and autonomy | 25–35 | 0 |
+| P5 robotics and autonomy | 25–35 | 30 |
 | P6 economics and governance | 40–60 | 0 |
-| **Total discovery corpus** | **180–250** | **130** |
+| **Total discovery corpus** | **180–250** | **160** |
 
 The pillar figures are topic-family discovery targets, not node assignments.
 One candidate may carry multiple topic tags but contributes once to the total.
@@ -53,6 +53,9 @@ One candidate may carry multiple topic tags but contributes once to the total.
 | P4-01 | P4 resources and energy | ISRU integration, resource detection, oxygen production, sample handling, and program setbacks | 10 | 10 | 0 | Detection is separated from extraction and production; Earth analogs, small flight experiments, and limited lunar operations retain explicit scale and outcome boundaries. |
 | P4-02 | P4 resources and energy | Nuclear power concepts, long-duration material exposure, and construction-material research | 9 | 10 | 0 | Reactor heritage and design studies remain distinct from surface power delivery; coupons and small samples are not treated as qualified structures. |
 | P4-03 | P4 resources and energy | Additive manufacturing, microgravity production, autonomous assembly, and canceled flight demonstrations | 9 | 10 | 0 | Imported feedstock, ground tests, partial prints, quality analysis, and preflight program conclusions are recorded without implying local industrial capacity. |
+| P5-01 | P5 robotics and autonomy | Onboard navigation, autonomous planning, planetary mobility, and terminal guidance | 16 | 10 | 0 | Six JPL pages returned 403 and one NTRS PDF exceeded 5 MiB; equivalent NASA/NTRS HTML records were used without bypass. Local autonomy remains distinct from Earth-selected goals. |
+| P5-02 | P5 robotics and autonomy | Remote robotic servicing, free-flying assistants, and autonomous spacecraft caretaking | 8 | 10 | 0 | Ground teleoperation, diagnostics, concurrent robots, simulations, and onboard autonomous inspection are explicitly separated from physical autonomous repair. |
+| P5-03 | P5 robotics and autonomy | Autonomous rendezvous, science targeting, cooperative robots, excavation simulation, and navigation beacons | 10 | 10 | 0 | One JPL CADRE page returned 403 and was replaced by NASA Robotics; ground, simulation, sensor, and off-Earth results retain separate boundaries. |
 
 ## Source decisions
 
@@ -65,6 +68,7 @@ One candidate may carry multiple topic tags but contributes once to the total.
 | NASA-SMA-PDF | NASA-hosted launch data sheet | Excluded from batch | Fingerprint request returned HTTP 500; stable NASA HTML records were used instead. |
 | NASA-JPL-WEB | NASA laboratory web page | Excluded from batch | Browser review succeeded but the transient fingerprint request returned HTTP 403; an equivalent NASA release was used without access-control bypass. |
 | NASA-DATED-BLOG | Retired dated NASA blog URL | Excluded from batch | The URL redirected to a generic blog archive that no longer contained the reviewed event record; a stable NASA mission article was used. |
+| NASA-NTRS-PDF | NASA-hosted technical report | Excluded from batch | The Deep Impact autonomy report exceeded the 5 MiB transient fingerprint limit; a smaller NTRS abstract that directly states the event was used. |
 
 ## Rejection summary
 
@@ -112,3 +116,10 @@ One candidate may carry multiple topic tags but contributes once to the total.
 | 2026-07-13 | P4 batch 3 source review and transient fingerprinting | 10 candidates, 9 accepted URLs, each response below 0.4 MiB, no source bytes retained |
 | 2026-07-13 | P4 batch 3 final fact review | Imported/local feedstock, ground/orbit, partial/complete, and length/quality boundaries confirmed |
 | 2026-07-13 | P4 completion corpus validation | 42/42 focused tests; 130 READY records, 0 rejected, 0 errors |
+| 2026-07-13 | P5 batch 1 source review and transient fingerprinting | 10 candidates, 9 accepted URLs, six 403 pages and one oversized PDF replaced, no source bytes retained |
+| 2026-07-13 | P5 batch 1 final fact review | Onboard/pre-programmed, local/mission, and Earth-team/spacecraft recovery boundaries confirmed |
+| 2026-07-13 | P5 batch 2 source review and transient fingerprinting | 10 candidates, 8 accepted URLs, each response below 0.4 MiB, no source bytes retained |
+| 2026-07-13 | P5 batch 2 final fact review | Remote control, diagnostic, simulation, inspection, and physical repair boundaries confirmed |
+| 2026-07-13 | P5 batch 3 source review and transient fingerprinting | 10 candidates, 9 accepted URLs, one 403 page replaced, no source bytes retained |
+| 2026-07-13 | P5 batch 3 final fact review | Ground/flight, sensor/control, targeting/mission planning, and simulation/operation boundaries confirmed |
+| 2026-07-13 | P5 completion corpus validation | 42/42 focused tests; 160 READY records, 0 rejected, 0 errors |
