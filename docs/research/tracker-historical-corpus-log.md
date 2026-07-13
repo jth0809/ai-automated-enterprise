@@ -1,6 +1,6 @@
 # Tracker Historical Corpus Research Log
 
-Status: Pillars 1–3 complete; 100 candidates ready for mapping.
+Status: Pillars 1–4 complete; 130 candidates ready for mapping.
 
 This log tracks discovery queries, opened sources, source decisions, rejection
 reasons, and corpus counts. It never stores source titles, quotations, excerpts,
@@ -13,10 +13,10 @@ article bodies, HTML, PDF, images, or other source content.
 | P1 transport and propulsion | 35–45 | 40 |
 | P2 life support and human health | 30–40 | 30 |
 | P3 habitat and infrastructure | 25–35 | 30 |
-| P4 resources and energy | 25–35 | 0 |
+| P4 resources and energy | 25–35 | 30 |
 | P5 robotics and autonomy | 25–35 | 0 |
 | P6 economics and governance | 40–60 | 0 |
-| **Total discovery corpus** | **180–250** | **100** |
+| **Total discovery corpus** | **180–250** | **130** |
 
 The pillar figures are topic-family discovery targets, not node assignments.
 One candidate may carry multiple topic tags but contributes once to the total.
@@ -50,6 +50,9 @@ One candidate may carry multiple topic tags but contributes once to the total.
 | P3-01 | P3 habitat and infrastructure | Surface shelter, orbital habitat assembly, expandable structures, and construction analogs | 9 | 10 | 0 | Records separate temporary cabins, orbital habitats, terrestrial analogs, and subscale prints from commissioned surface construction. |
 | P3-02 | P3 habitat and infrastructure | Integrated power systems and delay/disruption-tolerant communications | 9 | 10 | 0 | Isolated generators, orbital grids, analog buses, routed protocols, relays, and point-to-point optical links are explicitly distinguished. |
 | P3-03 | P3 habitat and infrastructure | Thermal control, dust mitigation, fault recovery, and long-duration habitat analogs | 8 | 10 | 0 | Operational orbital systems, component lunar tests, and terrestrial analog durations remain distinct from integrated surface habitation. |
+| P4-01 | P4 resources and energy | ISRU integration, resource detection, oxygen production, sample handling, and program setbacks | 10 | 10 | 0 | Detection is separated from extraction and production; Earth analogs, small flight experiments, and limited lunar operations retain explicit scale and outcome boundaries. |
+| P4-02 | P4 resources and energy | Nuclear power concepts, long-duration material exposure, and construction-material research | 9 | 10 | 0 | Reactor heritage and design studies remain distinct from surface power delivery; coupons and small samples are not treated as qualified structures. |
+| P4-03 | P4 resources and energy | Additive manufacturing, microgravity production, autonomous assembly, and canceled flight demonstrations | 9 | 10 | 0 | Imported feedstock, ground tests, partial prints, quality analysis, and preflight program conclusions are recorded without implying local industrial capacity. |
 
 ## Source decisions
 
@@ -102,3 +105,10 @@ One candidate may carry multiple topic tags but contributes once to the total.
 | 2026-07-13 | P3 batch 3 source review and transient fingerprinting | 10 candidates, 8 accepted URLs, largest response 0.76 MiB, no source bytes retained |
 | 2026-07-13 | P3 batch 3 final fact review | Thermal fault, dust control, analog/off-Earth, and 26-month integration boundaries confirmed |
 | 2026-07-13 | P3 completion corpus validation | 42/42 focused tests; 100 READY records, 0 rejected, 0 errors |
+| 2026-07-13 | P4 batch 1 source review and transient fingerprinting | 10 candidates, 10 accepted URLs, each response below 0.4 MiB, no source bytes retained |
+| 2026-07-13 | P4 batch 1 final fact review | Detection/extraction, analog/flight, scale, cancellation, and limited-operation boundaries confirmed |
+| 2026-07-13 | P4 batch 2 source review and transient fingerprinting | 10 candidates, 9 accepted URLs, each response below 0.4 MiB, no source bytes retained |
+| 2026-07-13 | P4 batch 2 final fact review | Reactor heritage/concept and sample/structure qualification boundaries confirmed |
+| 2026-07-13 | P4 batch 3 source review and transient fingerprinting | 10 candidates, 9 accepted URLs, each response below 0.4 MiB, no source bytes retained |
+| 2026-07-13 | P4 batch 3 final fact review | Imported/local feedstock, ground/orbit, partial/complete, and length/quality boundaries confirmed |
+| 2026-07-13 | P4 completion corpus validation | 42/42 focused tests; 130 READY records, 0 rejected, 0 errors |
