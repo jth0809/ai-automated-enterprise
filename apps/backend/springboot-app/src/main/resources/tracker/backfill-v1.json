@@ -1362,21 +1362,21 @@
     "nodeSetVersion": "nodes-v1.0",
     "rubricVersion": "r2.0",
     "nodeCode": "P3-HABITAT-INTEGRATION",
-    "eventType": "RETROSPECTIVE",
-    "claimedLevel": null,
+    "eventType": "PROTOTYPE_DEMO",
+    "claimedLevel": 5,
     "actor": "NASA and volunteer crew",
     "occurredOn": "2024-07-06",
     "occurredOnPrecision": "DAY",
     "expectedVerificationLevel": "OFFICIAL",
     "eventTitle": "CHAPEA completed a 378-day simulated Mars habitat mission",
-    "rubricJustification": "Long terrestrial analog evidence, but not an off-Earth pressure, thermal, dust, grid, or no-resupply demonstration and shorter than 26 months.",
+    "rubricJustification": "Crew-loaded full-scale habitat analog ran 378 continuous days with maintenance, food, and delayed-comms operations; the node's L5 anchor grants a crew-loaded full-scale analog capped credit. Terrestrial, sub-26-month, no off-Earth pressure/thermal/dust load, so held below L8.",
     "evidenceRefs": [
       "HC-2024-CHAPEA-378-DAY-ANALOG#NASA"
     ],
     "review": {
       "fact": "APPROVED",
       "rubric": "APPROVED",
-      "reviewerNote": "Fact metadata checked; non-progress classification and rubric boundary checked separately in this mapping pass."
+      "reviewerNote": "Re-scored 2026-07-13: integration node given graded partial credit per L3/L5 anchor; 26-month L8 finish line unchanged."
     }
   },
   {
@@ -2282,21 +2282,21 @@
     "nodeSetVersion": "nodes-v1.0",
     "rubricVersion": "r2.0",
     "nodeCode": "P5-OPS-INTEGRATION",
-    "eventType": "RETROSPECTIVE",
-    "claimedLevel": null,
+    "eventType": "PROTOTYPE_DEMO",
+    "claimedLevel": 3,
     "actor": "NASA",
     "occurredOn": "2025-01-01",
     "occurredOnPrecision": "YEAR",
     "expectedVerificationLevel": "OFFICIAL",
     "eventTitle": "ISAAC exercised fault-response and logistics workflows with important simulation limits",
-    "rubricJustification": "The fault was synthetic, no ISS manipulator was available to clear it, and cargo transfer was software simulation rather than physical logistics.",
+    "rubricJustification": "Integrated autonomy architecture coordinated fault-response and logistics workflows across robot types (L3 architecture/authority proof). Synthetic fault and simulated cargo transfer, so capped below L5 which needs a base analog handling physically injected faults.",
     "evidenceRefs": [
       "HC-2025-ISAAC-FAULT-LOGISTICS-DEMONSTRATIONS#NASA"
     ],
     "review": {
       "fact": "APPROVED",
       "rubric": "APPROVED",
-      "reviewerNote": "Fact metadata checked; non-progress classification and rubric boundary checked separately in this mapping pass."
+      "reviewerNote": "Re-scored 2026-07-13: integration node given graded partial credit per L3/L5 anchor; 26-month L8 finish line unchanged."
     }
   },
   {
@@ -3171,6 +3171,52 @@
       "fact": "APPROVED",
       "rubric": "APPROVED",
       "reviewerNote": "Mapped 2026-07-13: previously-collected candidate mapped with graded credit per node TRL/EGL anchors."
+    }
+  },
+  {
+    "backfillId": "BF-P1-026",
+    "candidateId": "HC-2021-PERSEVERANCE-MARS-LANDING",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P1-TRANSPORT-INTEGRATION",
+    "eventType": "FLIGHT_TEST",
+    "claimedLevel": 3,
+    "actor": "NASA",
+    "occurredOn": "2021-02-18",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "Perseverance landed in Jezero Crater",
+    "rubricJustification": "One robotic campaign integrated launch, deep-space cruise, and precision EDL through governed interfaces (L3 end-to-end architecture and interface proof). One-way and uncrewed with three of seven elements, so capped below L5 and far below the crewed 26-month L8 campaign.",
+    "evidenceRefs": [
+      "HC-2021-PERSEVERANCE-MARS-LANDING#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Mapped 2026-07-13: integration node graded partial credit; 26-month L8 finish line unchanged."
+    }
+  },
+  {
+    "backfillId": "BF-P2-021",
+    "candidateId": "HC-2000-ISS-PERMANENT-OCCUPANCY",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P2-SURVIVAL-INTEGRATION",
+    "eventType": "OPERATIONAL_DEPLOYMENT",
+    "claimedLevel": 5,
+    "actor": "NASA and Roscosmos",
+    "occurredOn": "2000-11-02",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "Expedition 1 began continuous human occupancy of the ISS",
+    "rubricJustification": "Continuously crewed off-Earth station has operated integrated life-support, health, and logistics for over two decades; the node's L5 anchor grants a shorter off-Earth integrated demonstration. Frequent bulk resupply means the no-material-resupply clock never ran, so held below L8.",
+    "evidenceRefs": [
+      "HC-2000-ISS-PERMANENT-OCCUPANCY#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Mapped 2026-07-13: integration node graded partial credit; 26-month L8 finish line unchanged."
     }
   }
 ]

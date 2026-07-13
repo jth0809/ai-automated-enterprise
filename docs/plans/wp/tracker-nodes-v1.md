@@ -24,15 +24,24 @@ matching Flyway migration and `r2.0` prompt to pass their automated tests.
   level inferred from a plan, schedule, funding award, neighboring node, or
   component maximum.
 - **Graded partial credit (restored from nodes-v0.1).** Partial, sub-scale, or
-  single-element demonstrations of an element node's critical function receive
+  single-element demonstrations of a node's critical function receive
   graded credit at a capped lower level — normally L3–L5 per the node anchors —
   rather than zero. A partial demonstration never reaches the node's
   full-capability anchors (L6+ first operational demonstration, L8+ qualified
-  operation) and can never satisfy an integration node. A boundary "exclusion"
+  operation). A boundary "exclusion"
   removes a milestone from the node's *full-capability* credit; it does not
   discard the intermediate progress the milestone genuinely proves. This keeps
   an all-or-nothing boundary from erasing real technology maturation (for
   example, first-stage-only reuse toward fully reusable launch).
+- **Integration nodes also receive graded partial credit.** An integration
+  node's own L3/L5 anchors reward partial integration — an end-to-end
+  architecture with interface proof (L3), or a crew-loaded analog, sub-scale, or
+  shorter off-Earth integrated demonstration (L5) — so a genuine partial
+  integration is scored at its capped anchor, not held at L0. Only L8+ requires
+  the full pillar conjunction operating through the qualifying 26-month
+  settlement campaign. Per-node anchors set each cap: a one-way robotic campaign
+  that joins launch, cruise, and landing caps at L3, while a crew-loaded
+  full-scale or continuous off-Earth integrated demonstration caps at L5.
 - TRL 8–9 and EGL 8–9 advances always require human review. Finish-line use
   additionally requires `OFFICIAL`-or-higher verification.
 - An element node has no incoming `capability_edge` in v1.0. Every integration
@@ -193,9 +202,10 @@ matching Flyway migration and `r2.0` prompt to pass their automated tests.
   and crew safety into a settlement supply and crew route. Cargo and crew legs
   may use different vehicles, but every registered element must be exercised
   inside the campaign's operational architecture.
-- **Exclusions:** A paper architecture; disconnected demonstrations by different
-  systems; a one-way robotic landing; a mission missing required crew-safety or
-  return functions.
+- **Exclusions from full-route (L5+) credit:** A paper architecture; disconnected
+  demonstrations by different systems; a mission missing required crew-safety or
+  return functions. A one-way robotic mission that integrates launch, cruise, and
+  landing as one campaign earns capped partial credit (L3), not full-route credit.
 - **Level anchors:** L3 end-to-end architecture with interface proof; L5 an
   integrated uncrewed or subscale mission spanning major legs; L8 operational
   settlement transport used within the qualifying 26-month campaign; L9
