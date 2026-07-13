@@ -110,11 +110,17 @@ Constraints:
   the tracker.
 - `locator` is at most 300 characters and identifies a page, heading, table,
   or section without reproducing it.
+- `eventTitle` and `actor` are at most 200 characters, `discoveryNote` is at
+  most 1,000 characters, a candidate has at most 20 topic tags and eight
+  evidence references, and one UTF-8 JSONL line is at most 8 KiB.
+- Candidate and evidence objects are fail-closed allowlists. Unknown keys are
+  rejected so prohibited source text cannot be hidden under an alternate name.
 - `contentSha256` is calculated transiently at review time. Source bytes are
   not committed or stored in the database.
-- URLs must be HTTPS except for a documented historical source that has no
-  HTTPS endpoint. No authentication token, cookie, paywalled body, or bypassed
-  access control is stored.
+- URLs must be HTTPS. No authentication token, cookie, paywalled body, or
+  bypassed access control is stored.
+- URLs containing user information or query names associated with tokens,
+  secrets, signatures, authentication, cookies, or passwords are rejected.
 - Candidate statuses are `DISCOVERED`, `READY_FOR_MAPPING`, or `REJECTED`.
   Rejected candidates remain in the audit corpus with a reason.
 

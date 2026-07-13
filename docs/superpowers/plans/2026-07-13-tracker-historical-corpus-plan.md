@@ -6,7 +6,7 @@
 
 **Architecture:** Store one JSON object per line with independently authored factual summaries and reference metadata only. A strict Java validator and a transient PowerShell fingerprint tool enforce the no-copy policy; research proceeds pillar by pillar before any node or TRL/EGL mapping.
 
-**Tech Stack:** Internet research using primary/authoritative web sources, JSONL, Java 25/Jackson, JUnit 5, PowerShell 7, SHA-256.
+**Tech Stack:** Internet research using primary/authoritative web sources, JSONL, Java 21/Jackson, JUnit 5, PowerShell 7, SHA-256.
 
 ## Global Constraints
 
@@ -15,6 +15,8 @@
 - Store no source title, quotation, excerpt, article body, HTML, PDF, image, WARC, or attachment.
 - `eventTitle`, `factSummary`, and `discoveryNote` must be independently written factual text.
 - `factSummary` ≤500 characters; `locator` ≤300 characters; URL ≤1,000 characters.
+- `eventTitle` and `actor` ≤200 characters; `discoveryNote` ≤1,000 characters; topic count ≤20; evidence count ≤8; each UTF-8 JSONL line ≤8 KiB.
+- Candidate and evidence objects reject every unknown key; URLs reject credentials and sensitive query parameters.
 - Every accepted source is opened and reviewed; search-result snippets are not evidence.
 - Do not bypass authentication, paywalls, robots restrictions, or technical protection measures.
 - Do not assign `nodeCode`, `claimedLevel`, or final `verificationLevel` in this corpus.
@@ -31,6 +33,7 @@
 - Create `apps/backend/springboot-app/src/main/resources/tracker/historical-source-catalog-v1.json`: reviewed source metadata used later by source-registry migration.
 - Create `apps/backend/springboot-app/src/main/java/com/aienterprise/backend/tracker/backfill/HistoricalCandidate.java`: JSONL contract.
 - Create `apps/backend/springboot-app/src/main/java/com/aienterprise/backend/tracker/backfill/HistoricalEvidenceReference.java`: reference-only evidence contract.
+- Create `apps/backend/springboot-app/src/main/java/com/aienterprise/backend/tracker/backfill/CorpusReport.java`: immutable validation result.
 - Create `apps/backend/springboot-app/src/main/java/com/aienterprise/backend/tracker/backfill/HistoricalCorpusValidator.java`: offline validation.
 - Create `apps/backend/springboot-app/src/test/java/com/aienterprise/backend/tracker/backfill/HistoricalCorpusValidatorTest.java`: policy tests.
 - Create `apps/backend/springboot-app/src/test/resources/tracker/backfill/historical-candidates-valid.jsonl`: positive fixture.
@@ -45,6 +48,7 @@
 **Files:**
 - Create: `apps/backend/springboot-app/src/main/java/com/aienterprise/backend/tracker/backfill/HistoricalCandidate.java`
 - Create: `apps/backend/springboot-app/src/main/java/com/aienterprise/backend/tracker/backfill/HistoricalEvidenceReference.java`
+- Create: `apps/backend/springboot-app/src/main/java/com/aienterprise/backend/tracker/backfill/CorpusReport.java`
 - Create: `apps/backend/springboot-app/src/main/java/com/aienterprise/backend/tracker/backfill/HistoricalCorpusValidator.java`
 - Create: `apps/backend/springboot-app/src/test/java/com/aienterprise/backend/tracker/backfill/HistoricalCorpusValidatorTest.java`
 - Create: `apps/backend/springboot-app/src/test/resources/tracker/backfill/historical-candidates-valid.jsonl`
@@ -73,7 +77,7 @@ void prohibitedSourceTextFieldsFail(String field) {
 
 - [ ] **Step 2: Add boundary and identity tests**
 
-Cover duplicate `candidateId`, non-HTTPS URL, invalid 64-character lowercase hash, blank locator, summary over 500 characters, locator over 300, invalid dates, empty evidence, and status outside `DISCOVERED`, `READY_FOR_MAPPING`, `REJECTED`.
+Cover duplicate `candidateId`, non-HTTPS or credential-bearing URL, sensitive URL query names, invalid 64-character lowercase hash, blank locator, all text/count/8-KiB bounds, unknown keys, invalid dates, empty evidence, and status outside `DISCOVERED`, `READY_FOR_MAPPING`, `REJECTED`.
 
 - [ ] **Step 3: Run tests and verify RED**
 
