@@ -49,6 +49,7 @@ class TrackerAdminControllerTest {
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(1, response.getBody().size());
         assertEquals(eventId, response.getBody().get(0).eventId());
+        assertEquals("PENDING", response.getBody().get(0).flukeStatus());
     }
 
     @Test
@@ -86,9 +87,77 @@ class TrackerAdminControllerTest {
 
         long eventId = event("resolved");
         long reviewId = repository.insertReview(eventId, "HIGH_IMPACT");
-        controller.decide(reviewId, "test-secret", new Decision("REJECT", null));
+        controller.decide(reviewId, "test-secret", new Decision("REJECT", "duplicate coverage"));
         assertEquals(HttpStatus.CONFLICT,
                 controller.decide(reviewId, "test-secret", new Decision("APPROVE", null)).getStatusCode());
+    }
+
+    @Test
+    void rejectionRequiresANonblankNote() {
+        setLevel("P1-REUSE-LV", 7);
+        long eventId = event("note-rules");
+        long reviewId = repository.insertReview(eventId, "HIGH_IMPACT");
+
+        assertEquals(HttpStatus.BAD_REQUEST,
+                controller.decide(reviewId, "test-secret", new Decision("REJECT", null)).getStatusCode());
+        assertEquals(HttpStatus.BAD_REQUEST,
+                controller.decide(reviewId, "test-secret", new Decision("REJECT", "   ")).getStatusCode());
+        assertEquals("PENDING", jdbc.sql("SELECT status FROM review_queue WHERE id = :id")
+                .param("id", reviewId).query(String.class).single());
+        // Approval notes stay optional.
+        assertEquals(HttpStatus.OK,
+                controller.decide(reviewId, "test-secret", new Decision("APPROVE", null)).getStatusCode());
+    }
+
+    @Test
+    void pendingReviewIncludesEvidenceAndLevelContext() {
+        jdbc.sql("UPDATE capability_node SET current_level = 6 WHERE code = 'P1-ORBIT-REFUEL'").update();
+        long sourceId = jdbc.sql("SELECT id FROM source_registry WHERE code = 'SPACENEWS'")
+                .query(Long.class).single();
+        long articleId = repository.insertArticleIfNew(
+                "https://spacenews.test/case", "8".repeat(64), sourceId,
+                "Refueling milestone story", java.time.Instant.parse("2026-01-30T00:00:00Z"),
+                "Full body. The vehicle completed the test.").orElseThrow();
+        long rubricId = repository.activeRubricVersionId();
+        long nodeId = jdbc.sql("SELECT id FROM capability_node WHERE code = 'P1-ORBIT-REFUEL'")
+                .query(Long.class).single();
+        long eventId = repository.upsertEventByNaturalKey(
+                "P1-ORBIT-REFUEL|FLIGHT_TEST|case|2926",
+                com.aienterprise.backend.tracker.domain.EventRow.draft(
+                        nodeId, "FLIGHT_TEST", 8, "SpaceX", LocalDate.of(2026, 1, 30),
+                        "OFFICIAL", LocalDate.of(2026, 4, 30), rubricId));
+        long classificationId = repository.insertClassification(
+                new com.aienterprise.backend.tracker.domain.ClassificationRow(
+                        0, articleId, null, "P1-ORBIT-REFUEL", "FLIGHT_TEST", 8, "SpaceX",
+                        LocalDate.of(2026, 1, 30), "THIRD_PARTY",
+                        "The vehicle completed the test.", true, "{}", rubricId));
+        repository.linkClassification(classificationId, eventId);
+        repository.insertReview(eventId, "HIGH_IMPACT");
+
+        var response = controller.reviewQueue("test-secret");
+
+        var item = response.getBody().get(0);
+        assertEquals("P1-ORBIT-REFUEL", item.nodeCode());
+        assertEquals(6, item.currentLevel());
+        assertEquals(8, item.claimedLevel());
+        assertEquals("HIGH_IMPACT", item.reason());
+        assertEquals(1, item.sourceCount());
+        assertEquals("The vehicle completed the test.",
+                item.evidence().get(0).evidenceQuote());
+        assertEquals("Refueling milestone story", item.evidence().get(0).articleTitle());
+        assertEquals("https://spacenews.test/case", item.evidence().get(0).articleUrl());
+    }
+
+    @Test
+    void casesAreOrderedByPriorityDescendingThenOldestFirst() {
+        long normal = repository.insertReview(event("older-normal"), "HIGH_IMPACT");
+        long urgent = repository.insertReview(event("newer-urgent"), "HIGH_IMPACT");
+        repository.recordFlukeFailure(urgent, "boom", 1);
+
+        var cases = controller.reviewQueue("test-secret").getBody();
+
+        assertEquals(urgent, cases.get(0).reviewId());
+        assertEquals(normal, cases.get(1).reviewId());
     }
 
     private void setLevel(String nodeCode, int level) {
