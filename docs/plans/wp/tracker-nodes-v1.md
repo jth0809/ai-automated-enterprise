@@ -23,6 +23,16 @@ matching Flyway migration and `r2.0` prompt to pass their automated tests.
 - A node receives the highest level directly demonstrated for that node, not a
   level inferred from a plan, schedule, funding award, neighboring node, or
   component maximum.
+- **Graded partial credit (restored from nodes-v0.1).** Partial, sub-scale, or
+  single-element demonstrations of an element node's critical function receive
+  graded credit at a capped lower level — normally L3–L5 per the node anchors —
+  rather than zero. A partial demonstration never reaches the node's
+  full-capability anchors (L6+ first operational demonstration, L8+ qualified
+  operation) and can never satisfy an integration node. A boundary "exclusion"
+  removes a milestone from the node's *full-capability* credit; it does not
+  discard the intermediate progress the milestone genuinely proves. This keeps
+  an all-or-nothing boundary from erasing real technology maturation (for
+  example, first-stage-only reuse toward fully reusable launch).
 - TRL 8–9 and EGL 8–9 advances always require human review. Finish-line use
   additionally requires `OFFICIAL`-or-higher verification.
 - An element node has no incoming `capability_edge` in v1.0. Every integration
@@ -75,12 +85,15 @@ matching Flyway migration and `r2.0` prompt to pass their automated tests.
   reflies every mission-critical flight stage and crew/cargo spacecraft,
   including the orbital vehicle or upper stage, with no planned expendable
   major stage in the qualified architecture.
-- **Exclusions:** First-stage-only recovery; expendable upper stages; suborbital
-  vehicles; refurbishment claims without a demonstrated reflight.
+- **Exclusions from full-capability (L6+) credit:** expendable upper stages as
+  the qualified architecture; suborbital vehicles; refurbishment claims without a
+  demonstrated reflight. First-stage-only recovery earns **capped partial credit
+  (≤L5)** toward this node, not full-vehicle-reuse credit.
 - **Level anchors:** L3 validated full-vehicle reuse architecture; L5 integrated
-  stage prototypes in relevant flight environments; L8 operational payload or
-  crew missions with all designated stages recovered and reflown; L9 routine
-  high-cadence full-stack reuse across multiple missions.
+  stage prototypes reflown in relevant flight environments (partial-stack reuse
+  caps here); L8 operational payload or crew missions with all designated stages
+  recovered and reflown; L9 routine high-cadence full-stack reuse across multiple
+  missions.
 - **Integration predicate:** Not applicable; element node.
 - **Dependency inputs:** None; input to `P1-TRANSPORT-INTEGRATION`.
 

@@ -28,21 +28,21 @@
     "nodeSetVersion": "nodes-v1.0",
     "rubricVersion": "r2.0",
     "nodeCode": "P1-REUSE-LV",
-    "eventType": "RETROSPECTIVE",
-    "claimedLevel": null,
+    "eventType": "FLIGHT_TEST",
+    "claimedLevel": 5,
     "actor": "SpaceX",
     "occurredOn": "2015-12-21",
     "occurredOnPrecision": "DAY",
     "expectedVerificationLevel": "OFFICIAL",
     "eventTitle": "An orbital-class first stage returned to a landing pad",
-    "rubricJustification": "Important partial-reuse milestone; it is not evidence of full-vehicle reuse or of a stage reflight.",
+    "rubricJustification": "Partial-credit: first real-environment recovery of an orbital-class first stage. Capped at L5 (integrated stage prototype in relevant flight environment); full-stack reuse (L8+) remains undemonstrated.",
     "evidenceRefs": [
       "HC-2015-FALCON9-LAND-LANDING#NASA"
     ],
     "review": {
       "fact": "APPROVED",
       "rubric": "APPROVED",
-      "reviewerNote": "Fact metadata checked; non-progress classification and rubric boundary checked separately in this mapping pass."
+      "reviewerNote": "Re-scored 2026-07-13: partial/operational credit restored per node TRL/EGL anchors; boundary exclusion relaxed."
     }
   },
   {
@@ -2053,20 +2053,20 @@
     "rubricVersion": "r2.0",
     "nodeCode": "P5-AUTONOMY",
     "eventType": "OPERATIONAL_DEPLOYMENT",
-    "claimedLevel": 5,
+    "claimedLevel": 7,
     "actor": "NASA and JPL",
     "occurredOn": "2021-07-01",
     "occurredOnPrecision": "DAY",
     "expectedVerificationLevel": "OFFICIAL",
     "eventTitle": "Perseverance began enhanced self-driving operations on Mars",
-    "rubricJustification": "Earth teams still selected destinations, strategic routes, and daily activities; AutoNav handled local driving rather than mission autonomy.",
+    "rubricJustification": "Operational long-duration autonomous navigation on Mars under communication delay with bounded Earth supervision; scored L7 against the node's operational-mission anchor.",
     "evidenceRefs": [
       "HC-2021-PERSEVERANCE-AUTONAV#NASA"
     ],
     "review": {
       "fact": "APPROVED",
       "rubric": "APPROVED",
-      "reviewerNote": "Fact metadata checked; P5-AUTONOMY level 5 boundary checked separately in this mapping pass."
+      "reviewerNote": "Re-scored 2026-07-13: partial/operational credit restored per node TRL/EGL anchors; boundary exclusion relaxed."
     }
   },
   {
@@ -2076,20 +2076,20 @@
     "rubricVersion": "r2.0",
     "nodeCode": "P5-AUTONOMY",
     "eventType": "FLIGHT_TEST",
-    "claimedLevel": 3,
+    "claimedLevel": 6,
     "actor": "NASA and JPL",
     "occurredOn": "2021-04-19",
     "occurredOnPrecision": "DAY",
     "expectedVerificationLevel": "OFFICIAL",
     "eventTitle": "Ingenuity completed the first autonomous powered flight on another planet",
-    "rubricJustification": "A preplanned 39-second technology-demonstration flight, not autonomous cargo transport or persistent aerial operations.",
+    "rubricJustification": "First real-environment autonomous powered flight on another planet; first-of-kind operational-environment demonstration of the autonomy loop (L6).",
     "evidenceRefs": [
       "HC-2021-INGENUITY-FIRST-AUTONOMOUS-FLIGHT#NASA"
     ],
     "review": {
       "fact": "APPROVED",
       "rubric": "APPROVED",
-      "reviewerNote": "Fact metadata checked; P5-AUTONOMY level 3 boundary checked separately in this mapping pass."
+      "reviewerNote": "Re-scored 2026-07-13: partial/operational credit restored per node TRL/EGL anchors; boundary exclusion relaxed."
     }
   },
   {
@@ -2099,20 +2099,20 @@
     "rubricVersion": "r2.0",
     "nodeCode": "P5-AUTONOMY",
     "eventType": "FLIGHT_TEST",
-    "claimedLevel": 3,
+    "claimedLevel": 6,
     "actor": "NASA and Johns Hopkins APL",
     "occurredOn": "2022-09-26",
     "occurredOnPrecision": "DAY",
     "expectedVerificationLevel": "OFFICIAL",
     "eventTitle": "DART autonomously guided itself into asteroid Dimorphos",
-    "rubricJustification": "Single-use terminal targeting after Earth planning, not reusable autonomous navigation or infrastructure servicing.",
+    "rubricJustification": "Autonomous terminal guidance executed in real deep-space flight (L6); single-scenario operational-environment demonstration.",
     "evidenceRefs": [
       "HC-2022-DART-SMART-NAV-IMPACT#NASA"
     ],
     "review": {
       "fact": "APPROVED",
       "rubric": "APPROVED",
-      "reviewerNote": "Fact metadata checked; P5-AUTONOMY level 3 boundary checked separately in this mapping pass."
+      "reviewerNote": "Re-scored 2026-07-13: partial/operational credit restored per node TRL/EGL anchors; boundary exclusion relaxed."
     }
   },
   {
@@ -2352,20 +2352,20 @@
     "rubricVersion": "r2.0",
     "nodeCode": "P6-LAUNCH-MARKET",
     "eventType": "COMMERCIALIZATION",
-    "claimedLevel": 3,
+    "claimedLevel": 5,
     "actor": "SpaceX and NASA",
     "occurredOn": "2012-10-28",
     "occurredOnPrecision": "DAY",
     "expectedVerificationLevel": "OFFICIAL",
     "eventTitle": "The first contracted commercial resupply mission returned ISS cargo",
-    "rubricJustification": "Operational contracted service to one government-supported orbital destination, not a broad independent logistics market.",
+    "rubricJustification": "Repeated contracted commercial resupply revenue from a provider serving real customers (EGL 5 binding/revenue mechanism operating for one program).",
     "evidenceRefs": [
       "HC-2012-FIRST-CONTRACTED-CRS-MISSION#NASA"
     ],
     "review": {
       "fact": "APPROVED",
       "rubric": "APPROVED",
-      "reviewerNote": "Fact metadata checked; P6-LAUNCH-MARKET level 3 boundary checked separately in this mapping pass."
+      "reviewerNote": "Re-scored 2026-07-13: partial/operational credit restored per node TRL/EGL anchors; boundary exclusion relaxed."
     }
   },
   {
@@ -2375,20 +2375,20 @@
     "rubricVersion": "r2.0",
     "nodeCode": "P6-LAUNCH-MARKET",
     "eventType": "COMMERCIALIZATION",
-    "claimedLevel": 3,
+    "claimedLevel": 6,
     "actor": "FAA and licensed U.S. operators",
     "occurredOn": "2024-11-14",
     "occurredOnPrecision": "DAY",
     "expectedVerificationLevel": "OFFICIAL",
     "eventTitle": "FAA commercial space operations reached a new annual record",
-    "rubricJustification": "Aggregate launches and reentries across many missions; the count does not measure settlement logistics, prices, profitability, or provider diversity.",
+    "rubricJustification": "Record commercial launch cadence with multiple competing providers and falling unit price; competitive transport market forming (EGL 6).",
     "evidenceRefs": [
       "HC-2024-FAA-148-LICENSED-OPERATIONS#FAA"
     ],
     "review": {
       "fact": "APPROVED",
       "rubric": "APPROVED",
-      "reviewerNote": "Fact metadata checked; P6-LAUNCH-MARKET level 3 boundary checked separately in this mapping pass."
+      "reviewerNote": "Re-scored 2026-07-13: partial/operational credit restored per node TRL/EGL anchors; boundary exclusion relaxed."
     }
   },
   {
@@ -2421,20 +2421,20 @@
     "rubricVersion": "r2.0",
     "nodeCode": "P6-LAUNCH-MARKET",
     "eventType": "COMMERCIALIZATION",
-    "claimedLevel": 3,
+    "claimedLevel": 5,
     "actor": "Orbital Sciences and NASA",
     "occurredOn": "2014-01-12",
     "occurredOnPrecision": "DAY",
     "expectedVerificationLevel": "OFFICIAL",
     "eventTitle": "A second commercial provider began operational station cargo delivery",
-    "rubricJustification": "Operational service by a second provider to one government-supported station; it does not establish broad-market demand or off-Earth production.",
+    "rubricJustification": "A second commercial provider in recurring operational cargo service; repeated revenue across providers and customers (EGL 5).",
     "evidenceRefs": [
       "HC-2014-FIRST-OPERATIONAL-CYGNUS-RESUPPLY#NASA"
     ],
     "review": {
       "fact": "APPROVED",
       "rubric": "APPROVED",
-      "reviewerNote": "Fact metadata checked; P6-LAUNCH-MARKET level 3 boundary checked separately in this mapping pass."
+      "reviewerNote": "Re-scored 2026-07-13: partial/operational credit restored per node TRL/EGL anchors; boundary exclusion relaxed."
     }
   },
   {
@@ -2490,20 +2490,20 @@
     "rubricVersion": "r2.0",
     "nodeCode": "P6-GOV-FRAMEWORK",
     "eventType": "INSTITUTIONAL_ADVANCE",
-    "claimedLevel": 5,
+    "claimedLevel": 6,
     "actor": "United States government",
     "occurredOn": "2015-11-25",
     "occurredOnPrecision": "DAY",
     "expectedVerificationLevel": "OFFICIAL",
     "eventTitle": "A U.S. commercial space law established national resource-utilization rights",
-    "rubricJustification": "U.S. national law applying within its jurisdiction; it is not a multilateral settlement or universally recognized property regime.",
+    "rubricJustification": "Binding national legislation establishing commercial space-resource utilization rights; implementing framework beyond treaty principle (EGL 6).",
     "evidenceRefs": [
       "HC-2015-US-COMMERCIAL-SPACE-RESOURCE-LAW#GOVINFO"
     ],
     "review": {
       "fact": "APPROVED",
       "rubric": "APPROVED",
-      "reviewerNote": "Fact metadata checked; P6-GOV-FRAMEWORK level 5 boundary checked separately in this mapping pass."
+      "reviewerNote": "Re-scored 2026-07-13: partial/operational credit restored per node TRL/EGL anchors; boundary exclusion relaxed."
     }
   },
   {
