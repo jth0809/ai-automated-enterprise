@@ -1,6 +1,6 @@
 # Tracker Historical Corpus Research Log
 
-Status: Pillars 1–2 complete; 70 candidates ready for mapping.
+Status: Pillars 1–3 complete; 100 candidates ready for mapping.
 
 This log tracks discovery queries, opened sources, source decisions, rejection
 reasons, and corpus counts. It never stores source titles, quotations, excerpts,
@@ -12,11 +12,11 @@ article bodies, HTML, PDF, images, or other source content.
 |---|---:|---:|
 | P1 transport and propulsion | 35–45 | 40 |
 | P2 life support and human health | 30–40 | 30 |
-| P3 habitat and infrastructure | 25–35 | 0 |
+| P3 habitat and infrastructure | 25–35 | 30 |
 | P4 resources and energy | 25–35 | 0 |
 | P5 robotics and autonomy | 25–35 | 0 |
 | P6 economics and governance | 40–60 | 0 |
-| **Total discovery corpus** | **180–250** | **70** |
+| **Total discovery corpus** | **180–250** | **100** |
 
 The pillar figures are topic-family discovery targets, not node assignments.
 One candidate may carry multiple topic tags but contributes once to the total.
@@ -47,6 +47,9 @@ One candidate may carry multiple topic tags but contributes once to the total.
 | P2-01 | P2 life support and human health | Regenerative air/water systems and crewed crop production | 10 | 10 | 0 | NASA and NTRS records document five ECLSS milestones and five cultivation outcomes; non-edible or installation-only evidence is explicitly bounded. |
 | P2-02 | P2 life support and human health | Radiation measurement/protection and long-duration physiological evidence | 10 | 10 | 0 | Flight, ground-evaluation, and medical records separate monitoring from shielding and cohort observations from validated countermeasures. |
 | P2-03 | P2 life support and human health | Solid-waste resource recovery and Earth-independent medical operations | 10 | 10 | 0 | Ground, suborbital, and ISS records distinguish collection from resource cycling and image acquisition from diagnosis or treatment. |
+| P3-01 | P3 habitat and infrastructure | Surface shelter, orbital habitat assembly, expandable structures, and construction analogs | 9 | 10 | 0 | Records separate temporary cabins, orbital habitats, terrestrial analogs, and subscale prints from commissioned surface construction. |
+| P3-02 | P3 habitat and infrastructure | Integrated power systems and delay/disruption-tolerant communications | 9 | 10 | 0 | Isolated generators, orbital grids, analog buses, routed protocols, relays, and point-to-point optical links are explicitly distinguished. |
+| P3-03 | P3 habitat and infrastructure | Thermal control, dust mitigation, fault recovery, and long-duration habitat analogs | 8 | 10 | 0 | Operational orbital systems, component lunar tests, and terrestrial analog durations remain distinct from integrated surface habitation. |
 
 ## Source decisions
 
@@ -92,3 +95,10 @@ One candidate may carry multiple topic tags but contributes once to the total.
 | 2026-07-13 | P2 batch 3 source review and transient fingerprinting | 10 candidates, 10 accepted URLs, each response below 0.3 MiB, no source bytes retained |
 | 2026-07-13 | P2 batch 3 final fact review | Waste collection/recovery and medical imaging/diagnosis/treatment boundaries confirmed |
 | 2026-07-13 | P2 completion corpus validation | 42/42 focused tests; 70 READY records, 0 rejected, 0 errors |
+| 2026-07-13 | P3 batch 1 source review and transient fingerprinting | 10 candidates, 9 accepted URLs, each response below 0.4 MiB, no source bytes retained |
+| 2026-07-13 | P3 batch 1 final fact review | Surface, orbital, analog, scale, pressure, and occupancy boundaries confirmed |
+| 2026-07-13 | P3 batch 2 source review and transient fingerprinting | 10 candidates, 9 accepted URLs, each response below 0.3 MiB, no source bytes retained |
+| 2026-07-13 | P3 batch 2 final fact review | Generator/grid and direct-link/relay/network boundaries confirmed |
+| 2026-07-13 | P3 batch 3 source review and transient fingerprinting | 10 candidates, 8 accepted URLs, largest response 0.76 MiB, no source bytes retained |
+| 2026-07-13 | P3 batch 3 final fact review | Thermal fault, dust control, analog/off-Earth, and 26-month integration boundaries confirmed |
+| 2026-07-13 | P3 completion corpus validation | 42/42 focused tests; 100 READY records, 0 rejected, 0 errors |
