@@ -331,3 +331,25 @@ SELECT target.id, source.id, 1, 0.150
   JOIN capability_node source ON source.pillar = target.pillar
  WHERE target.code = 'P6-SETTLEMENT-INTEGRATION'
    AND source.is_integration_node = 'N';
+
+-- ---------------------------------------------------------------------------
+-- Activate rubric r2.0 only after the nodes-v1.0 classifier resource is final.
+-- The classify hash is SHA-256 over UTF-8 bytes after CRLF-to-LF normalization.
+-- ---------------------------------------------------------------------------
+UPDATE rubric_version
+   SET active = 'N'
+ WHERE active = 'Y';
+
+INSERT INTO rubric_version (
+  version_label, gate_model, classify_model,
+  gate_prompt_sha256, classify_prompt_sha256,
+  node_set_version, active, notes
+)
+SELECT
+  'r2.0', gate_model, classify_model,
+  gate_prompt_sha256,
+  'bb77587b3d5d47971251d058ba54b41f47ea0a1b9df21b372b42933aec7a36b0',
+  'nodes-v1.0', 'Y',
+  'Approved 35-node registry with direct-evidence integration constraints'
+  FROM rubric_version
+ WHERE version_label = 'r1.0';

@@ -3,12 +3,17 @@ package com.aienterprise.backend.tracker;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.test.context.ActiveProfiles;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.util.HexFormat;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static java.util.Map.entry;
@@ -215,6 +220,77 @@ class TrackerNodesV1Test {
                 """).query(Integer.class).single();
 
         assertEquals(1, count);
+    }
+
+    @Test
+    void classifierPromptRegistryContainsEveryApprovedCodeExactlyOnce() throws Exception {
+        String prompt = promptText();
+        int registryStart = prompt.indexOf("[Block 2");
+        int registryEnd = prompt.indexOf("[Block 3");
+        assertTrue(registryStart >= 0 && registryEnd > registryStart);
+        String registry = prompt.substring(registryStart, registryEnd);
+
+        long registryRows = registry.lines()
+                .filter(line -> line.matches("P[1-6]-[A-Z0-9-]+\\s+.*"))
+                .count();
+        assertEquals(35, registryRows);
+
+        EXPECTED_CODES.forEach(code -> {
+            Pattern row = Pattern.compile("(?m)^" + Pattern.quote(code) + "\\s");
+            assertEquals(1, row.matcher(registry).results().count(), code);
+        });
+    }
+
+    @Test
+    void classifierPromptForbidsInferringIntegrationReadiness() throws Exception {
+        String prompt = promptText();
+
+        assertTrue(prompt.contains(
+                "Integration nodes require evidence of an integrated system operating as a unit."));
+        assertTrue(prompt.contains(
+                "Do not infer an integration-node level from component-node levels."));
+        assertTrue(prompt.contains("P2-SURVIVAL-INTEGRATION level 8 or 9"));
+        assertTrue(prompt.contains("26 months"));
+        assertTrue(prompt.contains("Partial first-stage reuse is not full-vehicle reuse."));
+        assertTrue(prompt.contains(
+                "Plans, design reviews, funding awards, and target dates are ANNOUNCEMENT_ONLY."));
+    }
+
+    @Test
+    void classifierAnchorsDoNotAwardFullSystemCreditToExcludedPartialSystems() throws Exception {
+        String prompt = promptText();
+        int anchorsStart = prompt.indexOf("[Block 5");
+        int anchorsEnd = prompt.indexOf("[Block 6");
+        assertTrue(anchorsStart >= 0 && anchorsEnd > anchorsStart);
+        String anchors = prompt.substring(anchorsStart, anchorsEnd);
+
+        assertFalse(Pattern.compile(
+                        "(?s)Falcon 9.*?node_code=P1-REUSE-LV.*?claimed_level=[6-9]")
+                .matcher(anchors).find());
+        assertFalse(Pattern.compile(
+                        "(?s)tank-to-tank.*?node_code=P1-ORBIT-REFUEL")
+                .matcher(anchors).find());
+    }
+
+    @Test
+    void rubricR2ClassifyPromptHashMatchesTheLfNormalizedResource() throws Exception {
+        List<String> seeded = jdbc.sql("""
+                SELECT classify_prompt_sha256 FROM rubric_version
+                 WHERE version_label = 'r2.0'
+                """).query(String.class).list();
+
+        assertEquals(1, seeded.size());
+        assertEquals(sha256LfNormalized(promptText()), seeded.getFirst());
+    }
+
+    private static String promptText() throws Exception {
+        return new ClassPathResource("tracker/prompt-classify-system.txt")
+                .getContentAsString(StandardCharsets.UTF_8);
+    }
+
+    private static String sha256LfNormalized(String text) throws Exception {
+        byte[] bytes = text.replace("\r\n", "\n").getBytes(StandardCharsets.UTF_8);
+        return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(bytes));
     }
 
     private record Edge(String fromCode, String toCode, int orGroup, double deltaE) {

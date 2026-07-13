@@ -161,8 +161,16 @@ class TrackerRepositoryTest {
     }
 
     @Test
-    void activeRubricVersionIdReturnsTheSeededActiveRow() {
-        assertEquals(id("rubric_version", "version_label", "r1.0"), repository.activeRubricVersionId());
+    void activeRubricVersionIdReturnsTheR2NodesV1Row() {
+        long activeId = repository.activeRubricVersionId();
+
+        String version = jdbc.sql("""
+                SELECT version_label FROM rubric_version
+                 WHERE id = :id
+                   AND active = 'Y'
+                   AND node_set_version = 'nodes-v1.0'
+                """).param("id", activeId).query(String.class).single();
+        assertEquals("r2.0", version);
     }
 
     @Test
