@@ -4,10 +4,13 @@ import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HexFormat;
 import java.util.List;
+import java.util.Locale;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,18 +67,33 @@ public class TrackerIngestJob {
         long sourceId = repository.findSourceIdForFeed(feed.source(), host)
                 .orElseThrow(() -> new IllegalArgumentException(
                         "Feed is not registered in source_registry: " + feed.source()));
+        Set<String> bodyHosts = repository.findActiveDomains(sourceId, "BODY");
         for (Article article : parser.parse(fetcher.fetch(feed.url()), feed.source())) {
             if (article.link() == null || article.link().isBlank()) {
                 continue;
             }
-            repository.insertArticleIfNew(
-                    article.link(),
-                    sha256(article.link()),
-                    sourceId,
-                    article.title(),
-                    parsePublishedAt(article.publishedAt()),
-                    body(article));
+            try {
+                repository.insertArticleIfNew(
+                        article.link(),
+                        sha256(article.link()),
+                        sourceId,
+                        article.title(),
+                        parsePublishedAt(article.publishedAt()),
+                        body(article),
+                        extractionStatus(article.link(), bodyHosts));
+            } catch (RuntimeException e) {
+                log.warn("tracker article ingestion failed for {} ({}): {}",
+                        feed.source(), article.link(), e.toString());
+            }
         }
+    }
+
+    /** Links on an active BODY/BOTH domain queue for extraction; the rest keep the RSS summary. */
+    private static String extractionStatus(String link, Set<String> bodyHosts) {
+        String host = URI.create(link).getHost();
+        return host != null && bodyHosts.contains(host.toLowerCase(Locale.ROOT))
+                ? "PENDING"
+                : "SKIPPED";
     }
 
     private static String body(Article article) {
@@ -94,8 +112,19 @@ public class TrackerIngestJob {
         if (raw == null || raw.isBlank()) {
             return null;
         }
+        String value = raw.trim();
         try {
-            return ZonedDateTime.parse(raw, DateTimeFormatter.RFC_1123_DATE_TIME).toInstant();
+            return ZonedDateTime.parse(value, DateTimeFormatter.RFC_1123_DATE_TIME).toInstant();
+        } catch (RuntimeException notRfc1123) {
+            // Fall through to the ISO-8601 forms used by Atom and Dublin Core.
+        }
+        try {
+            return Instant.parse(value);
+        } catch (RuntimeException notUtcInstant) {
+            // Fall through to the offset form (e.g. 2026-07-11T09:30:00+09:00).
+        }
+        try {
+            return OffsetDateTime.parse(value).toInstant();
         } catch (RuntimeException invalidDate) {
             return null;
         }

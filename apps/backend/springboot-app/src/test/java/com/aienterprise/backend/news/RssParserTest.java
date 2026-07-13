@@ -57,4 +57,86 @@ class RssParserTest {
         String empty = "<rss version=\"2.0\"><channel><title>Quiet</title></channel></rss>";
         assertTrue(new RssParser().parse(empty, "Quiet").isEmpty());
     }
+
+    @Test
+    void parsesAtomAlternateLinkAndPublishedTimestamp() {
+        String atom = """
+                <feed xmlns="http://www.w3.org/2005/Atom">
+                  <entry><title>Transfer demo</title>
+                    <link rel="alternate" href="https://example.test/a"/>
+                    <published>2026-07-12T01:02:03Z</published>
+                    <summary>Propellant moved between tanks.</summary>
+                  </entry>
+                </feed>
+                """;
+
+        Article article = new RssParser().parse(atom, "TEST").getFirst();
+
+        assertEquals("Transfer demo", article.title());
+        assertEquals("https://example.test/a", article.link());
+        assertEquals("2026-07-12T01:02:03Z", article.publishedAt());
+        assertEquals("Propellant moved between tanks.", article.excerpt());
+    }
+
+    @Test
+    void parsesRdfItemsWithDublinCoreDates() {
+        String rdf = """
+                <?xml version="1.0"?>
+                <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+                         xmlns="http://purl.org/rss/1.0/"
+                         xmlns:dc="http://purl.org/dc/elements/1.1/">
+                  <channel rdf:about="https://example.test/feed">
+                    <title>RDF Feed</title>
+                  </channel>
+                  <item rdf:about="https://example.test/one">
+                    <title>Ion engine result</title>
+                    <link>https://example.test/one</link>
+                    <dc:date>2026-07-11T09:30:00+00:00</dc:date>
+                    <description>Lab result summary.</description>
+                  </item>
+                  <item rdf:about="https://example.test/two">
+                    <title>Second item</title>
+                    <link>https://example.test/two</link>
+                    <dc:date>2026-07-10T09:30:00Z</dc:date>
+                  </item>
+                </rdf:RDF>
+                """;
+
+        List<Article> articles = new RssParser().parse(rdf, "ARXIV");
+
+        assertEquals(2, articles.size());
+        assertEquals("https://example.test/one", articles.get(0).link());
+        assertEquals("2026-07-11T09:30:00+00:00", articles.get(0).publishedAt());
+        assertEquals("Lab result summary.", articles.get(0).excerpt());
+        assertEquals("2026-07-10T09:30:00Z", articles.get(1).publishedAt());
+    }
+
+    @Test
+    void skipsEntriesWithoutLinksWithoutFailingTheFeed() {
+        String atom = """
+                <feed xmlns="http://www.w3.org/2005/Atom">
+                  <title>Atom Feed</title>
+                  <entry><title>First</title>
+                    <link rel="alternate" href="https://example.test/a"/>
+                    <published>2026-07-12T01:02:03Z</published>
+                  </entry>
+                  <entry><title>No link at all</title>
+                    <published>2026-07-12T02:00:00Z</published>
+                  </entry>
+                  <entry><title>Third</title>
+                    <link href="https://example.test/c"/>
+                    <updated>2026-07-12T03:00:00Z</updated>
+                  </entry>
+                </feed>
+                """;
+
+        List<Article> articles = new RssParser().parse(atom, "TEST");
+
+        assertEquals(2, articles.size());
+        assertEquals("https://example.test/a", articles.get(0).link());
+        assertEquals("https://example.test/c", articles.get(1).link());
+        // A bare <link href=...> without rel counts as the alternate link,
+        // and <updated> stands in when <published> is absent.
+        assertEquals("2026-07-12T03:00:00Z", articles.get(1).publishedAt());
+    }
 }

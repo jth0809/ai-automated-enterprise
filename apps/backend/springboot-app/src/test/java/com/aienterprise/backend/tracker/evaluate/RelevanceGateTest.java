@@ -72,6 +72,6 @@ class RelevanceGateTest {
         return new ArticleRow(
                 42, 1, "https://example.test/a", "a".repeat(64), "Orbital refueling test",
                 Instant.parse("2026-07-12T00:00:00Z"), Instant.parse("2026-07-12T01:00:00Z"),
-                "A flight test demonstrated propellant transfer.", false, "INGESTED", 0);
+                "A flight test demonstrated propellant transfer.", false, "SKIPPED", "INGESTED", 0);
     }
 }

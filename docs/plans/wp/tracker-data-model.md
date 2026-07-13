@@ -13,7 +13,9 @@
 ## ERD (개요)
 
 ```
-source_registry ──< article ──< article_classification >── event >── capability_node
+source_registry ──< source_domain
+       │
+       └──< article ──< article_classification >── event >── capability_node
                                                              │              │
                                        review_queue >────────┘              ├──< capability_edge (DAG)
                                                                              └──< node_state_history
@@ -37,6 +39,15 @@ CREATE TABLE source_registry (
   feed_active   CHAR(1) DEFAULT 'Y' NOT NULL CHECK (feed_active IN ('Y','N')),
   median_publish_interval_hours NUMBER,                 -- 데드맨 스위치 기준 (P2)
   created_at    TIMESTAMP DEFAULT SYSTIMESTAMP NOT NULL
+);
+
+CREATE TABLE source_domain (
+  id        NUMBER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  source_id NUMBER NOT NULL REFERENCES source_registry(id),
+  domain    VARCHAR2(253) NOT NULL,
+  purpose   VARCHAR2(5) NOT NULL CHECK (purpose IN ('FEED','BODY','BOTH')),
+  active    CHAR(1) DEFAULT 'Y' NOT NULL CHECK (active IN ('Y','N')),
+  CONSTRAINT uq_source_domain UNIQUE (source_id, domain)
 );
 
 CREATE TABLE rubric_version (
@@ -115,6 +126,11 @@ CREATE TABLE article (
   fetched_at    TIMESTAMP DEFAULT SYSTIMESTAMP NOT NULL,
   body          CLOB,                                   -- 원문 보존 (루브릭 개정 시 전체 재평가용)
   body_extracted CHAR(1) DEFAULT 'N' NOT NULL CHECK (body_extracted IN ('Y','N')), -- N이면 RSS 요약만
+  body_extraction_status VARCHAR2(10) DEFAULT 'SKIPPED' NOT NULL CHECK
+                  (body_extraction_status IN ('PENDING','EXTRACTED','SKIPPED','FAILED')),
+  body_extraction_attempts NUMBER(2) DEFAULT 0 NOT NULL CHECK
+                  (body_extraction_attempts BETWEEN 0 AND 99),
+  body_extraction_error VARCHAR2(1000),
   pipeline_status VARCHAR2(20) DEFAULT 'INGESTED' NOT NULL CHECK (pipeline_status IN
                   ('INGESTED','GATE_REJECTED','GATE_PASSED','CLASSIFIED','FAILED')),
   fail_count    NUMBER(2) DEFAULT 0 NOT NULL,
@@ -301,6 +317,8 @@ CREATE TABLE prediction (                               -- [P4] 마이크로 예
 | 4절 DAG (AND/OR, δ_e) | `capability_edge.or_group / delta_e` |
 | 4절 사건 {유형, 역량, 주체, 발생일, 검증, 인용, 출처 목록} | `event` + `article_classification`(인용·경로) |
 | 4절 기사 원문 보존 | `article.body` CLOB |
+| Phase 1b 본문 추출 상태·재시도 | `article.body_extraction_status/body_extraction_attempts/body_extraction_error` |
+| Zero-Trust 피드·본문 호스트 정책 | `source_domain` (`FEED`/`BODY`/`BOTH`, 소스별 정확 호스트) |
 | 6절 Stage 2 필드 표 (노드·유형·성숙도·경로·주체/발생일·인용·중복) | `article_classification.*` + `raw_output` JSON |
 | 6절 검증 수준 도출 (Tier·발표 경로·서열) | `source_registry.tier/source_type` + `article_classification.publication_path` → `event.verification_level` (코드 도출) |
 | 6절 플루크 필터 / 7절 인간 검수 | `review_queue` |
@@ -319,8 +337,25 @@ CREATE TABLE prediction (                               -- [P4] 마이크로 예
 
 - **JSON 타입 컬럼(`raw_output`, `trl_map`, `maturity_map`, `expected_output`)은 CLOB로 구현한다** — 테스트 DB(H2 MODE=Oracle) 호환 및 ATP 19c 하위 호환. JSON 파싱은 앱 레벨(Jackson). DDL의 `JSON` 표기는 의미 명세로 읽는다.
 
+## Phase 1b 스키마 보강
+
+- `source_registry.site_domain`은 기존 계약 호환용 대표 도메인으로 유지한다. 실제 네트워크 허용 판단은 소스별 복수 호스트와 용도를 정규화한 `source_domain`을 사용한다.
+- `body_extracted`는 전문 저장 여부의 기존 이진 계약으로 유지한다. 대기·정책 생략·재시도 소진을 구분하는 운영 상태는 `body_extraction_status`가 담당한다.
+- V3 적용 시 기존 `body_extracted='Y'` 행은 `EXTRACTED`, 나머지는 `SKIPPED`로 결정론적으로 이관한다. 새 기사에 대한 `PENDING` 지정은 수집기 코드가 명시적으로 수행한다.
+
 ## G0 승인 필요 결정 사항
 
 1. **event_type enum에 `INSTITUTIONAL_ADVANCE` 추가 (12종)** — 컨셉 6절의 11종에는 필라 6의 *전진* 사건(조약 채택, 시범 계약 등)에 맞는 유형이 없음이 설계 중 발견됨. 승인 시 컨셉 6절에 소급 반영.
 2. **노드의 수치 신뢰도 필드 생략** — 컨셉 4절의 "신뢰도"는 verification_level로 충분히 표현된다고 판정(YAGNI). 반대 시 `confidence NUMBER(3,2)` 추가.
 3. **마이그레이션 도구: Flyway 채택 권고** — Spring Boot 표준, `db/migration/V1__tracker_core.sql`부터 시작 (WP1.1에서 도입).
+
+## Phase 1b 추가 (V5 — fluke filter/review audit, 2026-07-13)
+
+- `review_queue` 확장: `priority NUMBER(1) 0..2` (0 일반, 1 mismatch, 2 필터 실패),
+  `fluke_status ('PENDING','COMPLETE','FAILED')`, `fluke_fail_count NUMBER(2)`,
+  `fluke_last_error VARCHAR2(1000)`. `(event_id, reason)` 유니크 — 동일 트리거의
+  중복 인큐를 차단하되 같은 사건의 다른 검수 유형(예: ARRIVAL_CANDIDATE)은 허용.
+- `fluke_evaluation` 신설: 검수당 성공 평가 1건(UNIQUE review_id). verdict
+  ('MATCH','MISMATCH'), 코드 검증된 evidence_quote(quote_verified), raw_output,
+  model_id, prompt_sha256, rubric_version_id, created_at — 전역 버전 스탬프
+  불변식을 충족한다. `review_queue.fluke_result`는 목록/정렬용 비정규화 필드로 유지.

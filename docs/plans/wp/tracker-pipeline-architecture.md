@@ -29,8 +29,10 @@ com.aienterprise.backend.tracker
 
 | 잡 | 크론 | 동작 | Phase |
 |----|------|------|-------|
-| `tracker-ingest` | `0 10 * * * *` (매시 :10 — news 잡 :00과 분산) | 피드 수집 → article 멱등 삽입 → 본문 추출(허용 도메인만) | P1 |
+| `tracker-ingest` | `0 10 * * * *` (매시 :10 — news 잡 :00과 분산) | 피드 수집 → article 멱등 삽입, BODY 도메인 정책으로 PENDING/SKIPPED 결정 | P1 |
+| `tracker-body-extraction` | `0 15 * * * *` (Phase 1b 구현) | PENDING 기사 ≤30건: 허용 호스트 페치 → 범용 추출 → EXTRACTED / SKIPPED(정책·부적합) / 3회 실패 시 FAILED. 추출 상태가 종결되기 전에는 게이트에 비노출 | P1b |
 | `tracker-process` | `0 */15 * * * *` | INGESTED 기사 배치(틱당 ≤30건): 게이트→분류→병합→검증 도출→채점→상태 갱신 | P1 |
+| `tracker-fluke-filter` | `0 57 * * * *` (Phase 1b 구현, `tracker.fluke-enabled` 기본 false) | PENDING 검수의 2차 컨텍스트 평가: MATCH/MISMATCH + 인용 코드 재검증 → `fluke_evaluation` 감사 기록, mismatch는 priority 1, 비용 캡 소진은 카운터 무변 유보, 3회 실패 시 FAILED/priority 2. 어떤 판정도 상태를 자동 전진/반려하지 않음 | P1b |
 | `tracker-snapshot` | `0 30 0 * * MON` | 주간 준비도 스냅샷 + 회귀 + ETA + 감쇠 표시값 갱신 | P1 |
 | `tracker-expiry` | `0 10 1 * * *` | 잠정 사건 90일 소멸 처리 | P1 |
 | `tracker-dormancy` | `0 20 1 1 * *` (월 1회) | 휴면 진입/감쇠 재계산 | P2 |
@@ -122,8 +124,8 @@ com.aienterprise.backend.tracker
 | `GET /api/tracker/summary` | { displayedEtaYear, etaLow, etaHigh, label:"현 추세 지속 시나리오 기준 · 모델 내 80% 구간", overallReadiness, bottleneckPillar, frozen:bool } |
 | `GET /api/tracker/pillars` | [ { pillar, name, readiness, etaYear, momentum } ×6 ] |
 | `GET /api/tracker/events?limit=50` | 타임라인: [ { occurredOn, nodeName, eventType, levelFrom, levelTo, impactScore, verificationLevel, sourceCount, evidenceQuote } ] |
-| `GET /api/tracker/admin/review` (인증) | 검수 큐 목록 |
-| `POST /api/tracker/admin/review/{id}` (인증) | { decision: APPROVE\|REJECT, note } |
+| `GET /api/tracker/admin/review` (인증) | 검수 큐 목록 — Phase 1b부터 **ReviewCase 프로젝션**: 검수 행 + 사건/노드/현재·제안 레벨 + 검증 수준·임팩트 + 플루크 상태·판정 + 출처 수 + 인용 검증된 증거(제목·URL·인용). priority DESC → 오래된 순 |
+| `POST /api/tracker/admin/review/{id}` (인증) | { decision: APPROVE\|REJECT, note } — Phase 1b부터 REJECT는 공백 아닌 note 필수, note ≤2000자, PENDING 외 결정은 409 |
 
 인증은 기존 resume 도메인의 접근 코드 패턴 또는 헤더 시크릿 재사용 — WP1.6 상세 플랜에서 확정. 공개 조회는 무인증(대시보드 공개 제품).
 

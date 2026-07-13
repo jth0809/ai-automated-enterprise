@@ -42,7 +42,7 @@ public class StateUpdater {
         }
         if (score.requiresReview()) {
             String reason = score.impactScore() >= HIGH_IMPACT_THRESHOLD ? "HIGH_IMPACT" : "LEVEL_JUMP";
-            repository.insertReview(event.id(), reason);
+            repository.insertReviewIfAbsent(event.id(), reason);
             return;
         }
         advance(event);

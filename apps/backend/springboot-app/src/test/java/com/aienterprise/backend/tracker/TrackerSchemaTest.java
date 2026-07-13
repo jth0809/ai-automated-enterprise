@@ -9,6 +9,9 @@ import org.springframework.test.context.ActiveProfiles;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.HashSet;
+import java.util.Set;
+
 /**
  * Verifies the Flyway-applied tracker schema (V1__tracker_core.sql) and seed
  * data (V2__tracker_seed.sql) against the real H2 (MODE=Oracle) test
@@ -48,6 +51,44 @@ class TrackerSchemaTest {
                 .query(Integer.class)
                 .single();
         assertEquals(16, count);
+    }
+
+    @Test
+    void phase1bHasExactlyTwelveActiveFeeds() {
+        Integer count = jdbcClient.sql("SELECT COUNT(*) FROM source_registry WHERE feed_active = 'Y'")
+                .query(Integer.class)
+                .single();
+        assertEquals(12, count);
+    }
+
+    @Test
+    void phase1bActivatesTheExpectedFeedCodes() {
+        Set<String> activeCodes = new HashSet<>(jdbcClient.sql("""
+                SELECT code FROM source_registry WHERE feed_active = 'Y'
+                """).query(String.class).list());
+
+        assertEquals(Set.of(
+                "NASA", "ESA", "JAXA", "ARXIV", "SPACENEWS", "NASASPACEFLIGHT",
+                "SPACEFLIGHT_NOW", "PLANETARY_SOCIETY", "PHYSORG_SPACE", "SPACE_COM",
+                "ARSTECHNICA_SPACE", "UNIVERSE_TODAY"), activeCodes);
+    }
+
+    @Test
+    void everyActiveFeedHasAnActiveFeedDomainPolicy() {
+        Integer unbackedFeeds = jdbcClient.sql("""
+                SELECT COUNT(*)
+                  FROM source_registry s
+                 WHERE s.feed_active = 'Y'
+                   AND NOT EXISTS (
+                       SELECT 1
+                         FROM source_domain d
+                        WHERE d.source_id = s.id
+                          AND d.active = 'Y'
+                          AND d.purpose IN ('FEED', 'BOTH')
+                   )
+                """).query(Integer.class).single();
+
+        assertEquals(0, unbackedFeeds);
     }
 
     @Test

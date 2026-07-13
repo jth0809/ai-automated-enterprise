@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.aienterprise.backend.tracker.domain.ReviewCase;
 import com.aienterprise.backend.tracker.domain.ReviewRow;
 import com.aienterprise.backend.tracker.domain.TrackerRepository;
 import com.aienterprise.backend.tracker.scoring.StateUpdater;
@@ -44,12 +45,12 @@ public class TrackerAdminController {
     }
 
     @GetMapping("/review")
-    public ResponseEntity<List<ReviewRow>> reviewQueue(
+    public ResponseEntity<List<ReviewCase>> reviewQueue(
             @RequestHeader(value = "X-Tracker-Admin-Token", required = false) String token) {
         if (!authorized(token)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        return ResponseEntity.ok(repository.findPendingReviews(100));
+        return ResponseEntity.ok(repository.findPendingReviewCases(100));
     }
 
     @PostMapping("/review/{id}")
@@ -64,6 +65,16 @@ public class TrackerAdminController {
         if (!"APPROVE".equals(decision) && !"REJECT".equals(decision)) {
             return ResponseEntity.badRequest().body(Map.of("error", "decision must be APPROVE or REJECT"));
         }
+        String note = body.note() == null ? null : body.note().trim();
+        if (note != null && note.isEmpty()) {
+            note = null;
+        }
+        if ("REJECT".equals(decision) && note == null) {
+            return ResponseEntity.badRequest().body(Map.of("error", "rejection requires a note"));
+        }
+        if (note != null && note.length() > 2_000) {
+            return ResponseEntity.badRequest().body(Map.of("error", "note must be at most 2000 characters"));
+        }
         Optional<ReviewRow> review = repository.findReviewById(id);
         if (review.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
@@ -73,9 +84,9 @@ public class TrackerAdminController {
                     .body(Map.of("error", "review already resolved", "status", review.get().status()));
         }
         if ("APPROVE".equals(decision)) {
-            stateUpdater.approve(review.get(), body.note());
+            stateUpdater.approve(review.get(), note);
         } else {
-            stateUpdater.reject(review.get(), body.note());
+            stateUpdater.reject(review.get(), note);
         }
         return ResponseEntity.ok(Map.of("id", id, "status", "APPROVE".equals(decision) ? "APPROVED" : "REJECTED"));
     }

@@ -80,6 +80,87 @@ class TrackerRepositoryTest {
     }
 
     @Test
+    void pendingExtractionsAreOldestFirstWithBodyDomainAllowlist() {
+        long sourceId = id("source_registry", "code", "NASA");
+        long first = repository.insertArticleIfNew(
+                "https://www.nasa.gov/one", "d".repeat(64), sourceId,
+                "One", Instant.parse("2026-07-13T00:00:00Z"), "Body", "PENDING").orElseThrow();
+        long second = repository.insertArticleIfNew(
+                "https://www.nasa.gov/two", "e".repeat(64), sourceId,
+                "Two", Instant.parse("2026-07-13T01:00:00Z"), "Body", "PENDING").orElseThrow();
+
+        var candidates = repository.findPendingExtractions(10);
+
+        assertEquals(List.of(first, second),
+                candidates.stream().map(ExtractionCandidate::id).toList());
+        assertTrue(candidates.get(0).allowedHosts().contains("www.nasa.gov"));
+        assertTrue(candidates.get(0).allowedHosts().contains("science.nasa.gov"),
+                "BODY-purpose domains must be part of the fetch allowlist");
+    }
+
+    @Test
+    void verifiedEvidenceBodiesAreProjectedForTheFlukeFilter() {
+        long sourceId = id("source_registry", "code", "NASA");
+        long nodeId = id("capability_node", "code", "P1-ORBIT-REFUEL");
+        long rubricId = id("rubric_version", "version_label", "r1.0");
+        long articleId = repository.insertArticleIfNew(
+                "https://example.test/fluke", "9".repeat(64), sourceId,
+                "Fluke source", Instant.parse("2026-01-01T00:00:00Z"),
+                "Body text for the fluke filter.").orElseThrow();
+        long verifiedId = repository.insertClassification(new ClassificationRow(
+                0, articleId, null, "P1-ORBIT-REFUEL", "FLIGHT_TEST", 6, "SpaceX",
+                LocalDate.of(2026, 1, 30), "THIRD_PARTY", "a quote", true, "{}", rubricId));
+        long unverifiedId = repository.insertClassification(new ClassificationRow(
+                0, articleId, null, "P1-ORBIT-REFUEL", "FLIGHT_TEST", 6, "SpaceX",
+                LocalDate.of(2026, 1, 30), "THIRD_PARTY", "bad quote", false, "{}", rubricId));
+        long eventId = repository.upsertEventByNaturalKey(
+                "P1-ORBIT-REFUEL|FLIGHT_TEST|fluke|2926",
+                EventRow.draft(nodeId, "FLIGHT_TEST", 6, "SpaceX", LocalDate.of(2026, 1, 30),
+                        "CLAIMED", LocalDate.of(2026, 4, 30), rubricId));
+        repository.linkClassification(verifiedId, eventId);
+        repository.linkClassification(unverifiedId, eventId);
+
+        assertEquals(List.of("Body text for the fluke filter."),
+                repository.findVerifiedEvidenceBodies(eventId));
+    }
+
+    @Test
+    void reviewInsertionIsIdempotentPerEventAndReason() {
+        long nodeId = id("capability_node", "code", "P1-ORBIT-REFUEL");
+        long rubricId = id("rubric_version", "version_label", "r1.0");
+        long eventId = repository.upsertEventByNaturalKey(
+                "P1-ORBIT-REFUEL|FLIGHT_TEST|idem|2926",
+                EventRow.draft(nodeId, "FLIGHT_TEST", 7, "SpaceX", LocalDate.of(2026, 1, 30),
+                        "OFFICIAL", LocalDate.of(2026, 4, 30), rubricId));
+
+        long first = repository.insertReviewIfAbsent(eventId, "HIGH_IMPACT");
+        long second = repository.insertReviewIfAbsent(eventId, "HIGH_IMPACT");
+        long distinct = repository.insertReviewIfAbsent(eventId, "ARRIVAL_CANDIDATE");
+
+        assertEquals(first, second);
+        assertTrue(distinct != first);
+        assertEquals(2, jdbc.sql("SELECT COUNT(*) FROM review_queue WHERE event_id = :id")
+                .param("id", eventId).query(Integer.class).single());
+    }
+
+    @Test
+    void reviewMapperPreservesPriorityAndFlukeState() {
+        long nodeId = id("capability_node", "code", "P1-ORBIT-REFUEL");
+        long rubricId = id("rubric_version", "version_label", "r1.0");
+        long eventId = repository.upsertEventByNaturalKey(
+                "P1-ORBIT-REFUEL|FLIGHT_TEST|mapper|2926",
+                EventRow.draft(nodeId, "FLIGHT_TEST", 7, "SpaceX", LocalDate.of(2026, 1, 30),
+                        "OFFICIAL", LocalDate.of(2026, 4, 30), rubricId));
+        long reviewId = repository.insertReview(eventId, "HIGH_IMPACT");
+
+        var review = repository.findReviewById(reviewId).orElseThrow();
+
+        assertEquals(0, review.priority());
+        assertEquals("PENDING", review.flukeStatus());
+        assertEquals(0, review.flukeFailCount());
+    }
+
+    @Test
     void activeRubricVersionIdReturnsTheSeededActiveRow() {
         assertEquals(id("rubric_version", "version_label", "r1.0"), repository.activeRubricVersionId());
     }

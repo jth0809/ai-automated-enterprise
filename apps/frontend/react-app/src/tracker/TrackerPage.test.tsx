@@ -63,5 +63,8 @@ describe("TrackerPage", () => {
       await screen.findByText(/ISRU: 추진제·물·산소 현지 생산/),
     ).toBeInTheDocument();
     expect(screen.getByText("FLIGHT_TEST")).toBeInTheDocument();
+    // The admin review queue is collapsed below the public dashboard and
+    // fetches nothing until a token is submitted.
+    expect(screen.getByText(/검수 큐/)).toBeInTheDocument();
   });
 });

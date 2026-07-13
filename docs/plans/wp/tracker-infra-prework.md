@@ -4,30 +4,41 @@
 
 ## 1. 피드 목록 v0 (12개) + Tier 배정
 
-⚠ RSS URL은 지식 기준 초안 — **WP1.2 첫 태스크가 URL 유효성 실검증**이다.
+아래 URL은 2026-07-12에 실제 GET으로 상태·Content-Type·최종 리다이렉트를 검증했다. JAXA와 Ars Technica의 폐기된 경로는 공식 피드 디렉터리에서 현재 경로로 교체했다.
 
 | # | 소스 | Tier | type | 피드(초안) | egress 도메인 |
 |---|------|------|------|-----------|---------------|
-| 1 | NASA Breaking News | 1 | AGENCY | nasa.gov/rss/dyn/breaking_news.rss | www.nasa.gov |
+| 1 | NASA News Releases | 1 | AGENCY | `https://www.nasa.gov/news-release/feed/` | www.nasa.gov, science.nasa.gov |
 | 2 | ESA Space News | 1 | AGENCY | esa.int RSS (Our_Activities) | www.esa.int |
-| 3 | JAXA Press Releases | 1 | AGENCY | global.jaxa.jp RSS | global.jaxa.jp |
-| 4 | arXiv (astro-ph.EP, physics.space-ph) | 2 | PREPRINT | rss.arxiv.org 카테고리 피드 | rss.arxiv.org, export.arxiv.org |
+| 3 | JAXA Press Releases | 1 | AGENCY | `https://global.jaxa.jp/rss/press.rdf` | global.jaxa.jp |
+| 4 | arXiv (astro-ph.EP) | 2 | PREPRINT | `https://rss.arxiv.org/rss/astro-ph.EP` | rss.arxiv.org, arxiv.org, export.arxiv.org |
 | 5 | SpaceNews | 2 | SPECIALIZED_MEDIA | spacenews.com/feed | spacenews.com |
 | 6 | NASASpaceflight | 2 | SPECIALIZED_MEDIA | nasaspaceflight.com/feed | www.nasaspaceflight.com |
 | 7 | Spaceflight Now | 2 | SPECIALIZED_MEDIA | spaceflightnow.com/feed | spaceflightnow.com |
 | 8 | The Planetary Society | 2 | SPECIALIZED_MEDIA | planetary.org RSS | www.planetary.org |
 | 9 | Phys.org – Space | 3 | GENERAL_MEDIA | phys.org/rss-feed/space-news/ | phys.org |
-| 10 | Space.com | 3 | GENERAL_MEDIA | space.com feeds | www.space.com |
-| 11 | Ars Technica – Space | 3 | GENERAL_MEDIA | feeds.arstechnica.com (space) | feeds.arstechnica.com, arstechnica.com |
-| 12 | Universe Today | 3 | GENERAL_MEDIA | universetoday.com/feed | www.universetoday.com |
+| 10 | Space.com | 3 | GENERAL_MEDIA | `https://www.space.com/feeds.xml` | www.space.com |
+| 11 | Ars Technica – Science | 3 | GENERAL_MEDIA | `https://feeds.arstechnica.com/arstechnica/science` | feeds.arstechnica.com, arstechnica.com |
+| 12 | Universe Today | 3 | GENERAL_MEDIA | `https://www.universetoday.com/rss.xml` | www.universetoday.com |
 
 레지스트리 전용 항목(피드 없음, 주체 매핑·발표 경로 판정용): SpaceX(CORPORATE T3), Blue Origin(CORPORATE T3), Nature/Science(JOURNAL T1 — arXiv와 달리 동료 심사 성립).
 
 **본문 추출 egress 정책:** 기사 본문은 **위 화이트리스트 도메인에서만** 추출한다. RSS가 외부 도메인으로 링크하면 본문 추출을 생략하고 RSS 요약만 사용 (`article.body_extracted='N'`) — egress 통제가 커버리지보다 우선한다는 명시적 트레이드오프.
 
+**2026-07-12 검증 기록:** 12개 최종 feed가 모두 HTTP 200과 RSS/RDF XML Content-Type을 반환했다. NASA의 구 URL은 `www.nasa.gov/news-release/feed/`, Space.com은 `/feeds.xml`, Universe Today는 `/rss.xml`로 리다이렉트됐다. JAXA 구 `/press/rss/press_e.rdf`와 Ars 구 `/arstechnica/space`는 404였으며 각각 공식 `/rss/press.rdf`와 공식 Science section feed로 교체했다. 최근 기사 링크 표본의 본문 호스트도 위 egress 목록과 일치했다. arXiv는 주말에 항목 없는 유효 채널을 반환하므로 공식 `arxiv.org`/`export.arxiv.org` 본문 호스트를 정책에 함께 등록한다.
+
 ## 2. CNP egress 추가 (gitops/apps/backend-springboot/network-policy.yaml)
 
 기존 패턴(news.google.com 규칙)을 그대로 확장. 추가 블록 초안:
+
+> **2026-07-13 적용 기록 (Phase 1b Task 7):** 아래 초안이 `network-policy.yaml`에
+> 반영됐다. 단, 실제 적용 집합은 V4 시드의 active `source_domain` 전체와 일치해야
+> 하므로 NASA 본문 호스트 `science.nasa.gov`를 포함한 **16개 호스트**다(초안 15개
+> + science.nasa.gov). 집합 동등성·PR-1 안전 기본값·시크릿 부재는
+> `gitops/apps/backend-springboot/tests/tracker-egress-policy.ps1`이 검증하며,
+> 호스트 변경 시 시드·CNP·검증 스크립트 세 곳을 함께 갱신한다. deployment에는
+> 비밀 아닌 수집 한도(`TRACKER_EXTRACT_CRON`, `TRACKER_EXTRACT_BATCH_SIZE`)와
+> `TRACKER_FLUKE_ENABLED=false`가 추가됐다.
 
 ```yaml
     # Tracker RSS feeds + article body extraction (WP0.4 whitelist).
@@ -37,6 +48,7 @@
         - matchName: www.esa.int
         - matchName: global.jaxa.jp
         - matchName: rss.arxiv.org
+        - matchName: arxiv.org
         - matchName: export.arxiv.org
         - matchName: spacenews.com
         - matchName: www.nasaspaceflight.com

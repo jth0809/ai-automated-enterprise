@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
+import org.springframework.boot.flyway.autoconfigure.FlywayAutoConfiguration;
 import org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration;
 import org.springframework.boot.jdbc.autoconfigure.JdbcClientAutoConfiguration;
 import org.springframework.boot.jdbc.autoconfigure.JdbcTemplateAutoConfiguration;
@@ -22,11 +23,14 @@ class TrackerConfigTest {
             .withConfiguration(AutoConfigurations.of(
                     DataSourceAutoConfiguration.class,
                     JdbcTemplateAutoConfiguration.class,
-                    JdbcClientAutoConfiguration.class))
+                    JdbcClientAutoConfiguration.class,
+                    FlywayAutoConfiguration.class))
             .withPropertyValues(
                     "spring.datasource.url=jdbc:h2:mem:tracker-config;MODE=Oracle;DB_CLOSE_DELAY=-1",
                     "spring.datasource.username=sa",
-                    "spring.datasource.password=");
+                    "spring.datasource.password=",
+                    "spring.flyway.enabled=true",
+                    "tracker.backfill-on-boot=false");
 
     @Test
     void trackerBeansAreAbsentWhenFeatureFlagIsDisabledByDefault() {
@@ -42,15 +46,15 @@ class TrackerConfigTest {
         runner.withUserConfiguration(TrackerConfig.class)
                 .withPropertyValues(
                         "tracker.enabled=true",
-                        "tracker.feeds=NASA|https://www.nasa.gov/rss.xml,https://spacenews.com/feed/")
+                        "tracker.feeds=NASA|https://www.nasa.gov/news-release/feed/,SPACENEWS|https://spacenews.com/feed/")
                 .run(context -> {
                     assertThat(context).hasSingleBean(TrackerRepository.class);
                     assertThat(context).hasSingleBean(LockProvider.class);
                     @SuppressWarnings("unchecked")
                     List<FeedSpec> feeds = (List<FeedSpec>) context.getBean("trackerFeeds");
                     assertThat(feeds).containsExactly(
-                            new FeedSpec("NASA", "https://www.nasa.gov/rss.xml"),
-                            new FeedSpec("spacenews.com", "https://spacenews.com/feed/"));
+                            new FeedSpec("NASA", "https://www.nasa.gov/news-release/feed/"),
+                            new FeedSpec("SPACENEWS", "https://spacenews.com/feed/"));
                 });
     }
 }

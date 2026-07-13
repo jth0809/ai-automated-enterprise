@@ -9,6 +9,10 @@ public record ReviewRow(
         String flukeResult,
         String status,
         String reviewerNote,
+        int priority,
+        String flukeStatus,
+        int flukeFailCount,
+        String flukeLastError,
         Instant createdAt,
         Instant resolvedAt) {
 }

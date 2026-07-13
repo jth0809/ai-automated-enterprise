@@ -7,7 +7,9 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
+import java.util.Set;
 
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.jdbc.core.simple.JdbcClient;
@@ -31,15 +33,29 @@ public class TrackerRepository {
             String title,
             Instant publishedAt,
             String body) {
+        // Legacy shape: no extraction attempted, matching the V3 backfill.
+        return insertArticleIfNew(url, urlHash, sourceId, title, publishedAt, body, "SKIPPED");
+    }
+
+    public Optional<Long> insertArticleIfNew(
+            String url,
+            String urlHash,
+            long sourceId,
+            String title,
+            Instant publishedAt,
+            String body,
+            String bodyExtractionStatus) {
         if (articleIdByHash(urlHash).isPresent()) {
             return Optional.empty();
         }
         try {
             jdbc.sql("""
                     INSERT INTO article
-                      (source_id, url, url_hash, title, published_at, body, body_extracted, pipeline_status)
+                      (source_id, url, url_hash, title, published_at, body, body_extracted,
+                       pipeline_status, body_extraction_status)
                     VALUES
-                      (:sourceId, :url, :urlHash, :title, :publishedAt, :body, 'N', 'INGESTED')
+                      (:sourceId, :url, :urlHash, :title, :publishedAt, :body, 'N',
+                       'INGESTED', :bodyExtractionStatus)
                     """)
                     .param("sourceId", sourceId)
                     .param("url", url)
@@ -47,6 +63,7 @@ public class TrackerRepository {
                     .param("title", title)
                     .param("publishedAt", publishedAt == null ? null : Timestamp.from(publishedAt))
                     .param("body", body)
+                    .param("bodyExtractionStatus", bodyExtractionStatus)
                     .update();
             return articleIdByHash(urlHash);
         } catch (DuplicateKeyException concurrentDuplicate) {
@@ -59,17 +76,109 @@ public class TrackerRepository {
             return List.of();
         }
         int safeLimit = Math.min(limit, 1_000);
+        // INGESTED rows stay invisible to the gate until extraction reaches a
+        // terminal state; other pipeline statuses are unaffected.
+        String pendingFilter = "INGESTED".equals(status)
+                ? " AND body_extraction_status <> 'PENDING'"
+                : "";
         return jdbc.sql("""
                 SELECT id, source_id, url, url_hash, title, published_at, fetched_at,
-                       body, body_extracted, pipeline_status, fail_count
+                       body, body_extracted, body_extraction_status, pipeline_status, fail_count
                   FROM article
-                 WHERE pipeline_status = :status
+                 WHERE pipeline_status = :status%s
                  ORDER BY fetched_at, id
                  FETCH FIRST %d ROWS ONLY
-                """.formatted(safeLimit))
+                """.formatted(pendingFilter, safeLimit))
                 .param("status", status)
                 .query(TrackerRepository::mapArticle)
                 .list();
+    }
+
+    public List<ExtractionCandidate> findPendingExtractions(int limit) {
+        if (limit <= 0) {
+            return List.of();
+        }
+        int safeLimit = Math.min(limit, 100);
+        record PendingRow(long id, long sourceId, String url) {
+        }
+        List<PendingRow> rows = jdbc.sql("""
+                SELECT id, source_id, url
+                  FROM article
+                 WHERE body_extraction_status = 'PENDING'
+                 ORDER BY fetched_at, id
+                 FETCH FIRST %d ROWS ONLY
+                """.formatted(safeLimit))
+                .query((rs, rowNum) -> new PendingRow(
+                        rs.getLong("id"), rs.getLong("source_id"), rs.getString("url")))
+                .list();
+        java.util.Map<Long, Set<String>> hostsBySource = new java.util.HashMap<>();
+        return rows.stream()
+                .map(row -> new ExtractionCandidate(row.id(), row.url(),
+                        hostsBySource.computeIfAbsent(row.sourceId(),
+                                sourceId -> findActiveDomains(sourceId, "BODY"))))
+                .toList();
+    }
+
+    public void completeExtraction(long id, String text) {
+        int changed = jdbc.sql("""
+                UPDATE article
+                   SET body = :text,
+                       body_extracted = 'Y',
+                       body_extraction_status = 'EXTRACTED',
+                       body_extraction_error = NULL
+                 WHERE id = :id
+                """)
+                .param("text", text)
+                .param("id", id)
+                .update();
+        if (changed != 1) {
+            throw new IllegalArgumentException("Unknown article id: " + id);
+        }
+    }
+
+    public String recordExtractionFailure(long id, String message, int maxAttempts) {
+        int attempts = jdbc.sql("SELECT body_extraction_attempts FROM article WHERE id = :id")
+                .param("id", id)
+                .query(Integer.class)
+                .optional()
+                .orElseThrow(() -> new IllegalArgumentException("Unknown article id: " + id));
+        int nextAttempts = attempts + 1;
+        String status = nextAttempts >= maxAttempts ? "FAILED" : "PENDING";
+        jdbc.sql("""
+                UPDATE article
+                   SET body_extraction_attempts = :attempts,
+                       body_extraction_status = :status,
+                       body_extraction_error = :error
+                 WHERE id = :id
+                """)
+                .param("attempts", nextAttempts)
+                .param("status", status)
+                .param("error", boundedError(message))
+                .param("id", id)
+                .update();
+        return status;
+    }
+
+    public void skipExtraction(long id, String message) {
+        int changed = jdbc.sql("""
+                UPDATE article
+                   SET body_extraction_status = 'SKIPPED',
+                       body_extraction_error = :error
+                 WHERE id = :id
+                """)
+                .param("error", boundedError(message))
+                .param("id", id)
+                .update();
+        if (changed != 1) {
+            throw new IllegalArgumentException("Unknown article id: " + id);
+        }
+    }
+
+    private static String boundedError(String message) {
+        if (message == null || message.isBlank()) {
+            return null;
+        }
+        return message.length() > 1_000 ? message.substring(0, 1_000) : message;
     }
 
     public void updateArticleStatus(long id, String status) {
@@ -96,6 +205,70 @@ public class TrackerRepository {
                 .query(Long.class)
                 .list();
         return ids.stream().findFirst();
+    }
+
+    public List<SourceDomainRow> findActiveSourceDomains() {
+        return jdbc.sql("""
+                SELECT s.id AS source_id, s.code AS source_code,
+                       LOWER(d.domain) AS domain, d.purpose
+                  FROM source_domain d
+                  JOIN source_registry s ON s.id = d.source_id
+                 WHERE d.active = 'Y'
+                 ORDER BY s.code, d.domain
+                """)
+                .query((rs, rowNum) -> new SourceDomainRow(
+                        rs.getLong("source_id"),
+                        rs.getString("source_code"),
+                        rs.getString("domain"),
+                        rs.getString("purpose")))
+                .list();
+    }
+
+    public Set<String> findActiveDomains(long sourceId, String purpose) {
+        String normalizedPurpose = normalizeDomainPurpose(purpose);
+        return Set.copyOf(jdbc.sql("""
+                SELECT LOWER(domain)
+                  FROM source_domain
+                 WHERE source_id = :sourceId
+                   AND active = 'Y'
+                   AND purpose IN (:purpose, 'BOTH')
+                 ORDER BY domain
+                """)
+                .param("sourceId", sourceId)
+                .param("purpose", normalizedPurpose)
+                .query(String.class)
+                .list());
+    }
+
+    public boolean isRegisteredFeed(String sourceCode, String host) {
+        if (sourceCode == null || sourceCode.isBlank() || host == null || host.isBlank()) {
+            return false;
+        }
+        return jdbc.sql("""
+                SELECT COUNT(*)
+                  FROM source_registry s
+                  JOIN source_domain d ON d.source_id = s.id
+                 WHERE UPPER(s.code) = UPPER(:sourceCode)
+                   AND s.feed_active = 'Y'
+                   AND d.active = 'Y'
+                   AND d.purpose IN ('FEED', 'BOTH')
+                   AND LOWER(d.domain) = LOWER(:host)
+                """)
+                .param("sourceCode", sourceCode.trim())
+                .param("host", host.trim())
+                .query(Integer.class)
+                .single() == 1;
+    }
+
+    private static String normalizeDomainPurpose(String purpose) {
+        if (purpose == null) {
+            throw new IllegalArgumentException("Domain purpose is required");
+        }
+        String normalized = purpose.trim().toUpperCase(Locale.ROOT);
+        if (!Set.of("FEED", "BODY", "BOTH").contains(normalized)) {
+            throw new IllegalArgumentException("Unknown domain purpose: " + purpose);
+        }
+        return normalized;
     }
 
     public long upsertEventByNaturalKey(String naturalKey, EventRow draft) {
@@ -332,6 +505,213 @@ public class TrackerRepository {
         return key.longValue();
     }
 
+    public long insertReviewIfAbsent(long eventId, String reason) {
+        Optional<Long> existing = reviewIdByEventAndReason(eventId, reason);
+        if (existing.isPresent()) {
+            return existing.get();
+        }
+        try {
+            return insertReview(eventId, reason);
+        } catch (DuplicateKeyException concurrentDuplicate) {
+            return reviewIdByEventAndReason(eventId, reason)
+                    .orElseThrow(() -> new IllegalStateException(
+                            "Review upsert produced no row for event " + eventId));
+        }
+    }
+
+    public List<ReviewRow> findReviewsForFluke(int limit) {
+        if (limit <= 0) {
+            return List.of();
+        }
+        int safeLimit = Math.min(limit, 100);
+        return jdbc.sql(REVIEW_SELECT + """
+
+                 WHERE status = 'PENDING'
+                   AND fluke_status = 'PENDING'
+                 ORDER BY created_at, id
+                 FETCH FIRST %d ROWS ONLY
+                """.formatted(safeLimit))
+                .query(TrackerRepository::mapReview)
+                .list();
+    }
+
+    @Transactional
+    public void storeFlukeEvaluation(
+            long reviewId,
+            long eventId,
+            String verdict,
+            String evidenceQuote,
+            boolean quoteVerified,
+            String rawOutput,
+            String modelId,
+            String promptSha256,
+            long rubricVersionId,
+            int priority) {
+        jdbc.sql("""
+                INSERT INTO fluke_evaluation
+                  (review_id, event_id, verdict, evidence_quote, quote_verified,
+                   raw_output, model_id, prompt_sha256, rubric_version_id)
+                VALUES
+                  (:reviewId, :eventId, :verdict, :evidenceQuote, :quoteVerified,
+                   :rawOutput, :modelId, :promptSha256, :rubricVersionId)
+                """)
+                .param("reviewId", reviewId)
+                .param("eventId", eventId)
+                .param("verdict", verdict)
+                .param("evidenceQuote", evidenceQuote)
+                .param("quoteVerified", quoteVerified ? "Y" : "N")
+                .param("rawOutput", rawOutput)
+                .param("modelId", modelId)
+                .param("promptSha256", promptSha256)
+                .param("rubricVersionId", rubricVersionId)
+                .update();
+        int changed = jdbc.sql("""
+                UPDATE review_queue
+                   SET fluke_status = 'COMPLETE',
+                       fluke_result = :verdict,
+                       priority = :priority,
+                       fluke_last_error = NULL
+                 WHERE id = :id
+                """)
+                .param("verdict", verdict)
+                .param("priority", priority)
+                .param("id", reviewId)
+                .update();
+        if (changed != 1) {
+            throw new IllegalArgumentException("Unknown review id: " + reviewId);
+        }
+    }
+
+    public String recordFlukeFailure(long reviewId, String message, int maxAttempts) {
+        int failures = jdbc.sql("SELECT fluke_fail_count FROM review_queue WHERE id = :id")
+                .param("id", reviewId)
+                .query(Integer.class)
+                .optional()
+                .orElseThrow(() -> new IllegalArgumentException("Unknown review id: " + reviewId));
+        int nextFailures = failures + 1;
+        boolean terminal = nextFailures >= maxAttempts;
+        jdbc.sql("""
+                UPDATE review_queue
+                   SET fluke_fail_count = :failures,
+                       fluke_status = :status,
+                       priority = :priority,
+                       fluke_last_error = :error
+                 WHERE id = :id
+                """)
+                .param("failures", nextFailures)
+                .param("status", terminal ? "FAILED" : "PENDING")
+                .param("priority", terminal ? 2 : 0)
+                .param("error", boundedError(message))
+                .param("id", reviewId)
+                .update();
+        return terminal ? "FAILED" : "PENDING";
+    }
+
+    /**
+     * Pending review cases with full decision context, priority-desc then
+     * oldest-first. One bounded case query plus one bounded evidence query,
+     * grouped in Java — no N+1. Only quote-verified evidence is exposed.
+     */
+    public List<ReviewCase> findPendingReviewCases(int limit) {
+        if (limit <= 0) {
+            return List.of();
+        }
+        int safeLimit = Math.min(limit, 200);
+        List<ReviewCase> skeletons = jdbc.sql("""
+                SELECT r.id AS review_id, r.reason, r.priority, r.fluke_status, r.fluke_result,
+                       r.created_at, r.status, r.reviewer_note,
+                       e.id AS event_id, e.event_type, e.occurred_on, e.actor,
+                       e.verification_level, e.impact_score, e.claimed_level,
+                       n.code AS node_code, n.name_ko, n.scale_type, n.current_level
+                  FROM review_queue r
+                  JOIN event e ON e.id = r.event_id
+                  JOIN capability_node n ON n.id = e.node_id
+                 WHERE r.status = 'PENDING'
+                 ORDER BY r.priority DESC, r.created_at, r.id
+                 FETCH FIRST %d ROWS ONLY
+                """.formatted(safeLimit))
+                .query(TrackerRepository::mapReviewCaseSkeleton)
+                .list();
+        if (skeletons.isEmpty()) {
+            return skeletons;
+        }
+
+        record EvidenceRow(long eventId, long sourceId, ReviewEvidence evidence) {
+        }
+        List<Long> eventIds = skeletons.stream().map(ReviewCase::eventId).distinct().toList();
+        List<EvidenceRow> evidenceRows = jdbc.sql("""
+                SELECT c.event_id, a.source_id, a.title, a.url, c.evidence_quote
+                  FROM article_classification c
+                  JOIN article a ON a.id = c.article_id
+                 WHERE c.quote_verified = 'Y'
+                   AND c.event_id IN (:eventIds)
+                 ORDER BY c.id
+                """)
+                .param("eventIds", eventIds)
+                .query((rs, rowNum) -> new EvidenceRow(
+                        rs.getLong("event_id"),
+                        rs.getLong("source_id"),
+                        new ReviewEvidence(
+                                rs.getString("title"),
+                                rs.getString("url"),
+                                rs.getString("evidence_quote"))))
+                .list();
+
+        java.util.Map<Long, List<ReviewEvidence>> evidenceByEvent = new java.util.HashMap<>();
+        java.util.Map<Long, Set<Long>> sourcesByEvent = new java.util.HashMap<>();
+        for (EvidenceRow row : evidenceRows) {
+            evidenceByEvent.computeIfAbsent(row.eventId(), key -> new java.util.ArrayList<>())
+                    .add(row.evidence());
+            sourcesByEvent.computeIfAbsent(row.eventId(), key -> new java.util.HashSet<>())
+                    .add(row.sourceId());
+        }
+        return skeletons.stream()
+                .map(skeleton -> new ReviewCase(
+                        skeleton.reviewId(), skeleton.reason(), skeleton.priority(),
+                        skeleton.flukeStatus(), skeleton.flukeResult(), skeleton.createdAt(),
+                        skeleton.eventId(), skeleton.eventType(), skeleton.occurredOn(),
+                        skeleton.actor(), skeleton.verificationLevel(), skeleton.impactScore(),
+                        skeleton.claimedLevel(), skeleton.nodeCode(), skeleton.nodeName(),
+                        skeleton.scaleType(), skeleton.currentLevel(),
+                        sourcesByEvent.getOrDefault(skeleton.eventId(), Set.of()).size(),
+                        List.copyOf(evidenceByEvent.getOrDefault(skeleton.eventId(), List.of())),
+                        skeleton.status(), skeleton.reviewerNote()))
+                .toList();
+    }
+
+    private static ReviewCase mapReviewCaseSkeleton(ResultSet rs, int rowNum) throws SQLException {
+        return new ReviewCase(
+                rs.getLong("review_id"),
+                rs.getString("reason"),
+                rs.getInt("priority"),
+                rs.getString("fluke_status"),
+                rs.getString("fluke_result"),
+                rs.getTimestamp("created_at").toInstant(),
+                rs.getLong("event_id"),
+                rs.getString("event_type"),
+                localDate(rs.getDate("occurred_on")),
+                rs.getString("actor"),
+                rs.getString("verification_level"),
+                nullableDouble(rs, "impact_score"),
+                nullableInt(rs, "claimed_level"),
+                rs.getString("node_code"),
+                rs.getString("name_ko"),
+                rs.getString("scale_type"),
+                rs.getInt("current_level"),
+                0,
+                List.of(),
+                rs.getString("status"),
+                rs.getString("reviewer_note"));
+    }
+
+    private Optional<Long> reviewIdByEventAndReason(long eventId, String reason) {
+        return jdbc.sql("SELECT id FROM review_queue WHERE event_id = :eventId AND reason = :reason")
+                .param("eventId", eventId)
+                .param("reason", reason)
+                .query(Long.class)
+                .optional();
+    }
+
     public Optional<ReviewRow> findReviewById(long id) {
         return jdbc.sql(REVIEW_SELECT + " WHERE id = :id")
                 .param("id", id)
@@ -500,6 +880,21 @@ public class TrackerRepository {
                 .list();
     }
 
+    /** Full bodies of quote-verified articles in an event's cluster (fluke input). */
+    public List<String> findVerifiedEvidenceBodies(long eventId) {
+        return jdbc.sql("""
+                SELECT a.body
+                  FROM article_classification c
+                  JOIN article a ON a.id = c.article_id
+                 WHERE c.event_id = :eventId
+                   AND c.quote_verified = 'Y'
+                 ORDER BY c.id
+                """)
+                .param("eventId", eventId)
+                .query(String.class)
+                .list();
+    }
+
     public NodeRow findNodeByCode(String code) {
         return jdbc.sql(NODE_SELECT + " WHERE code = :code")
                 .param("code", code)
@@ -602,6 +997,7 @@ public class TrackerRepository {
                 rs.getTimestamp("fetched_at").toInstant(),
                 rs.getString("body"),
                 "Y".equals(rs.getString("body_extracted")),
+                rs.getString("body_extraction_status"),
                 rs.getString("pipeline_status"),
                 rs.getInt("fail_count"));
     }
@@ -639,6 +1035,10 @@ public class TrackerRepository {
                 rs.getString("fluke_result"),
                 rs.getString("status"),
                 rs.getString("reviewer_note"),
+                rs.getInt("priority"),
+                rs.getString("fluke_status"),
+                rs.getInt("fluke_fail_count"),
+                rs.getString("fluke_last_error"),
                 rs.getTimestamp("created_at").toInstant(),
                 resolved == null ? null : resolved.toInstant());
     }
@@ -740,6 +1140,7 @@ public class TrackerRepository {
 
     private static final String REVIEW_SELECT = """
             SELECT id, event_id, reason, fluke_result, status, reviewer_note,
+                   priority, fluke_status, fluke_fail_count, fluke_last_error,
                    created_at, resolved_at
               FROM review_queue
             """;
