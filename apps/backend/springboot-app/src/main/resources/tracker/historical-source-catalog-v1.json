@@ -1,1 +1,18 @@
-[]
+[
+  {
+    "sourceCode": "NASA",
+    "name": "National Aeronautics and Space Administration",
+    "domain": "nasa.gov",
+    "sourceType": "AGENCY",
+    "tier": 1,
+    "feedActive": true
+  },
+  {
+    "sourceCode": "FAA",
+    "name": "Federal Aviation Administration",
+    "domain": "faa.gov",
+    "sourceType": "AGENCY",
+    "tier": 1,
+    "feedActive": false
+  }
+]

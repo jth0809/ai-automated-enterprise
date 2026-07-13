@@ -1,6 +1,6 @@
 # Tracker Historical Corpus Research Log
 
-Status: initialized; internet research not yet started.
+Status: Pillar 1 complete and fact-reviewed; 40 candidates ready for mapping.
 
 This log tracks discovery queries, opened sources, source decisions, rejection
 reasons, and corpus counts. It never stores source titles, quotations, excerpts,
@@ -10,13 +10,13 @@ article bodies, HTML, PDF, images, or other source content.
 
 | Pillar topic family | Candidate range | Current |
 |---|---:|---:|
-| P1 transport and propulsion | 35–45 | 0 |
+| P1 transport and propulsion | 35–45 | 40 |
 | P2 life support and human health | 30–40 | 0 |
 | P3 habitat and infrastructure | 25–35 | 0 |
 | P4 resources and energy | 25–35 | 0 |
 | P5 robotics and autonomy | 25–35 | 0 |
 | P6 economics and governance | 40–60 | 0 |
-| **Total discovery corpus** | **180–250** | **0** |
+| **Total discovery corpus** | **180–250** | **40** |
 
 The pillar figures are topic-family discovery targets, not node assignments.
 One candidate may carry multiple topic tags but contributes once to the total.
@@ -40,11 +40,22 @@ One candidate may carry multiple topic tags but contributes once to the total.
 
 | Batch | Pillar family | Query intent | Sources opened | Ready | Rejected | Notes |
 |---|---|---|---:|---:|---:|---|
+| P1-01 | P1 transport and propulsion | Reusable orbital transport, repeated recovery, and major setbacks | 15 | 10 | 0 | Nine stable NASA/FAA URLs accepted; JavaScript-only SpaceX shells and two unstable/oversized PDFs excluded as evidence. |
+| P1-02 | P1 transport and propulsion | Orbital servicing, electric propulsion, nuclear thermal propulsion, and program setbacks | 8 | 10 | 0 | Eight stable NASA pages accepted; month/year precision retained where the official record did not state an exact day. |
+| P1-03 | P1 transport and propulsion | Planetary EDL, heavy-landing precursors, surface ascent, and failed demonstrations | 11 | 10 | 0 | Ten stable NASA pages accepted; one JPL URL returned 403 to the fingerprint client and was replaced with an equivalent nasa.gov record without bypassing access controls. |
+| P1-04 | P1 transport and propulsion | Crew abort/recovery and orbital docking/cargo handoff | 11 | 10 | 0 | Ten stable NASA pages accepted; one retired dated blog URL redirected to a generic archive and was replaced with a current NASA mission record. |
 
 ## Source decisions
 
 | Source code | Authority | Decision | Reason |
 |---|---|---|---|
+| NASA | U.S. civil space agency | Accepted, Tier 1 agency | Mission pages and history records directly document NASA events and independently record commercial launch outcomes. |
+| FAA | U.S. launch regulator | Accepted, Tier 1 agency | Official mishap correspondence records licensed launch outcome and corrective-action process. |
+| SPACEX-WEB | Commercial launch provider | Excluded from batch | Direct requests returned only a JavaScript application shell, so the factual page content could not be reviewed or fingerprinted reliably. |
+| NASA-HISTORY-PDF | NASA historical publication | Excluded from batch | Response exceeded the 5 MiB transient fingerprint limit. |
+| NASA-SMA-PDF | NASA-hosted launch data sheet | Excluded from batch | Fingerprint request returned HTTP 500; stable NASA HTML records were used instead. |
+| NASA-JPL-WEB | NASA laboratory web page | Excluded from batch | Browser review succeeded but the transient fingerprint request returned HTTP 403; an equivalent NASA release was used without access-control bypass. |
+| NASA-DATED-BLOG | Retired dated NASA blog URL | Excluded from batch | The URL redirected to a generic blog archive that no longer contained the reviewed event record; a stable NASA mission article was used. |
 
 ## Rejection summary
 
@@ -62,3 +73,12 @@ One candidate may carry multiple topic tags but contributes once to the total.
 | Date | Command | Result |
 |---|---|---|
 | 2026-07-13 | `scripts/backfill/Test-HistoricalCorpus.ps1` | 37/37 focused tests; 0 records, 0 errors; target warning emitted |
+| 2026-07-13 | P1 batch 1 source review and transient fingerprinting | 10 candidates, 9 accepted URLs, no source bytes retained |
+| 2026-07-13 | P1 batch 1 final fact review | All 9 unique URLs reopened; dates, actors, and outcomes confirmed for 10 READY records |
+| 2026-07-13 | Date-precision contract test | 41/41 focused tests passed; DAY, MONTH, and YEAR anchors enforced |
+| 2026-07-13 | P1 batch 2 source review and transient fingerprinting | 10 candidates, 8 accepted URLs, no source bytes retained |
+| 2026-07-13 | P1 batch 2 final fact review | All 8 unique URLs reopened; dates, precision, actors, outcomes, and setbacks confirmed |
+| 2026-07-13 | P1 batch 3 source review and transient fingerprinting | 10 candidates, 10 accepted URLs, one 403 source replaced, no source bytes retained |
+| 2026-07-13 | P1 batch 3 final fact review | EDL scale exclusions and precursor/ascent boundaries recorded for all 10 READY records |
+| 2026-07-13 | P1 batch 4 source review and transient fingerprinting | 10 candidates, 10 accepted URLs, one retired redirect replaced, no source bytes retained |
+| 2026-07-13 | P1 batch 4 final fact review | Crew safety and orbital logistics facts, mixed outcomes, and exclusions confirmed |
