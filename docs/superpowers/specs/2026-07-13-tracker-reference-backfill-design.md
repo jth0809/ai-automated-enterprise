@@ -193,6 +193,7 @@ publication_path
 fact_summary
 fact_review_status
 rubric_review_status
+reference_status
 reviewer_note
 created_at
 ```
@@ -205,6 +206,8 @@ Required constraints:
 - `fact_summary` ≤500 characters; `reviewer_note` ≤2,000 characters.
 - Only rows with both reviews `APPROVED` participate in verification or UI
   source counts.
+- `reference_status` is `APPROVED`, `STALE`, or `REJECTED`; only `APPROVED`
+  references participate in verification or source counts.
 - No column exists for source body, source title, excerpt, HTML, or attachment.
 
 ### `backfill_import`
