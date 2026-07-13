@@ -1,6 +1,6 @@
 # Tracker Historical Corpus Research Log
 
-Status: Pillar 1 complete and fact-reviewed; 40 candidates ready for mapping.
+Status: Pillars 1–2 complete; 70 candidates ready for mapping.
 
 This log tracks discovery queries, opened sources, source decisions, rejection
 reasons, and corpus counts. It never stores source titles, quotations, excerpts,
@@ -11,12 +11,12 @@ article bodies, HTML, PDF, images, or other source content.
 | Pillar topic family | Candidate range | Current |
 |---|---:|---:|
 | P1 transport and propulsion | 35–45 | 40 |
-| P2 life support and human health | 30–40 | 0 |
+| P2 life support and human health | 30–40 | 30 |
 | P3 habitat and infrastructure | 25–35 | 0 |
 | P4 resources and energy | 25–35 | 0 |
 | P5 robotics and autonomy | 25–35 | 0 |
 | P6 economics and governance | 40–60 | 0 |
-| **Total discovery corpus** | **180–250** | **40** |
+| **Total discovery corpus** | **180–250** | **70** |
 
 The pillar figures are topic-family discovery targets, not node assignments.
 One candidate may carry multiple topic tags but contributes once to the total.
@@ -44,6 +44,9 @@ One candidate may carry multiple topic tags but contributes once to the total.
 | P1-02 | P1 transport and propulsion | Orbital servicing, electric propulsion, nuclear thermal propulsion, and program setbacks | 8 | 10 | 0 | Eight stable NASA pages accepted; month/year precision retained where the official record did not state an exact day. |
 | P1-03 | P1 transport and propulsion | Planetary EDL, heavy-landing precursors, surface ascent, and failed demonstrations | 11 | 10 | 0 | Ten stable NASA pages accepted; one JPL URL returned 403 to the fingerprint client and was replaced with an equivalent nasa.gov record without bypassing access controls. |
 | P1-04 | P1 transport and propulsion | Crew abort/recovery and orbital docking/cargo handoff | 11 | 10 | 0 | Ten stable NASA pages accepted; one retired dated blog URL redirected to a generic archive and was replaced with a current NASA mission record. |
+| P2-01 | P2 life support and human health | Regenerative air/water systems and crewed crop production | 10 | 10 | 0 | NASA and NTRS records document five ECLSS milestones and five cultivation outcomes; non-edible or installation-only evidence is explicitly bounded. |
+| P2-02 | P2 life support and human health | Radiation measurement/protection and long-duration physiological evidence | 10 | 10 | 0 | Flight, ground-evaluation, and medical records separate monitoring from shielding and cohort observations from validated countermeasures. |
+| P2-03 | P2 life support and human health | Solid-waste resource recovery and Earth-independent medical operations | 10 | 10 | 0 | Ground, suborbital, and ISS records distinguish collection from resource cycling and image acquisition from diagnosis or treatment. |
 
 ## Source decisions
 
@@ -82,3 +85,10 @@ One candidate may carry multiple topic tags but contributes once to the total.
 | 2026-07-13 | P1 batch 3 final fact review | EDL scale exclusions and precursor/ascent boundaries recorded for all 10 READY records |
 | 2026-07-13 | P1 batch 4 source review and transient fingerprinting | 10 candidates, 10 accepted URLs, one retired redirect replaced, no source bytes retained |
 | 2026-07-13 | P1 batch 4 final fact review | Crew safety and orbital logistics facts, mixed outcomes, and exclusions confirmed |
+| 2026-07-13 | P2 batch 1 source review and transient fingerprinting | 10 candidates, 10 accepted URLs, no source bytes retained |
+| 2026-07-13 | P2 batch 1 final fact review | ECLSS closure boundaries and edible-yield limitations confirmed for all 10 READY records |
+| 2026-07-13 | P2 batch 2 source review and transient fingerprinting | 10 candidates, 10 accepted URLs, no source bytes retained |
+| 2026-07-13 | P2 batch 2 final fact review | Radiation protection levels, cohort limits, and unresolved medical risks confirmed |
+| 2026-07-13 | P2 batch 3 source review and transient fingerprinting | 10 candidates, 10 accepted URLs, each response below 0.3 MiB, no source bytes retained |
+| 2026-07-13 | P2 batch 3 final fact review | Waste collection/recovery and medical imaging/diagnosis/treatment boundaries confirmed |
+| 2026-07-13 | P2 completion corpus validation | 42/42 focused tests; 70 READY records, 0 rejected, 0 errors |
