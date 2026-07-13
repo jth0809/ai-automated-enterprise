@@ -505,6 +505,213 @@ public class TrackerRepository {
         return key.longValue();
     }
 
+    public long insertReviewIfAbsent(long eventId, String reason) {
+        Optional<Long> existing = reviewIdByEventAndReason(eventId, reason);
+        if (existing.isPresent()) {
+            return existing.get();
+        }
+        try {
+            return insertReview(eventId, reason);
+        } catch (DuplicateKeyException concurrentDuplicate) {
+            return reviewIdByEventAndReason(eventId, reason)
+                    .orElseThrow(() -> new IllegalStateException(
+                            "Review upsert produced no row for event " + eventId));
+        }
+    }
+
+    public List<ReviewRow> findReviewsForFluke(int limit) {
+        if (limit <= 0) {
+            return List.of();
+        }
+        int safeLimit = Math.min(limit, 100);
+        return jdbc.sql(REVIEW_SELECT + """
+
+                 WHERE status = 'PENDING'
+                   AND fluke_status = 'PENDING'
+                 ORDER BY created_at, id
+                 FETCH FIRST %d ROWS ONLY
+                """.formatted(safeLimit))
+                .query(TrackerRepository::mapReview)
+                .list();
+    }
+
+    @Transactional
+    public void storeFlukeEvaluation(
+            long reviewId,
+            long eventId,
+            String verdict,
+            String evidenceQuote,
+            boolean quoteVerified,
+            String rawOutput,
+            String modelId,
+            String promptSha256,
+            long rubricVersionId,
+            int priority) {
+        jdbc.sql("""
+                INSERT INTO fluke_evaluation
+                  (review_id, event_id, verdict, evidence_quote, quote_verified,
+                   raw_output, model_id, prompt_sha256, rubric_version_id)
+                VALUES
+                  (:reviewId, :eventId, :verdict, :evidenceQuote, :quoteVerified,
+                   :rawOutput, :modelId, :promptSha256, :rubricVersionId)
+                """)
+                .param("reviewId", reviewId)
+                .param("eventId", eventId)
+                .param("verdict", verdict)
+                .param("evidenceQuote", evidenceQuote)
+                .param("quoteVerified", quoteVerified ? "Y" : "N")
+                .param("rawOutput", rawOutput)
+                .param("modelId", modelId)
+                .param("promptSha256", promptSha256)
+                .param("rubricVersionId", rubricVersionId)
+                .update();
+        int changed = jdbc.sql("""
+                UPDATE review_queue
+                   SET fluke_status = 'COMPLETE',
+                       fluke_result = :verdict,
+                       priority = :priority,
+                       fluke_last_error = NULL
+                 WHERE id = :id
+                """)
+                .param("verdict", verdict)
+                .param("priority", priority)
+                .param("id", reviewId)
+                .update();
+        if (changed != 1) {
+            throw new IllegalArgumentException("Unknown review id: " + reviewId);
+        }
+    }
+
+    public String recordFlukeFailure(long reviewId, String message, int maxAttempts) {
+        int failures = jdbc.sql("SELECT fluke_fail_count FROM review_queue WHERE id = :id")
+                .param("id", reviewId)
+                .query(Integer.class)
+                .optional()
+                .orElseThrow(() -> new IllegalArgumentException("Unknown review id: " + reviewId));
+        int nextFailures = failures + 1;
+        boolean terminal = nextFailures >= maxAttempts;
+        jdbc.sql("""
+                UPDATE review_queue
+                   SET fluke_fail_count = :failures,
+                       fluke_status = :status,
+                       priority = :priority,
+                       fluke_last_error = :error
+                 WHERE id = :id
+                """)
+                .param("failures", nextFailures)
+                .param("status", terminal ? "FAILED" : "PENDING")
+                .param("priority", terminal ? 2 : 0)
+                .param("error", boundedError(message))
+                .param("id", reviewId)
+                .update();
+        return terminal ? "FAILED" : "PENDING";
+    }
+
+    /**
+     * Pending review cases with full decision context, priority-desc then
+     * oldest-first. One bounded case query plus one bounded evidence query,
+     * grouped in Java — no N+1. Only quote-verified evidence is exposed.
+     */
+    public List<ReviewCase> findPendingReviewCases(int limit) {
+        if (limit <= 0) {
+            return List.of();
+        }
+        int safeLimit = Math.min(limit, 200);
+        List<ReviewCase> skeletons = jdbc.sql("""
+                SELECT r.id AS review_id, r.reason, r.priority, r.fluke_status, r.fluke_result,
+                       r.created_at, r.status, r.reviewer_note,
+                       e.id AS event_id, e.event_type, e.occurred_on, e.actor,
+                       e.verification_level, e.impact_score, e.claimed_level,
+                       n.code AS node_code, n.name_ko, n.scale_type, n.current_level
+                  FROM review_queue r
+                  JOIN event e ON e.id = r.event_id
+                  JOIN capability_node n ON n.id = e.node_id
+                 WHERE r.status = 'PENDING'
+                 ORDER BY r.priority DESC, r.created_at, r.id
+                 FETCH FIRST %d ROWS ONLY
+                """.formatted(safeLimit))
+                .query(TrackerRepository::mapReviewCaseSkeleton)
+                .list();
+        if (skeletons.isEmpty()) {
+            return skeletons;
+        }
+
+        record EvidenceRow(long eventId, long sourceId, ReviewEvidence evidence) {
+        }
+        List<Long> eventIds = skeletons.stream().map(ReviewCase::eventId).distinct().toList();
+        List<EvidenceRow> evidenceRows = jdbc.sql("""
+                SELECT c.event_id, a.source_id, a.title, a.url, c.evidence_quote
+                  FROM article_classification c
+                  JOIN article a ON a.id = c.article_id
+                 WHERE c.quote_verified = 'Y'
+                   AND c.event_id IN (:eventIds)
+                 ORDER BY c.id
+                """)
+                .param("eventIds", eventIds)
+                .query((rs, rowNum) -> new EvidenceRow(
+                        rs.getLong("event_id"),
+                        rs.getLong("source_id"),
+                        new ReviewEvidence(
+                                rs.getString("title"),
+                                rs.getString("url"),
+                                rs.getString("evidence_quote"))))
+                .list();
+
+        java.util.Map<Long, List<ReviewEvidence>> evidenceByEvent = new java.util.HashMap<>();
+        java.util.Map<Long, Set<Long>> sourcesByEvent = new java.util.HashMap<>();
+        for (EvidenceRow row : evidenceRows) {
+            evidenceByEvent.computeIfAbsent(row.eventId(), key -> new java.util.ArrayList<>())
+                    .add(row.evidence());
+            sourcesByEvent.computeIfAbsent(row.eventId(), key -> new java.util.HashSet<>())
+                    .add(row.sourceId());
+        }
+        return skeletons.stream()
+                .map(skeleton -> new ReviewCase(
+                        skeleton.reviewId(), skeleton.reason(), skeleton.priority(),
+                        skeleton.flukeStatus(), skeleton.flukeResult(), skeleton.createdAt(),
+                        skeleton.eventId(), skeleton.eventType(), skeleton.occurredOn(),
+                        skeleton.actor(), skeleton.verificationLevel(), skeleton.impactScore(),
+                        skeleton.claimedLevel(), skeleton.nodeCode(), skeleton.nodeName(),
+                        skeleton.scaleType(), skeleton.currentLevel(),
+                        sourcesByEvent.getOrDefault(skeleton.eventId(), Set.of()).size(),
+                        List.copyOf(evidenceByEvent.getOrDefault(skeleton.eventId(), List.of())),
+                        skeleton.status(), skeleton.reviewerNote()))
+                .toList();
+    }
+
+    private static ReviewCase mapReviewCaseSkeleton(ResultSet rs, int rowNum) throws SQLException {
+        return new ReviewCase(
+                rs.getLong("review_id"),
+                rs.getString("reason"),
+                rs.getInt("priority"),
+                rs.getString("fluke_status"),
+                rs.getString("fluke_result"),
+                rs.getTimestamp("created_at").toInstant(),
+                rs.getLong("event_id"),
+                rs.getString("event_type"),
+                localDate(rs.getDate("occurred_on")),
+                rs.getString("actor"),
+                rs.getString("verification_level"),
+                nullableDouble(rs, "impact_score"),
+                nullableInt(rs, "claimed_level"),
+                rs.getString("node_code"),
+                rs.getString("name_ko"),
+                rs.getString("scale_type"),
+                rs.getInt("current_level"),
+                0,
+                List.of(),
+                rs.getString("status"),
+                rs.getString("reviewer_note"));
+    }
+
+    private Optional<Long> reviewIdByEventAndReason(long eventId, String reason) {
+        return jdbc.sql("SELECT id FROM review_queue WHERE event_id = :eventId AND reason = :reason")
+                .param("eventId", eventId)
+                .param("reason", reason)
+                .query(Long.class)
+                .optional();
+    }
+
     public Optional<ReviewRow> findReviewById(long id) {
         return jdbc.sql(REVIEW_SELECT + " WHERE id = :id")
                 .param("id", id)

@@ -125,6 +125,25 @@ class TrackerRepositoryTest {
     }
 
     @Test
+    void reviewInsertionIsIdempotentPerEventAndReason() {
+        long nodeId = id("capability_node", "code", "P1-ORBIT-REFUEL");
+        long rubricId = id("rubric_version", "version_label", "r1.0");
+        long eventId = repository.upsertEventByNaturalKey(
+                "P1-ORBIT-REFUEL|FLIGHT_TEST|idem|2926",
+                EventRow.draft(nodeId, "FLIGHT_TEST", 7, "SpaceX", LocalDate.of(2026, 1, 30),
+                        "OFFICIAL", LocalDate.of(2026, 4, 30), rubricId));
+
+        long first = repository.insertReviewIfAbsent(eventId, "HIGH_IMPACT");
+        long second = repository.insertReviewIfAbsent(eventId, "HIGH_IMPACT");
+        long distinct = repository.insertReviewIfAbsent(eventId, "ARRIVAL_CANDIDATE");
+
+        assertEquals(first, second);
+        assertTrue(distinct != first);
+        assertEquals(2, jdbc.sql("SELECT COUNT(*) FROM review_queue WHERE event_id = :id")
+                .param("id", eventId).query(Integer.class).single());
+    }
+
+    @Test
     void reviewMapperPreservesPriorityAndFlukeState() {
         long nodeId = id("capability_node", "code", "P1-ORBIT-REFUEL");
         long rubricId = id("rubric_version", "version_label", "r1.0");
