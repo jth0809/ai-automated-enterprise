@@ -1,6 +1,6 @@
 # Tracker 참조형 역사 백필 검증·롤아웃 런북
 
-작성: 2026-07-13. 대상 데이터셋: `nodes-v1.0` / `r2.0` / `backfill-v1`.
+작성: 2026-07-13, WP2.2-A 갱신: 2026-07-14. 대상 데이터셋: `nodes-v1.0` / `r2.0` / `backfill-v1`.
 
 이 백필은 애플리케이션 이미지에 포함된 로컬 JSON/JSONL만 읽는다. 배포와 설정 변경은 Git 커밋 및 Flux 조정으로만 수행하며, 운영 데이터베이스를 수동 변경하지 않는다.
 
@@ -9,14 +9,16 @@
 | 항목 | 값 |
 |---|---:|
 | 활성 역량 노드 | 35 |
-| 노드 중립 후보 | 정확히 210건 |
-| 승인 매핑 | 120건(필라별 20건) |
-| 직접 사용 후보 | 117건 |
-| 상태 전진 가능 / 비진행 맥락 | 86 / 34 |
-| 후보 파일 | 211,298 bytes, SHA-256 `3a556f18d5f40b067934d9e93d015168b6a47a0d12c7928c9bb3d6fb106bdd17` |
-| 매핑 파일 | 110,603 bytes, SHA-256 `1273edd3c0f388cc8d0a719477b8d35a9af95a2a2b0dacd3065b687a26c4cfa8` |
+| 노드 중립 후보 | 정확히 212건 |
+| 승인 매핑 | 146건(P1~P6: 32/21/24/21/23/25) |
+| 직접 사용 후보 | 140건 |
+| 상태 전진 가능 / 비진행 맥락 | 114 / 32 |
+| 후보 파일 | 213,110 bytes, SHA-256 `33f5d4fe47843e6705bcd0af4ad103504afedcc3a2000c4e1d5b1d088645b081` |
+| 매핑 파일 | 136,255 bytes, SHA-256 `a6b293e0032867efdee0e4dfa1d7543013a7b50bbc2c87e2aa4565bd18714f9b` |
 
-210건은 노드마다 6건을 강제로 할당한 수가 아니라, 약한 근거를 버릴 여유를 둔 노드 중립 후보 풀이다. 생산 매핑은 110~150건 승인 범위 안의 120건이다. `backfill-v*` importer는 기동 시 후보 210/READY 210/REJECTED 0과 매핑 110~150을 다시 강제한다. 35개 노드 중 31개에는 직접 매핑이 있고, 직접 통합 근거가 없는 `P1-TRANSPORT-INTEGRATION`, `P2-SURVIVAL-INTEGRATION`, `P4-RESOURCE-INTEGRATION`, `P6-SETTLEMENT-INTEGRATION`은 사건을 발명하지 않고 레벨 0을 유지한다. `P3-HABITAT-INTEGRATION`과 `P5-OPS-INTEGRATION`의 각 1건도 맥락 기록일 뿐 상태를 올리지 않는다.
+212건은 노드마다 6건을 강제로 할당한 수가 아니라, 약한 근거를 버릴 여유를 둔 노드 중립 후보 풀이다. 생산 매핑은 110~150건 승인 범위 안의 146건이다. `backfill-v*` importer는 기동 시 후보 212/READY 212/REJECTED 0과 매핑 110~150을 다시 강제한다. 35개 노드 중 33개에 직접 매핑이 있고, 직접 통합 근거가 없는 `P4-RESOURCE-INTEGRATION`, `P6-SETTLEMENT-INTEGRATION`은 사건을 발명하지 않고 레벨 0을 유지한다. P1 현재상태는 fresh H2 재생으로 감사했으며 P2~P6의 현재상태·휴면 판정은 후속 WP2.2-B에서 닫는다.
+
+`backfill-v1`은 아직 G2를 통과하지 않은 미출시 코퍼스이므로 WP2.2-A 보강을 같은 버전에 반영했다. 이전 바이트를 이미 가져온 비운영 DB는 같은 버전의 해시 불일치로 실패하는 것이 정상이며, 깨끗이 재시드한 뒤 검증한다. G2 승인 뒤에는 v1을 불변으로 동결하고 후속 변경은 새 데이터셋 버전으로 낸다.
 
 ## 2. 저작권·저장량 방어선
 
@@ -25,11 +27,11 @@
 현재 리소스 감사 결과:
 
 - 금지 JSON 키 0건, NUL/바이너리 파일 0건
-- 후보 JSONL 최대 행 1,155 bytes, 매핑 JSON 최대 행 211 bytes(각 한도 8 KiB)
-- 120개 역사 증거 행의 가변 payload 61,872 bytes
-- 행·이벤트 오버헤드를 포함한 150개 청구 추정치 192,540 bytes
-- 396개 연말 스냅샷, 최대 150개 이력 행, audit까지 각 행 256~512 bytes로 보수 계산한 전체 추정치 434,204 bytes(1 MiB 미만)
-- 후보와 매핑 원본을 합쳐도 321,901 bytes
+- 후보 JSONL 최대 행 1,155 bytes, 매핑 JSON 최대 행 312 bytes(각 한도 8 KiB)
+- 146개 역사 증거 행의 가변 payload 75,205 bytes
+- 행·이벤트 오버헤드를 포함한 146개 청구 추정치 187,333 bytes
+- 396개 연말 스냅샷, 최대 146개 이력 행, audit까지 각 행 256~512 bytes로 보수 계산한 전체 추정치 427,973 bytes(1 MiB 미만)
+- 후보와 매핑 원본을 합치면 349,365 bytes
 
 릴리스 전 동일 감사를 다시 실행하고 결과를 PR에 첨부한다. API 응답에서 `HISTORICAL_REFERENCE.evidenceQuote`는 항상 `null`이어야 하며 `body`, `html`, `attachment` 계열 필드가 없어야 한다.
 
@@ -50,11 +52,11 @@ git diff --check
 & 'gitops/apps/backend-springboot/tests/tracker-egress-policy.ps1'
 ```
 
-필수 테스트 범위는 V7/V8 제약과 FK, 35개 노드, 210개 후보, 120개 승인 매핑, 잘못된 데이터셋 전체 롤백, 동일 해시 no-op, 같은 버전의 다른 해시 거부, 시간순 롤백·취소·휴면·복원, 실시간/역사 증거의 출처 중복 제거, 두 UI 렌더링 분기다.
+필수 테스트 범위는 V7/V8 제약과 FK, 35개 노드, 212개 후보, 146개 승인 매핑, 잘못된 데이터셋 전체 롤백, 동일 해시 no-op, 같은 버전의 다른 해시 거부, 시간순 롤백·취소·휴면·복원, 실시간/역사 증거의 출처 중복 제거, 두 UI 렌더링 분기다.
 
 이미 확정된 실시간 상태 전이가 있는 노드는 백필 시작 시 보호 대상으로 고정한다. 해당 노드에는 역사 사건·참조·연말 스냅샷을 추가하지만 현재 레벨, 휴면, 프로그램 종료 상태를 오래된 사건으로 덮어쓰지 않는 회귀 테스트가 필수다.
 
-현재 작업 세션에서는 데이터셋 validator 집중 테스트 16건과 V1~V8 H2 스키마 검사가 통과했다. 이후 importer/API/UI 변경을 포함한 전체 회귀와 프런트 빌드는 로컬 실행 권한 제한 때문에 아직 릴리스 증거로 기록하지 않았으므로, 위 게이트가 실제로 완료되기 전에는 배포 승인으로 간주하지 않는다.
+WP2.2-A 집중 검증은 구조·코퍼스·출처·재생 테스트 45건과 독립 코퍼스 테스트 42건이 통과했다. 전체 백엔드 회귀는 280/280, GitOps egress 정책 검사, 금지 필드/NUL 검사와 `git diff --check`도 통과했다. 프런트엔드 계약은 변경하지 않았지만 실제 이미지 릴리스 전에는 위 전체 게이트를 다시 실행해야 하며, 현재 결과를 운영 배포 승인으로 간주하지 않는다.
 
 ## 4. Flux 전용 2단계 롤아웃
 
@@ -90,7 +92,7 @@ SELECT COUNT(*) AS prohibited_columns
 ### 2단계 — 백필과 tracker 활성화
 
 1. 별도 GitOps PR에서 `TRACKER_ENABLED=true`로 변경한다. 기본값인 `backfill-v1`, `tracker/backfill-v1.json`, `tracker/historical-candidates-v1.jsonl`을 사용한다.
-2. Flux 조정 후 클러스터 단일 `tracker-backfill-import` 잠금 아래에서 실행된 `tracker backfill imported 120 reviewed claims from dataset backfill-v1` 로그를 한 번만 확인한다.
+2. Flux 조정 후 클러스터 단일 `tracker-backfill-import` 잠금 아래에서 실행된 `tracker backfill imported 146 reviewed claims from dataset backfill-v1` 로그를 한 번만 확인한다.
 3. 재기동 후 같은 로그가 반복되지 않고 아래 audit 행이 그대로인지 확인한다.
 
 ```sql
@@ -113,7 +115,7 @@ SELECT pillar, COUNT(*) AS snapshots, MIN(snapshot_date), MAX(snapshot_date)
  ORDER BY pillar;
 ```
 
-기대값은 audit `record_count=120`, 승인 참조 120건이며, 연말 스냅샷은 여섯 필라에 같은 기간으로 존재해야 한다. `dataset_sha256`은 런타임 정규화 해시이므로 파일별 SHA와 다르며, 같은 데이터셋 버전에서 절대 바꾸지 않는다.
+기대값은 audit `record_count=146`, 승인 참조 146건, 고유 후보 140건이며, 연말 스냅샷은 여섯 필라에 같은 기간으로 존재해야 한다. `dataset_sha256`은 런타임 정규화 해시이므로 파일별 SHA와 다르며, 같은 데이터셋 버전에서 절대 바꾸지 않는다.
 
 ## 5. API·화면 확인
 
@@ -128,7 +130,7 @@ SELECT pillar, COUNT(*) AS snapshots, MIN(snapshot_date), MAX(snapshot_date)
 
 ## 6. 네트워크·시크릿 영향
 
-백필은 클래스패스 리소스만 읽으므로 새 egress가 없다. V7의 역사 전용 FAA/UNOOSA/GOVINFO/LSA 행은 피드가 비활성이고 RSS/본문 도메인을 추가하지 않는다. 기존 NASA 실시간 피드 정책도 변경하지 않는다.
+백필은 클래스패스 리소스만 읽으므로 새 egress가 없다. V7의 역사 전용 FAA/UNOOSA/GOVINFO/LSA 행은 피드가 비활성이고 RSS/본문 도메인을 추가하지 않는다. ESA 참조는 이미 등록된 실시간 ESA feed와 CNP 허용 도메인을 재사용하며 NASA/ESA 네트워크 정책을 변경하지 않는다.
 
 백필 자체에는 새 시크릿이 필요 없다. 실시간 수집과 관리자 화면을 함께 활성화할 때만 기존 Vault의 `TRACKER_FEEDS`와 `TRACKER_ADMIN_TOKEN`을 사용하며 값은 Git, 로그, URL, 브라우저 저장소에 기록하지 않는다.
 
