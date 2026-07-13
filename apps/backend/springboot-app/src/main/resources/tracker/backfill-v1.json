@@ -1,0 +1,2762 @@
+[
+  {
+    "backfillId": "BF-P1-001",
+    "candidateId": "HC-1986-CHALLENGER-LOSS",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P1-CREW-SAFE",
+    "eventType": "SETBACK",
+    "claimedLevel": null,
+    "actor": "NASA",
+    "occurredOn": "1986-01-28",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "Challenger and its crew were lost during ascent",
+    "rubricJustification": "Negative evidence for reusable crew transport; later review should distinguish safety setback from technology dormancy.",
+    "evidenceRefs": [
+      "HC-1986-CHALLENGER-LOSS#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; non-progress classification and rubric boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P1-002",
+    "candidateId": "HC-2015-FALCON9-LAND-LANDING",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P1-REUSE-LV",
+    "eventType": "RETROSPECTIVE",
+    "claimedLevel": null,
+    "actor": "SpaceX",
+    "occurredOn": "2015-12-21",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "An orbital-class first stage returned to a landing pad",
+    "rubricJustification": "Important partial-reuse milestone; it is not evidence of full-vehicle reuse or of a stage reflight.",
+    "evidenceRefs": [
+      "HC-2015-FALCON9-LAND-LANDING#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; non-progress classification and rubric boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P1-003",
+    "candidateId": "HC-2023-STARSHIP-IFT1-MISHAP",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P1-REUSE-LV",
+    "eventType": "SETBACK",
+    "claimedLevel": null,
+    "actor": "SpaceX",
+    "occurredOn": "2023-04-20",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "The first integrated Starship launch ended in vehicle loss",
+    "rubricJustification": "FAA classified the launch as a mishap; this candidate records the flight outcome rather than the later investigation closure.",
+    "evidenceRefs": [
+      "HC-2023-STARSHIP-IFT1-MISHAP#FAA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; non-progress classification and rubric boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P1-004",
+    "candidateId": "HC-2013-RRM-ROBOTIC-FLUID-TRANSFER",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P1-ORBIT-REFUEL",
+    "eventType": "FLIGHT_TEST",
+    "claimedLevel": 5,
+    "actor": "NASA and Canadian Space Agency",
+    "occurredOn": "2013-01-01",
+    "occurredOnPrecision": "MONTH",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "RRM demonstrated robotic fluid transfer in orbit",
+    "rubricJustification": "The source identifies January but not an exact operation day; occurredOn is a month sorting anchor.",
+    "evidenceRefs": [
+      "HC-2013-RRM-ROBOTIC-FLUID-TRANSFER#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; P1-ORBIT-REFUEL level 5 boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P1-005",
+    "candidateId": "HC-2019-RRM3-STORAGE-AND-VENTING",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P1-ORBIT-REFUEL",
+    "eventType": "SETBACK",
+    "claimedLevel": null,
+    "actor": "NASA",
+    "occurredOn": "2019-04-08",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "RRM3 stored cryogen without boiloff before a venting issue",
+    "rubricJustification": "One occurrence contains positive storage evidence and a transfer-program setback; mapping may create separate reviewed claims.",
+    "evidenceRefs": [
+      "HC-2019-RRM3-STORAGE-AND-VENTING#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; non-progress classification and rubric boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P1-006",
+    "candidateId": "HC-2024-OSAM1-ORDERLY-SHUTDOWN",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P1-ORBIT-REFUEL",
+    "eventType": "PROGRAM_CANCELLATION",
+    "claimedLevel": null,
+    "actor": "NASA",
+    "occurredOn": "2024-10-01",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "NASA began orderly shutdown of OSAM-1",
+    "rubricJustification": "Program cancellation is negative historical evidence and cannot advance a capability state.",
+    "evidenceRefs": [
+      "HC-2024-OSAM1-ORDERLY-SHUTDOWN#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; non-progress classification and rubric boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P1-007",
+    "candidateId": "HC-1970-SERT2-LONG-DURATION-TEST",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P1-DEEP-PROP",
+    "eventType": "RETROSPECTIVE",
+    "claimedLevel": null,
+    "actor": "NASA",
+    "occurredOn": "1970-02-14",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "SERT II began a long-duration orbital ion-thruster test",
+    "rubricJustification": "Later grid shorts limited the original six-month objectives; mapping must preserve that qualification.",
+    "evidenceRefs": [
+      "HC-1970-SERT2-LONG-DURATION-TEST#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; non-progress classification and rubric boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P1-008",
+    "candidateId": "HC-1969-NERVA-XE-GROUND-TESTS",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P1-DEEP-PROP",
+    "eventType": "PROTOTYPE_DEMO",
+    "claimedLevel": 5,
+    "actor": "Atomic Energy Commission and NASA",
+    "occurredOn": "1969-01-01",
+    "occurredOnPrecision": "YEAR",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "NERVA XE completed repeated ground tests",
+    "rubricJustification": "The source supports only year precision, and these were ground tests rather than flight evidence.",
+    "evidenceRefs": [
+      "HC-1969-NERVA-XE-GROUND-TESTS#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; P1-DEEP-PROP level 5 boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P1-009",
+    "candidateId": "HC-1973-NERVA-CANCELLATION",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P1-DEEP-PROP",
+    "eventType": "PROGRAM_CANCELLATION",
+    "claimedLevel": null,
+    "actor": "NASA and Atomic Energy Commission",
+    "occurredOn": "1973-01-01",
+    "occurredOnPrecision": "YEAR",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "NERVA ended before a flight test",
+    "rubricJustification": "The source supports only year precision; cancellation cannot advance capability state.",
+    "evidenceRefs": [
+      "HC-1973-NERVA-CANCELLATION#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; non-progress classification and rubric boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P1-010",
+    "candidateId": "HC-2007-DAWN-ION-ENGINE-TEST",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P1-DEEP-PROP",
+    "eventType": "RETROSPECTIVE",
+    "claimedLevel": null,
+    "actor": "NASA",
+    "occurredOn": "2007-10-06",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "Dawn completed its first ion-propulsion system test",
+    "rubricJustification": "This is spacecraft checkout evidence, not by itself proof of the later full interplanetary mission outcome.",
+    "evidenceRefs": [
+      "HC-2007-DAWN-ION-ENGINE-TEST#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; non-progress classification and rubric boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P1-011",
+    "candidateId": "HC-2012-CURIOSITY-SKY-CRANE-LANDING",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P1-EDL-HEAVY",
+    "eventType": "FLIGHT_TEST",
+    "claimedLevel": 5,
+    "actor": "NASA",
+    "occurredOn": "2012-08-06",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "Curiosity completed a sky-crane landing on Mars",
+    "rubricJustification": "Integrated EDL technology evidence at rover scale, not at the 10-tonne heavy-cargo threshold.",
+    "evidenceRefs": [
+      "HC-2012-CURIOSITY-SKY-CRANE-LANDING#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; P1-EDL-HEAVY level 5 boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P1-012",
+    "candidateId": "HC-2015-LDSD-SECOND-FLIGHT",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P1-EDL-HEAVY",
+    "eventType": "FLIGHT_TEST",
+    "claimedLevel": 3,
+    "actor": "NASA",
+    "occurredOn": "2015-06-08",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "LDSD tested large supersonic decelerators with a parachute tear",
+    "rubricJustification": "Mixed test outcome for larger Mars payload technology; neither component delivered cargo to a planetary surface.",
+    "evidenceRefs": [
+      "HC-2015-LDSD-SECOND-FLIGHT#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; P1-EDL-HEAVY level 3 boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P1-013",
+    "candidateId": "HC-2022-LOFTID-REENTRY-DEMO",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P1-EDL-HEAVY",
+    "eventType": "FLIGHT_TEST",
+    "claimedLevel": 5,
+    "actor": "NASA and United Launch Alliance",
+    "occurredOn": "2022-11-10",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "LOFTID completed an inflatable-aeroshell reentry demonstration",
+    "rubricJustification": "Earth reentry test evidence for a precursor technology, not a non-Earth heavy-cargo landing.",
+    "evidenceRefs": [
+      "HC-2022-LOFTID-REENTRY-DEMO#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; P1-EDL-HEAVY level 5 boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P1-014",
+    "candidateId": "HC-1999-MARS-POLAR-LANDER-LOSS",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P1-EDL-HEAVY",
+    "eventType": "SETBACK",
+    "claimedLevel": null,
+    "actor": "NASA",
+    "occurredOn": "1999-12-03",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "Mars Polar Lander was lost during its arrival sequence",
+    "rubricJustification": "Negative EDL evidence; the probable cause is retained as qualified rather than stated as certain.",
+    "evidenceRefs": [
+      "HC-1999-MARS-POLAR-LANDER-LOSS#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; non-progress classification and rubric boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P1-015",
+    "candidateId": "HC-1968-APOLLO5-LM-PROPULSION-TEST",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P1-SURFACE-ASCENT",
+    "eventType": "PROTOTYPE_DEMO",
+    "claimedLevel": 5,
+    "actor": "NASA",
+    "occurredOn": "1968-01-22",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "Apollo 5 demonstrated lunar-module ascent and descent propulsion",
+    "rubricJustification": "Integrated precursor test in Earth orbit; it did not launch from a non-Earth surface.",
+    "evidenceRefs": [
+      "HC-1968-APOLLO5-LM-PROPULSION-TEST#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; P1-SURFACE-ASCENT level 5 boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P1-016",
+    "candidateId": "HC-1969-APOLLO11-LUNAR-ASCENT",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P1-SURFACE-ASCENT",
+    "eventType": "OPERATIONAL_DEPLOYMENT",
+    "claimedLevel": 8,
+    "actor": "NASA",
+    "occurredOn": "1969-07-21",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "Apollo 11 carried crew from the lunar surface back to orbit",
+    "rubricJustification": "Direct crewed surface-ascent and rendezvous evidence, but not a repeated or settlement-scale service.",
+    "evidenceRefs": [
+      "HC-1969-APOLLO11-LUNAR-ASCENT#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; P1-SURFACE-ASCENT level 8 boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P1-017",
+    "candidateId": "HC-1970-APOLLO13-CREW-RECOVERY",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P1-CREW-SAFE",
+    "eventType": "OPERATIONAL_DEPLOYMENT",
+    "claimedLevel": 8,
+    "actor": "NASA",
+    "occurredOn": "1970-04-17",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "Apollo 13 crew returned after loss of service-module power and oxygen",
+    "rubricJustification": "A real contingency and crew-recovery outcome, not evidence that the initiating failure was prevented.",
+    "evidenceRefs": [
+      "HC-1970-APOLLO13-CREW-RECOVERY#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; P1-CREW-SAFE level 8 boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P1-018",
+    "candidateId": "HC-2018-SOYUZ-MS10-ABORT-RECOVERY",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P1-CREW-SAFE",
+    "eventType": "OPERATIONAL_DEPLOYMENT",
+    "claimedLevel": 8,
+    "actor": "Roscosmos",
+    "occurredOn": "2018-10-11",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "Soyuz MS-10 aborted ascent and recovered its crew",
+    "rubricJustification": "Operational abort and recovery evidence; it also records a launch-system failure.",
+    "evidenceRefs": [
+      "HC-2018-SOYUZ-MS10-ABORT-RECOVERY#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; P1-CREW-SAFE level 8 boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P1-019",
+    "candidateId": "HC-2020-CREW-DRAGON-INFLIGHT-ABORT",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P1-CREW-SAFE",
+    "eventType": "FLIGHT_TEST",
+    "claimedLevel": 5,
+    "actor": "NASA and SpaceX",
+    "occurredOn": "2020-01-19",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "Crew Dragon completed an in-flight launch escape test",
+    "rubricJustification": "Uncrewed integrated launch-escape and recovery test, not an operational emergency with crew aboard.",
+    "evidenceRefs": [
+      "HC-2020-CREW-DRAGON-INFLIGHT-ABORT#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; P1-CREW-SAFE level 5 boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P1-020",
+    "candidateId": "HC-1995-STS71-SHUTTLE-MIR-DOCKING",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P1-ORBIT-LOGISTICS",
+    "eventType": "OPERATIONAL_DEPLOYMENT",
+    "claimedLevel": 5,
+    "actor": "NASA and Russian space program",
+    "occurredOn": "1995-06-29",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "Atlantis docked with Mir and exchanged crews and equipment",
+    "rubricJustification": "Integrated crew and cargo handoff on one mission, but not evidence of cross-operator standardized inventory custody.",
+    "evidenceRefs": [
+      "HC-1995-STS71-SHUTTLE-MIR-DOCKING#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; P1-ORBIT-LOGISTICS level 5 boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P2-001",
+    "candidateId": "HC-2007-ISS-OXYGEN-GENERATION-OPERATION",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P2-ECLSS",
+    "eventType": "OPERATIONAL_DEPLOYMENT",
+    "claimedLevel": 3,
+    "actor": "NASA",
+    "occurredOn": "2007-07-12",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "ISS oxygen generation became operational",
+    "rubricJustification": "Operational oxygen regeneration evidence, but not a complete closed air-and-water loop by itself.",
+    "evidenceRefs": [
+      "HC-2007-ISS-OXYGEN-GENERATION-OPERATION#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; P2-ECLSS level 3 boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P2-002",
+    "candidateId": "HC-2008-ISS-URINE-PROCESSOR-ACTIVATION",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P2-ECLSS",
+    "eventType": "OPERATIONAL_DEPLOYMENT",
+    "claimedLevel": 3,
+    "actor": "NASA",
+    "occurredOn": "2008-11-01",
+    "occurredOnPrecision": "MONTH",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "ISS urine processing began producing recycled drinking water",
+    "rubricJustification": "The source supports month precision for activation; later cumulative output demonstrates continued use but not total loop closure.",
+    "evidenceRefs": [
+      "HC-2008-ISS-URINE-PROCESSOR-ACTIVATION#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; P2-ECLSS level 3 boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P2-003",
+    "candidateId": "HC-2010-ISS-SABATIER-ONLINE",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P2-ECLSS",
+    "eventType": "OPERATIONAL_DEPLOYMENT",
+    "claimedLevel": 3,
+    "actor": "NASA",
+    "occurredOn": "2010-11-01",
+    "occurredOnPrecision": "MONTH",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "ISS brought its Sabatier carbon-dioxide reduction system online",
+    "rubricJustification": "The source supports month precision; methane was still a discarded output, so this was not full oxygen-loop closure.",
+    "evidenceRefs": [
+      "HC-2010-ISS-SABATIER-ONLINE#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; P2-ECLSS level 3 boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P2-004",
+    "candidateId": "HC-2023-ISS-98PCT-WATER-RECOVERY",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P2-ECLSS",
+    "eventType": "OPERATIONAL_DEPLOYMENT",
+    "claimedLevel": 3,
+    "actor": "NASA",
+    "occurredOn": "2023-06-20",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "ISS ECLSS demonstrated 98 percent total water recovery",
+    "rubricJustification": "High-closure water-loop evidence on ISS; it does not establish equally high closure for oxygen, food, or solid waste.",
+    "evidenceRefs": [
+      "HC-2023-ISS-98PCT-WATER-RECOVERY#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; P2-ECLSS level 3 boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P2-005",
+    "candidateId": "HC-2015-ISS-FIRST-LETTUCE-MEAL",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P2-FOOD",
+    "eventType": "PROTOTYPE_DEMO",
+    "claimedLevel": 3,
+    "actor": "NASA",
+    "occurredOn": "2015-08-10",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "ISS crew ate the first station-grown crop placed on the menu",
+    "rubricJustification": "Edible yield and consumption evidence at experiment scale, not a material fraction of crew nutrition.",
+    "evidenceRefs": [
+      "HC-2015-ISS-FIRST-LETTUCE-MEAL#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; P2-FOOD level 3 boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P2-006",
+    "candidateId": "HC-2016-ISS-ZINNIA-AUTONOMOUS-CARE",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P2-FOOD",
+    "eventType": "SETBACK",
+    "claimedLevel": null,
+    "actor": "NASA",
+    "occurredOn": "2016-01-16",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "ISS crew recovered a stressed flowering crop through onboard care",
+    "rubricJustification": "Useful autonomous cultivation evidence, but zinnias produced no edible yield and cannot advance food-production state alone.",
+    "evidenceRefs": [
+      "HC-2016-ISS-ZINNIA-AUTONOMOUS-CARE#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; non-progress classification and rubric boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P2-007",
+    "candidateId": "HC-2020-ISS-RADISH-HARVEST",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P2-FOOD",
+    "eventType": "PROTOTYPE_DEMO",
+    "claimedLevel": 3,
+    "actor": "NASA",
+    "occurredOn": "2020-11-30",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "ISS Advanced Plant Habitat produced a radish harvest",
+    "rubricJustification": "Edible crop-yield evidence, but the harvest was stored for analysis rather than supplying routine crew meals.",
+    "evidenceRefs": [
+      "HC-2020-ISS-RADISH-HARVEST#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; P2-FOOD level 3 boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P2-008",
+    "candidateId": "HC-2021-ISS-PEPPER-SECOND-HARVEST",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P2-FOOD",
+    "eventType": "PROTOTYPE_DEMO",
+    "claimedLevel": 3,
+    "actor": "NASA",
+    "occurredOn": "2021-11-26",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "ISS completed a second harvest from a 137-day pepper experiment",
+    "rubricJustification": "Repeated harvest within one experiment, not repeated independent crop cycles or stable nutritional supply.",
+    "evidenceRefs": [
+      "HC-2021-ISS-PEPPER-SECOND-HARVEST#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; P2-FOOD level 3 boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P2-009",
+    "candidateId": "HC-1968-APOLLO-LUNAR-DOSIMETRY",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P2-RAD",
+    "eventType": "FLIGHT_TEST",
+    "claimedLevel": 3,
+    "actor": "NASA",
+    "occurredOn": "1968-12-01",
+    "occurredOnPrecision": "MONTH",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "Apollo lunar crews began collecting personal radiation dose data",
+    "rubricJustification": "The source supports month precision for the first flight; no large solar-particle event occurred, so these data do not validate storm protection.",
+    "evidenceRefs": [
+      "HC-1968-APOLLO-LUNAR-DOSIMETRY#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; P2-RAD level 3 boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P2-010",
+    "candidateId": "HC-2014-RADWORKS-STORM-SHELTER-EVALUATION",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P2-RAD",
+    "eventType": "PROTOTYPE_DEMO",
+    "claimedLevel": 3,
+    "actor": "NASA",
+    "occurredOn": "2014-08-04",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "NASA evaluated two low-mass solar-particle storm shelter concepts",
+    "rubricJustification": "Ground design and human-factors evidence for solar-particle protection; galactic cosmic-ray protection and flight operation were not demonstrated.",
+    "evidenceRefs": [
+      "HC-2014-RADWORKS-STORM-SHELTER-EVALUATION#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; P2-RAD level 3 boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P2-011",
+    "candidateId": "HC-2017-ISS-WATER-SHIELD-GARMENT-TEST",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P2-RAD",
+    "eventType": "RETROSPECTIVE",
+    "claimedLevel": null,
+    "actor": "European Space Agency",
+    "occurredOn": "2017-11-07",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "An ISS crewmember tested a water-filled radiation shielding garment",
+    "rubricJustification": "Wearability test in low Earth orbit; the record does not state a measured reduction in deep-space crew dose.",
+    "evidenceRefs": [
+      "HC-2017-ISS-WATER-SHIELD-GARMENT-TEST#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; non-progress classification and rubric boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P2-012",
+    "candidateId": "HC-2022-ARTEMIS1-ORION-RADIATION-VALIDATION",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P2-RAD",
+    "eventType": "FLIGHT_TEST",
+    "claimedLevel": 5,
+    "actor": "NASA, DLR, and European Space Agency",
+    "occurredOn": "2022-11-01",
+    "occurredOnPrecision": "MONTH",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "Artemis I measured Orion shielding performance around the Moon",
+    "rubricJustification": "The source supports the November mission month; uncrewed lunar-duration validation does not establish long-duration or spacewalk protection.",
+    "evidenceRefs": [
+      "HC-2022-ARTEMIS1-ORION-RADIATION-VALIDATION#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; P2-RAD level 5 boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P2-013",
+    "candidateId": "HC-1974-SKYLAB4-EXERCISE-REGIMEN",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P2-MED",
+    "eventType": "OPERATIONAL_DEPLOYMENT",
+    "claimedLevel": 3,
+    "actor": "NASA",
+    "occurredOn": "1974-01-14",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "Skylab 4 sustained daily exercise during a record-duration mission",
+    "rubricJustification": "Operational regimen and monitoring evidence at 84-day mission scale; the source does not quantify maintained health outcomes from exercise alone.",
+    "evidenceRefs": [
+      "HC-1974-SKYLAB4-EXERCISE-REGIMEN#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; P2-MED level 3 boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P2-014",
+    "candidateId": "HC-2012-ARED-BONE-STUDY",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P2-MED",
+    "eventType": "OPERATIONAL_DEPLOYMENT",
+    "claimedLevel": 5,
+    "actor": "NASA",
+    "occurredOn": "2012-08-24",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "ISS resistance exercise study found improved bone and body-composition outcomes",
+    "rubricJustification": "Flight-population health outcome evidence, although bone breakdown still increased and diet contributed alongside exercise.",
+    "evidenceRefs": [
+      "HC-2012-ARED-BONE-STUDY#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; P2-MED level 5 boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P2-015",
+    "candidateId": "HC-2016-ISS-ONE-YEAR-MISSION",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P2-MED",
+    "eventType": "RETROSPECTIVE",
+    "claimedLevel": null,
+    "actor": "NASA and Roscosmos",
+    "occurredOn": "2016-03-01",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "A two-person ISS study completed 340 days of continuous microgravity exposure",
+    "rubricJustification": "Long-duration exposure and research cohort of two; it does not establish settlement-duration health maintenance or partial-gravity outcomes.",
+    "evidenceRefs": [
+      "HC-2016-ISS-ONE-YEAR-MISSION#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; non-progress classification and rubric boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P2-016",
+    "candidateId": "HC-2009-ISS-SANS-RECOGNITION",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P2-MED",
+    "eventType": "SETBACK",
+    "claimedLevel": null,
+    "actor": "NASA and Canadian Space Agency",
+    "occurredOn": "2009-01-01",
+    "occurredOnPrecision": "YEAR",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "Crew physicians recognized neuro-ocular changes during a six-month ISS mission",
+    "rubricJustification": "The source supports year precision; this is risk-discovery evidence, not a validated prevention or treatment.",
+    "evidenceRefs": [
+      "HC-2009-ISS-SANS-RECOGNITION#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; non-progress classification and rubric boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P2-017",
+    "candidateId": "HC-2013-TRASH-TO-GAS-GROUND-TESTS",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P2-WASTE-CYCLE",
+    "eventType": "LAB_RESULT",
+    "claimedLevel": 3,
+    "actor": "NASA",
+    "occurredOn": "2013-12-03",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "NASA evaluated thermal conversion of mixed crew waste into gases",
+    "rubricJustification": "Ground reactor evidence only; the work did not deliver recovered products to an operational life-support, propulsion, or manufacturing system.",
+    "evidenceRefs": [
+      "HC-2013-TRASH-TO-GAS-GROUND-TESTS#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; P2-WASTE-CYCLE level 3 boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P2-018",
+    "candidateId": "HC-2019-OSCAR-SUBORBITAL-TRASH-TO-GAS",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P2-WASTE-CYCLE",
+    "eventType": "FLIGHT_TEST",
+    "claimedLevel": 3,
+    "actor": "NASA and Blue Origin",
+    "occurredOn": "2019-12-11",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "OSCAR ran an automated trash-to-gas test in suborbital microgravity",
+    "rubricJustification": "Brief suborbital experiment with laboratory simulant; it did not demonstrate continuous processing, useful-product delivery, or crewed-habitat integration.",
+    "evidenceRefs": [
+      "HC-2019-OSCAR-SUBORBITAL-TRASH-TO-GAS#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; P2-WASTE-CYCLE level 3 boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P2-019",
+    "candidateId": "HC-2020-ISS-AMOS-FIRST-AUTONOMOUS-SCANS",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P2-HEALTH-AUTONOMY",
+    "eventType": "RETROSPECTIVE",
+    "claimedLevel": null,
+    "actor": "NASA and ISS crew",
+    "occurredOn": "2020-04-09",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "ISS crew completed autonomous kidney and bladder ultrasound with AMOS",
+    "rubricJustification": "Autonomous image-acquisition evidence only; the session did not establish autonomous interpretation, diagnosis, treatment selection, or treatment delivery.",
+    "evidenceRefs": [
+      "HC-2020-ISS-AMOS-FIRST-AUTONOMOUS-SCANS#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; non-progress classification and rubric boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P2-020",
+    "candidateId": "HC-2022-ISS-AMOS-REPEAT-AUTONOMOUS-SCANS",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P2-HEALTH-AUTONOMY",
+    "eventType": "RETROSPECTIVE",
+    "claimedLevel": null,
+    "actor": "NASA and ISS crew",
+    "occurredOn": "2022-06-29",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "A second ISS crew repeated autonomous AMOS ultrasound practice",
+    "rubricJustification": "Repeated in-flight procedure-guidance evidence, but still limited to image acquisition rather than autonomous diagnosis or treatment.",
+    "evidenceRefs": [
+      "HC-2022-ISS-AMOS-REPEAT-AUTONOMOUS-SCANS#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; non-progress classification and rubric boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P3-001",
+    "candidateId": "HC-1969-APOLLO11-LUNAR-SURFACE-SHELTER",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P3-CONSTRUCT",
+    "eventType": "RETROSPECTIVE",
+    "claimedLevel": null,
+    "actor": "NASA",
+    "occurredOn": "1969-07-20",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "Apollo 11 used a crewed cabin on the lunar surface for less than one day",
+    "rubricJustification": "The only crew shelter was a prebuilt temporary lander cabin; no surface construction, expansion, or long-duration habitation was demonstrated.",
+    "evidenceRefs": [
+      "HC-1969-APOLLO11-LUNAR-SURFACE-SHELTER#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; non-progress classification and rubric boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P3-002",
+    "candidateId": "HC-1998-ISS-ASSEMBLY-BEGINS",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P3-CONSTRUCT",
+    "eventType": "RETROSPECTIVE",
+    "claimedLevel": null,
+    "actor": "NASA and Roscosmos",
+    "occurredOn": "1998-11-20",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "Launch of Zarya began assembly of the International Space Station",
+    "rubricJustification": "Large-scale modular assembly in Earth orbit; it does not demonstrate construction, sealing, or commissioning on a planetary surface.",
+    "evidenceRefs": [
+      "HC-1998-ISS-ASSEMBLY-BEGINS#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; non-progress classification and rubric boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P3-003",
+    "candidateId": "HC-2010-HDU-DESERT-RATS-INTEGRATION",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P3-CONSTRUCT",
+    "eventType": "PROTOTYPE_DEMO",
+    "claimedLevel": 3,
+    "actor": "NASA",
+    "occurredOn": "2010-01-01",
+    "occurredOnPrecision": "YEAR",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "NASA field-tested an integrated habitat demonstration unit in the Arizona desert",
+    "rubricJustification": "The source supports year precision. This was a terrestrial analog and integration exercise, not a sealed or occupied off-Earth surface habitat.",
+    "evidenceRefs": [
+      "HC-2010-HDU-DESERT-RATS-INTEGRATION#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; P3-CONSTRUCT level 3 boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P3-004",
+    "candidateId": "HC-2019-3D-PRINTED-HABITAT-FINAL",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P3-CONSTRUCT",
+    "eventType": "PROTOTYPE_DEMO",
+    "claimedLevel": 3,
+    "actor": "NASA and competition teams",
+    "occurredOn": "2019-01-01",
+    "occurredOnPrecision": "YEAR",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "NASA's habitat challenge culminated in autonomous printing of subscale structures",
+    "rubricJustification": "The source supports year precision. Subscale ground structures were not pressure-sealed, commissioned, or built from actual off-Earth material.",
+    "evidenceRefs": [
+      "HC-2019-3D-PRINTED-HABITAT-FINAL#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; P3-CONSTRUCT level 3 boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P3-005",
+    "candidateId": "HC-2021-MARS-DUNE-ALPHA-PRINTED",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P3-CONSTRUCT",
+    "eventType": "PROTOTYPE_DEMO",
+    "claimedLevel": 3,
+    "actor": "NASA and ICON",
+    "occurredOn": "2021-01-01",
+    "occurredOnPrecision": "YEAR",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "A full-scale simulated Mars habitat was built with large-scale 3D printing",
+    "rubricJustification": "The source supports year precision. It is a full-scale Earth analog made under terrestrial conditions, not a pressure-qualified structure built from local lunar or Martian material.",
+    "evidenceRefs": [
+      "HC-2021-MARS-DUNE-ALPHA-PRINTED#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; P3-CONSTRUCT level 3 boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P3-006",
+    "candidateId": "HC-1969-APOLLO12-SNAP27-SURFACE-POWER",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P3-POWER",
+    "eventType": "RETROSPECTIVE",
+    "claimedLevel": null,
+    "actor": "NASA",
+    "occurredOn": "1969-11-19",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "Apollo 12 deployed a radioisotope power source for lunar instruments",
+    "rubricJustification": "Operational off-Earth generation for an isolated science package, not a habitat-scale grid with storage, distribution, protection, or load management.",
+    "evidenceRefs": [
+      "HC-1969-APOLLO12-SNAP27-SURFACE-POWER#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; non-progress classification and rubric boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P3-007",
+    "candidateId": "HC-2000-ISS-P6-POWER-INTEGRATION",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P3-POWER",
+    "eventType": "RETROSPECTIVE",
+    "claimedLevel": null,
+    "actor": "NASA and international partners",
+    "occurredOn": "2000-12-05",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "ISS connected its first major U.S. solar arrays to the station power system",
+    "rubricJustification": "Generation and distribution integration on an orbital station; it is not a surface microgrid or evidence of black-start and destination-night resilience.",
+    "evidenceRefs": [
+      "HC-2000-ISS-P6-POWER-INTEGRATION#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; non-progress classification and rubric boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P3-008",
+    "candidateId": "HC-2010-HDU-ANALOG-POWER-SYSTEM",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P3-POWER",
+    "eventType": "RETROSPECTIVE",
+    "claimedLevel": null,
+    "actor": "NASA",
+    "occurredOn": "2010-01-01",
+    "occurredOnPrecision": "YEAR",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "A habitat analog operated an integrated multi-bus power system for two weeks",
+    "rubricJustification": "The source supports year precision. This was a terrestrial analog without off-Earth environmental cycles, settlement-scale storage, or demonstrated black start.",
+    "evidenceRefs": [
+      "HC-2010-HDU-ANALOG-POWER-SYSTEM#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; non-progress classification and rubric boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P3-009",
+    "candidateId": "HC-2008-EPOXI-DTN-DEEP-SPACE-TEST",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P3-COMMS",
+    "eventType": "FLIGHT_TEST",
+    "claimedLevel": 3,
+    "actor": "NASA Jet Propulsion Laboratory",
+    "occurredOn": "2008-10-01",
+    "occurredOnPrecision": "MONTH",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "EPOXI tested disruption-tolerant networking across a deep-space link",
+    "rubricJustification": "The source supports month precision. This was a bounded spacecraft experiment, not an operational settlement, surface, relay, and Earth network.",
+    "evidenceRefs": [
+      "HC-2008-EPOXI-DTN-DEEP-SPACE-TEST#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; P3-COMMS level 3 boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P3-010",
+    "candidateId": "HC-2017-ISS-DTN-ARCHITECTURE-REPORT",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P3-COMMS",
+    "eventType": "PROTOTYPE_DEMO",
+    "claimedLevel": 3,
+    "actor": "NASA and Boeing",
+    "occurredOn": "2017-03-04",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "NASA documented disruption-tolerant networking implementation for the ISS",
+    "rubricJustification": "An orbital network implementation report; it does not establish a redundant planetary surface and interplanetary communications service.",
+    "evidenceRefs": [
+      "HC-2017-ISS-DTN-ARCHITECTURE-REPORT#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; P3-COMMS level 3 boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P3-011",
+    "candidateId": "HC-2023-DSOC-DEEP-SPACE-FIRST-LIGHT",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P3-COMMS",
+    "eventType": "FLIGHT_TEST",
+    "claimedLevel": 3,
+    "actor": "NASA Jet Propulsion Laboratory",
+    "occurredOn": "2023-11-14",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "DSOC exchanged optical signals from far beyond the Moon",
+    "rubricJustification": "A deep-space point-to-point technology link, not an operational routed network with surface assets, redundancy, or outage handling.",
+    "evidenceRefs": [
+      "HC-2023-DSOC-DEEP-SPACE-FIRST-LIGHT#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; P3-COMMS level 3 boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P3-012",
+    "candidateId": "HC-2023-LCRD-ILLUMAT-END-TO-END-RELAY",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P3-COMMS",
+    "eventType": "FLIGHT_TEST",
+    "claimedLevel": 3,
+    "actor": "NASA and ISS crew",
+    "occurredOn": "2023-12-05",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "LCRD and ILLUMA-T formed an end-to-end optical relay through the ISS",
+    "rubricJustification": "An experimental low-Earth-orbit relay chain; it did not include a planetary settlement, interplanetary delay, or long-term autonomous network management.",
+    "evidenceRefs": [
+      "HC-2023-LCRD-ILLUMAT-END-TO-END-RELAY#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; P3-COMMS level 3 boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P3-013",
+    "candidateId": "HC-1973-SKYLAB-THERMAL-POWER-FAILURE",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P3-THERMAL",
+    "eventType": "SETBACK",
+    "claimedLevel": null,
+    "actor": "NASA",
+    "occurredOn": "1973-05-14",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "Skylab reached orbit with severe thermal-shield and solar-array damage",
+    "rubricJustification": "A combined habitat thermal and power failure at launch; later crew repair prevented loss of the orbital workshop.",
+    "evidenceRefs": [
+      "HC-1973-SKYLAB-THERMAL-POWER-FAILURE#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; non-progress classification and rubric boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P3-014",
+    "candidateId": "HC-2006-ISS-PERMANENT-THERMAL-LOOP-ACTIVATION",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P3-THERMAL",
+    "eventType": "RETROSPECTIVE",
+    "claimedLevel": null,
+    "actor": "NASA and international partners",
+    "occurredOn": "2006-12-14",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "ISS activated a permanent external heat-rejection loop during power rewiring",
+    "rubricJustification": "Integrated orbital habitat heat rejection; it does not demonstrate surface thermal balance through destination day-night, seasonal, or dust conditions.",
+    "evidenceRefs": [
+      "HC-2006-ISS-PERMANENT-THERMAL-LOOP-ACTIVATION#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; non-progress classification and rubric boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P3-015",
+    "candidateId": "HC-2010-ISS-COOLING-PUMP-FAILURE",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P3-THERMAL",
+    "eventType": "SETBACK",
+    "claimedLevel": null,
+    "actor": "NASA and ISS crew",
+    "occurredOn": "2010-07-31",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "An ISS ammonia pump failure removed half of external cooling redundancy",
+    "rubricJustification": "Operational habitat thermal setback and loss of fault tolerance; continued crew safety depended on the redundant loop, power-downs, and rapid repair planning.",
+    "evidenceRefs": [
+      "HC-2010-ISS-COOLING-PUMP-FAILURE#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; non-progress classification and rubric boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P3-016",
+    "candidateId": "HC-1972-APOLLO17-LUNAR-DUST-INTRUSION",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P3-DUST",
+    "eventType": "SETBACK",
+    "claimedLevel": null,
+    "actor": "NASA",
+    "occurredOn": "1972-12-01",
+    "occurredOnPrecision": "MONTH",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "Apollo 17 exposed crew and cabin hardware to persistent lunar dust",
+    "rubricJustification": "The source supports month precision. This is uncontrolled contamination evidence from a three-day sortie, not a sustained dust-prevention or removal capability.",
+    "evidenceRefs": [
+      "HC-1972-APOLLO17-LUNAR-DUST-INTRUSION#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; non-progress classification and rubric boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P3-017",
+    "candidateId": "HC-2012-EDS-VACUUM-REDUCED-GRAVITY-TESTS",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P3-DUST",
+    "eventType": "PROTOTYPE_DEMO",
+    "claimedLevel": 3,
+    "actor": "NASA and University of Arkansas at Little Rock",
+    "occurredOn": "2012-10-05",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "Electrodynamic shields removed simulated dust in vacuum and reduced gravity tests",
+    "rubricJustification": "The day anchors the report. Laboratory and aircraft tests did not validate lifetime, crew interfaces, or operation with actual lunar regolith on the Moon.",
+    "evidenceRefs": [
+      "HC-2012-EDS-VACUUM-REDUCED-GRAVITY-TESTS#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; P3-DUST level 3 boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P3-018",
+    "candidateId": "HC-2025-BLUE-GHOST-EDS-LUNAR-DEMO",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P3-DUST",
+    "eventType": "FLIGHT_TEST",
+    "claimedLevel": 3,
+    "actor": "NASA and Firefly Aerospace",
+    "occurredOn": "2025-03-14",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "An electrodynamic shield removed actual regolith on the lunar surface",
+    "rubricJustification": "Uncrewed component-surface demonstration; it did not protect an occupied habitat, suit-airlock interface, mechanism fleet, or settlement-scale infrastructure.",
+    "evidenceRefs": [
+      "HC-2025-BLUE-GHOST-EDS-LUNAR-DEMO#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; P3-DUST level 3 boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P3-019",
+    "candidateId": "HC-2025-BLUE-GHOST-RAC-DUST-MEASUREMENT",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P3-DUST",
+    "eventType": "FLIGHT_TEST",
+    "claimedLevel": 3,
+    "actor": "NASA and Firefly Aerospace",
+    "occurredOn": "2025-03-14",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "Blue Ghost measured lunar dust adherence across candidate materials",
+    "rubricJustification": "Field characterization and monitoring precursor only; RAC did not prevent, contain, or remove contamination.",
+    "evidenceRefs": [
+      "HC-2025-BLUE-GHOST-RAC-DUST-MEASUREMENT#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; P3-DUST level 3 boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P3-020",
+    "candidateId": "HC-2024-CHAPEA-378-DAY-ANALOG",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P3-HABITAT-INTEGRATION",
+    "eventType": "RETROSPECTIVE",
+    "claimedLevel": null,
+    "actor": "NASA and volunteer crew",
+    "occurredOn": "2024-07-06",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "CHAPEA completed a 378-day simulated Mars habitat mission",
+    "rubricJustification": "Long terrestrial analog evidence, but not an off-Earth pressure, thermal, dust, grid, or no-resupply demonstration and shorter than 26 months.",
+    "evidenceRefs": [
+      "HC-2024-CHAPEA-378-DAY-ANALOG#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; non-progress classification and rubric boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P4-001",
+    "candidateId": "HC-2008-LUNAR-ISRU-END-TO-END-ANALOG",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P4-ISRU-PROP",
+    "eventType": "PROTOTYPE_DEMO",
+    "claimedLevel": 3,
+    "actor": "NASA and international partners",
+    "occurredOn": "2008-11-01",
+    "occurredOnPrecision": "MONTH",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "A field analog integrated excavation, oxygen production, and product storage",
+    "rubricJustification": "Integrated terrestrial field evidence; the feedstock, atmosphere, gravity, and support environment were not lunar.",
+    "evidenceRefs": [
+      "HC-2008-LUNAR-ISRU-END-TO-END-ANALOG#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; P4-ISRU-PROP level 3 boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P4-002",
+    "candidateId": "HC-2009-LCROSS-LUNAR-WATER-CONFIRMATION",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P4-ISRU-PROP",
+    "eventType": "RETROSPECTIVE",
+    "claimedLevel": null,
+    "actor": "NASA",
+    "occurredOn": "2009-11-13",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "LCROSS impact data confirmed water near the lunar south pole",
+    "rubricJustification": "Remote and impact-plume detection established resource presence; it did not extract, process, store, or use lunar water.",
+    "evidenceRefs": [
+      "HC-2009-LCROSS-LUNAR-WATER-CONFIRMATION#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; non-progress classification and rubric boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P4-003",
+    "candidateId": "HC-2012-RESOLVE-FULL-SCALE-FIELD-DEMO",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P4-ISRU-PROP",
+    "eventType": "PROTOTYPE_DEMO",
+    "claimedLevel": 3,
+    "actor": "NASA, CSA, and PISCES",
+    "occurredOn": "2012-07-01",
+    "occurredOnPrecision": "MONTH",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "RESOLVE completed a full-scale volatile prospecting field demonstration",
+    "rubricJustification": "Earth analog evidence for prospecting and sample processing, not extraction of an actual off-Earth resource.",
+    "evidenceRefs": [
+      "HC-2012-RESOLVE-FULL-SCALE-FIELD-DEMO#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; P4-ISRU-PROP level 3 boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P4-004",
+    "candidateId": "HC-2018-RESOURCE-PROSPECTOR-CANCELLATION",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P4-ISRU-PROP",
+    "eventType": "PROGRAM_CANCELLATION",
+    "claimedLevel": null,
+    "actor": "NASA",
+    "occurredOn": "2018-06-01",
+    "occurredOnPrecision": "MONTH",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "NASA canceled the Resource Prospector activity before lunar flight",
+    "rubricJustification": "Program setback: substantial ground maturity did not become a mobile lunar prospecting and extraction demonstration.",
+    "evidenceRefs": [
+      "HC-2018-RESOURCE-PROSPECTOR-CANCELLATION#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; non-progress classification and rubric boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P4-005",
+    "candidateId": "HC-2021-MOXIE-FIRST-MARS-OXYGEN",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P4-ISRU-PROP",
+    "eventType": "FLIGHT_TEST",
+    "claimedLevel": 5,
+    "actor": "NASA and MIT",
+    "occurredOn": "2021-04-20",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "MOXIE produced oxygen from the Martian atmosphere for the first time",
+    "rubricJustification": "Small intermittent flight experiment; it did not liquefy, store, distribute, or continuously produce crew- or ascent-scale oxygen.",
+    "evidenceRefs": [
+      "HC-2021-MOXIE-FIRST-MARS-OXYGEN#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; P4-ISRU-PROP level 5 boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P4-006",
+    "candidateId": "HC-2023-MOXIE-MISSION-COMPLETION",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P4-ISRU-PROP",
+    "eventType": "FLIGHT_TEST",
+    "claimedLevel": 5,
+    "actor": "NASA and MIT",
+    "occurredOn": "2023-09-06",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "MOXIE concluded after sixteen oxygen-production runs on Mars",
+    "rubricJustification": "Repeat production broadened environmental evidence but remained far below continuous human-life-support or propellant-plant scale.",
+    "evidenceRefs": [
+      "HC-2023-MOXIE-MISSION-COMPLETION#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; P4-ISRU-PROP level 5 boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P4-007",
+    "candidateId": "HC-2025-PRIME1-LIMITED-LUNAR-OPERATIONS",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P4-ISRU-PROP",
+    "eventType": "SETBACK",
+    "claimedLevel": null,
+    "actor": "NASA and Intuitive Machines",
+    "occurredOn": "2025-03-06",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "PRIME-1 exercised its drill and gas analyzer during a short lunar mission",
+    "rubricJustification": "The tilted lander shortened operations, no sampled volatile resource was confirmed, and initially detected gases appeared human-origin.",
+    "evidenceRefs": [
+      "HC-2025-PRIME1-LIMITED-LUNAR-OPERATIONS#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; non-progress classification and rubric boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P4-008",
+    "candidateId": "HC-2018-KRUSTY-FULL-POWER-GROUND-TEST",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P4-NUKE",
+    "eventType": "PROTOTYPE_DEMO",
+    "claimedLevel": 5,
+    "actor": "NASA and U.S. Department of Energy",
+    "occurredOn": "2018-03-21",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "KRUSTY completed a full-power fission-system ground demonstration",
+    "rubricJustification": "Integrated reactor and conversion ground evidence, but no flight, surface distribution network, storage, or settlement loads were demonstrated.",
+    "evidenceRefs": [
+      "HC-2018-KRUSTY-FULL-POWER-GROUND-TEST#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; P4-NUKE level 5 boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P4-009",
+    "candidateId": "HC-1965-SNAP10A-SPACE-FISSION",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P4-NUKE",
+    "eventType": "FLIGHT_TEST",
+    "claimedLevel": 5,
+    "actor": "U.S. Atomic Energy Commission and NASA",
+    "occurredOn": "1965-01-01",
+    "occurredOnPrecision": "YEAR",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "SNAP-10A placed a U.S. fission reactor in space",
+    "rubricJustification": "Short-lived orbital heritage, not a surface reactor, settlement grid, refueling cycle, or modern flight-qualified lunar power plant.",
+    "evidenceRefs": [
+      "HC-1965-SNAP10A-SPACE-FISSION#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; P4-NUKE level 5 boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P4-010",
+    "candidateId": "HC-2022-FISSION-SURFACE-POWER-CONCEPT-AWARDS",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P4-NUKE",
+    "eventType": "ANNOUNCEMENT_ONLY",
+    "claimedLevel": null,
+    "actor": "NASA and U.S. Department of Energy",
+    "occurredOn": "2022-06-21",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "NASA and DOE funded three lunar fission power concept studies",
+    "rubricJustification": "Concept awards and target requirements, not completed reactor designs, hardware qualification, launch, or lunar power delivery.",
+    "evidenceRefs": [
+      "HC-2022-FISSION-SURFACE-POWER-CONCEPT-AWARDS#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; non-progress classification and rubric boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P4-011",
+    "candidateId": "HC-1990-LDEF-MATERIALS-RETRIEVAL",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P4-MATERIALS",
+    "eventType": "FLIGHT_TEST",
+    "claimedLevel": 3,
+    "actor": "NASA",
+    "occurredOn": "1990-01-01",
+    "occurredOnPrecision": "MONTH",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "LDEF returned after nearly six years of orbital exposure",
+    "rubricJustification": "Valuable durability evidence from returned samples; exposure results are material-specific and not whole-structure lifetime qualification.",
+    "evidenceRefs": [
+      "HC-1990-LDEF-MATERIALS-RETRIEVAL#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; P4-MATERIALS level 3 boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P4-012",
+    "candidateId": "HC-1992-APOLLO16-SOIL-CONCRETE-TESTS",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P4-MATERIALS",
+    "eventType": "LAB_RESULT",
+    "claimedLevel": 3,
+    "actor": "Construction Technology Laboratories and NASA",
+    "occurredOn": "1992-09-01",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "Researchers made concrete specimens with Apollo 16 lunar soil",
+    "rubricJustification": "Used scarce returned soil plus Earth-supplied binder and water; it did not demonstrate local bulk feedstock production or lunar construction.",
+    "evidenceRefs": [
+      "HC-1992-APOLLO16-SOIL-CONCRETE-TESTS#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; P4-MATERIALS level 3 boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P4-013",
+    "candidateId": "HC-2005-MISSE-FOUR-YEAR-EXPOSURE",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P4-MATERIALS",
+    "eventType": "FLIGHT_TEST",
+    "claimedLevel": 3,
+    "actor": "NASA and ISS partners",
+    "occurredOn": "2005-01-01",
+    "occurredOnPrecision": "YEAR",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "MISSE 1 and 2 completed a four-year orbital exposure interval",
+    "rubricJustification": "Long exposure improves material evidence but remains sample-specific, in low Earth orbit, and dependent on postflight analysis.",
+    "evidenceRefs": [
+      "HC-2005-MISSE-FOUR-YEAR-EXPOSURE#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; P4-MATERIALS level 3 boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P4-014",
+    "candidateId": "HC-2019-ISS-CEMENT-HYDRATION-STUDY",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P4-MATERIALS",
+    "eventType": "LAB_RESULT",
+    "claimedLevel": 3,
+    "actor": "NASA and research partners",
+    "occurredOn": "2019-09-16",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "ISS samples revealed gravity-dependent cement hydration structures",
+    "rubricJustification": "Small sealed samples with Earth materials; no local feedstock, full-scale casting, curing, loading, or off-Earth structure was demonstrated.",
+    "evidenceRefs": [
+      "HC-2019-ISS-CEMENT-HYDRATION-STUDY#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; P4-MATERIALS level 3 boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P4-015",
+    "candidateId": "HC-2014-FIRST-3D-PRINTED-OBJECT-IN-SPACE",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P4-MANUFACTURING",
+    "eventType": "FLIGHT_TEST",
+    "claimedLevel": 3,
+    "actor": "NASA and Made In Space",
+    "occurredOn": "2014-11-25",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "The ISS printer produced the first additively manufactured object in space",
+    "rubricJustification": "First small polymer print using Earth-launched feedstock and extensive ground support, not certified repair production or local-resource manufacturing.",
+    "evidenceRefs": [
+      "HC-2014-FIRST-3D-PRINTED-OBJECT-IN-SPACE#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; P4-MANUFACTURING level 3 boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P4-016",
+    "candidateId": "HC-2016-AMF-PERMANENT-ISS-INSTALLATION",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P4-MANUFACTURING",
+    "eventType": "OPERATIONAL_DEPLOYMENT",
+    "claimedLevel": 3,
+    "actor": "NASA and Made In Space",
+    "occurredOn": "2016-04-01",
+    "occurredOnPrecision": "MONTH",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "A second-generation additive manufacturing facility entered ISS service",
+    "rubricJustification": "Persistent orbital service using imported polymers; printed parts still require application-specific design, inspection, and qualification.",
+    "evidenceRefs": [
+      "HC-2016-AMF-PERMANENT-ISS-INSTALLATION#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; P4-MANUFACTURING level 3 boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P4-017",
+    "candidateId": "HC-2017-ARCHINAUT-THERMAL-VACUUM-BEAMS",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P4-MANUFACTURING",
+    "eventType": "PROTOTYPE_DEMO",
+    "claimedLevel": 3,
+    "actor": "NASA and Made In Space",
+    "occurredOn": "2017-08-10",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "Archinaut printed large beam segments in a space-like chamber",
+    "rubricJustification": "Ground thermal-vacuum success, not orbital manufacturing, autonomous assembly, structural service, or use of off-Earth feedstock.",
+    "evidenceRefs": [
+      "HC-2017-ARCHINAUT-THERMAL-VACUUM-BEAMS#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; P4-MANUFACTURING level 3 boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P4-018",
+    "candidateId": "HC-2021-REDWIRE-REGOLITH-PRINT-PARTIAL",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P4-MANUFACTURING",
+    "eventType": "SETBACK",
+    "claimedLevel": null,
+    "actor": "Redwire Space, NASA, and ISS crew",
+    "occurredOn": "2021-09-14",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "An ISS regolith-simulant print extruded material but did not finish",
+    "rubricJustification": "Explicit partial failure using Earth-made simulant; no lunar material, complete structure, qualification, or surface construction was achieved.",
+    "evidenceRefs": [
+      "HC-2021-REDWIRE-REGOLITH-PRINT-PARTIAL#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; non-progress classification and rubric boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P4-019",
+    "candidateId": "HC-2023-OSAM2-CONCLUDED-BEFORE-FLIGHT",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P4-MANUFACTURING",
+    "eventType": "PROGRAM_CANCELLATION",
+    "claimedLevel": null,
+    "actor": "NASA and Redwire Space",
+    "occurredOn": "2023-01-01",
+    "occurredOnPrecision": "YEAR",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "NASA concluded OSAM-2 before its planned orbital demonstration",
+    "rubricJustification": "Ground lessons and project data survived, but the intended orbital manufacturing and assembly capability was not demonstrated.",
+    "evidenceRefs": [
+      "HC-2023-OSAM2-CONCLUDED-BEFORE-FLIGHT#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; non-progress classification and rubric boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P4-020",
+    "candidateId": "HC-2024-FIRST-METAL-3D-PRINT-IN-SPACE",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P4-MANUFACTURING",
+    "eventType": "FLIGHT_TEST",
+    "claimedLevel": 3,
+    "actor": "European Space Agency, Airbus, and ISS crew",
+    "occurredOn": "2024-05-30",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "An ISS experiment produced the first metal 3D print in space",
+    "rubricJustification": "Commissioning-scale sample with imported material; it did not produce a qualified replacement part or demonstrate local metal refining.",
+    "evidenceRefs": [
+      "HC-2024-FIRST-METAL-3D-PRINT-IN-SPACE#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; P4-MANUFACTURING level 3 boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P5-001",
+    "candidateId": "HC-2019-3D-PRINTED-HABITAT-FINAL",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P5-AUTOCON",
+    "eventType": "PROTOTYPE_DEMO",
+    "claimedLevel": 3,
+    "actor": "NASA and competition teams",
+    "occurredOn": "2019-01-01",
+    "occurredOnPrecision": "YEAR",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "NASA's habitat challenge culminated in autonomous printing of subscale structures",
+    "rubricJustification": "The source supports year precision. Subscale ground structures were not pressure-sealed, commissioned, or built from actual off-Earth material.",
+    "evidenceRefs": [
+      "HC-2019-3D-PRINTED-HABITAT-FINAL#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; P5-AUTOCON level 3 boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P5-002",
+    "candidateId": "HC-2017-ARCHINAUT-THERMAL-VACUUM-BEAMS",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P5-AUTOCON",
+    "eventType": "PROTOTYPE_DEMO",
+    "claimedLevel": 3,
+    "actor": "NASA and Made In Space",
+    "occurredOn": "2017-08-10",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "Archinaut printed large beam segments in a space-like chamber",
+    "rubricJustification": "Ground thermal-vacuum success, not orbital manufacturing, autonomous assembly, structural service, or use of off-Earth feedstock.",
+    "evidenceRefs": [
+      "HC-2017-ARCHINAUT-THERMAL-VACUUM-BEAMS#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; P5-AUTOCON level 3 boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P5-003",
+    "candidateId": "HC-2023-OSAM2-CONCLUDED-BEFORE-FLIGHT",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P5-AUTOCON",
+    "eventType": "PROGRAM_CANCELLATION",
+    "claimedLevel": null,
+    "actor": "NASA and Redwire Space",
+    "occurredOn": "2023-01-01",
+    "occurredOnPrecision": "YEAR",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "NASA concluded OSAM-2 before its planned orbital demonstration",
+    "rubricJustification": "Ground lessons and project data survived, but the intended orbital manufacturing and assembly capability was not demonstrated.",
+    "evidenceRefs": [
+      "HC-2023-OSAM2-CONCLUDED-BEFORE-FLIGHT#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; non-progress classification and rubric boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P5-004",
+    "candidateId": "HC-2024-ARMADAS-AUTONOMOUS-GROUND-ASSEMBLY",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P5-AUTOCON",
+    "eventType": "PROTOTYPE_DEMO",
+    "claimedLevel": 3,
+    "actor": "NASA",
+    "occurredOn": "2024-01-17",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "Three robots autonomously assembled a shed-scale digital structure",
+    "rubricJustification": "Terrestrial autonomous assembly with prefabricated Earth blocks; no launch, planetary deployment, local feedstock, or occupied structure.",
+    "evidenceRefs": [
+      "HC-2024-ARMADAS-AUTONOMOUS-GROUND-ASSEMBLY#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; P5-AUTOCON level 3 boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P5-005",
+    "candidateId": "HC-1999-DS1-AUTONAV-TEST",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P5-AUTONOMY",
+    "eventType": "FLIGHT_TEST",
+    "claimedLevel": 5,
+    "actor": "NASA and JPL",
+    "occurredOn": "1999-01-01",
+    "occurredOnPrecision": "YEAR",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "Deep Space 1 tested autonomous optical navigation in interplanetary flight",
+    "rubricJustification": "Technology validation for onboard navigation; the later Braille flyby also exposed navigation-data problems and missed its planned close range.",
+    "evidenceRefs": [
+      "HC-1999-DS1-AUTONAV-TEST#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; P5-AUTONOMY level 5 boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P5-006",
+    "candidateId": "HC-1999-DS1-REMOTE-AGENT",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P5-AUTONOMY",
+    "eventType": "FLIGHT_TEST",
+    "claimedLevel": 5,
+    "actor": "NASA Ames and JPL",
+    "occurredOn": "1999-01-01",
+    "occurredOnPrecision": "YEAR",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "Remote Agent became the first artificial intelligence system to operate a spacecraft",
+    "rubricJustification": "Bounded flight experiment, not a continuously autonomous mission or evidence that general spacecraft maintenance no longer required Earth teams.",
+    "evidenceRefs": [
+      "HC-1999-DS1-REMOTE-AGENT#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; P5-AUTONOMY level 5 boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P5-007",
+    "candidateId": "HC-2005-DEEP-IMPACT-AUTONAV",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P5-AUTONOMY",
+    "eventType": "FLIGHT_TEST",
+    "claimedLevel": 3,
+    "actor": "NASA and JPL",
+    "occurredOn": "2005-07-04",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "Deep Impact used onboard navigation to strike comet Tempel 1",
+    "rubricJustification": "Short terminal-guidance demonstration toward a preselected target, not long-duration autonomous logistics or settlement operations.",
+    "evidenceRefs": [
+      "HC-2005-DEEP-IMPACT-AUTONAV#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; P5-AUTONOMY level 3 boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P5-008",
+    "candidateId": "HC-2013-CURIOSITY-AUTONAV-UNKNOWN-GROUND",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P5-AUTONOMY",
+    "eventType": "OPERATIONAL_DEPLOYMENT",
+    "claimedLevel": 5,
+    "actor": "NASA and JPL",
+    "occurredOn": "2013-08-27",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "Curiosity first drove autonomously across terrain unseen by operators",
+    "rubricJustification": "Local path and hazard decisions within an Earth-selected route and activity plan, not independent mission planning.",
+    "evidenceRefs": [
+      "HC-2013-CURIOSITY-AUTONAV-UNKNOWN-GROUND#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; P5-AUTONOMY level 5 boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P5-009",
+    "candidateId": "HC-2020-OSIRIS-REX-AUTONOMOUS-TAG",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P5-AUTONOMY",
+    "eventType": "FLIGHT_TEST",
+    "claimedLevel": 3,
+    "actor": "NASA, University of Arizona, and Lockheed Martin",
+    "occurredOn": "2020-10-20",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "OSIRIS-REx autonomously executed its asteroid touch-and-go sequence",
+    "rubricJustification": "Autonomous execution of a carefully planned one-time sequence; sample quantity still required later Earth-based assessment.",
+    "evidenceRefs": [
+      "HC-2020-OSIRIS-REX-AUTONOMOUS-TAG#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; P5-AUTONOMY level 3 boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P5-010",
+    "candidateId": "HC-2021-PERSEVERANCE-AUTONAV",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P5-AUTONOMY",
+    "eventType": "OPERATIONAL_DEPLOYMENT",
+    "claimedLevel": 5,
+    "actor": "NASA and JPL",
+    "occurredOn": "2021-07-01",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "Perseverance began enhanced self-driving operations on Mars",
+    "rubricJustification": "Earth teams still selected destinations, strategic routes, and daily activities; AutoNav handled local driving rather than mission autonomy.",
+    "evidenceRefs": [
+      "HC-2021-PERSEVERANCE-AUTONAV#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; P5-AUTONOMY level 5 boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P5-011",
+    "candidateId": "HC-2021-INGENUITY-FIRST-AUTONOMOUS-FLIGHT",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P5-AUTONOMY",
+    "eventType": "FLIGHT_TEST",
+    "claimedLevel": 3,
+    "actor": "NASA and JPL",
+    "occurredOn": "2021-04-19",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "Ingenuity completed the first autonomous powered flight on another planet",
+    "rubricJustification": "A preplanned 39-second technology-demonstration flight, not autonomous cargo transport or persistent aerial operations.",
+    "evidenceRefs": [
+      "HC-2021-INGENUITY-FIRST-AUTONOMOUS-FLIGHT#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; P5-AUTONOMY level 3 boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P5-012",
+    "candidateId": "HC-2022-DART-SMART-NAV-IMPACT",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P5-AUTONOMY",
+    "eventType": "FLIGHT_TEST",
+    "claimedLevel": 3,
+    "actor": "NASA and Johns Hopkins APL",
+    "occurredOn": "2022-09-26",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "DART autonomously guided itself into asteroid Dimorphos",
+    "rubricJustification": "Single-use terminal targeting after Earth planning, not reusable autonomous navigation or infrastructure servicing.",
+    "evidenceRefs": [
+      "HC-2022-DART-SMART-NAV-IMPACT#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; P5-AUTONOMY level 3 boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P5-013",
+    "candidateId": "HC-2010-OPPORTUNITY-AEGIS-FIRST-TARGETS",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P5-AUTONOMY",
+    "eventType": "OPERATIONAL_DEPLOYMENT",
+    "claimedLevel": 5,
+    "actor": "NASA and JPL",
+    "occurredOn": "2010-01-01",
+    "occurredOnPrecision": "YEAR",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "Opportunity first used AEGIS for operational autonomous science targeting",
+    "rubricJustification": "Autonomous target selection within a commanded science activity, not independent mission objectives or physical resource operations.",
+    "evidenceRefs": [
+      "HC-2010-OPPORTUNITY-AEGIS-FIRST-TARGETS#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; P5-AUTONOMY level 5 boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P5-014",
+    "candidateId": "HC-2023-PERSEVERANCE-AEGIS-DEPLOYMENT",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P5-AUTONOMY",
+    "eventType": "OPERATIONAL_DEPLOYMENT",
+    "claimedLevel": 5,
+    "actor": "NASA and JPL",
+    "occurredOn": "2023-02-02",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "AEGIS expanded autonomous target selection on Perseverance",
+    "rubricJustification": "Expanded autonomous science selection within Earth-defined campaigns, not general autonomy over mission planning or resource use.",
+    "evidenceRefs": [
+      "HC-2023-PERSEVERANCE-AEGIS-DEPLOYMENT#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; P5-AUTONOMY level 5 boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P5-015",
+    "candidateId": "HC-2012-RRM-WIRE-CUTTING",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P5-MAINTENANCE",
+    "eventType": "FLIGHT_TEST",
+    "claimedLevel": 3,
+    "actor": "NASA and Canadian Space Agency",
+    "occurredOn": "2012-03-09",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "Ground-controlled robots cut and manipulated satellite-style wires in orbit",
+    "rubricJustification": "Remote teleoperation on a prepared ISS test board, not autonomous repair of a free-flying operational satellite.",
+    "evidenceRefs": [
+      "HC-2012-RRM-WIRE-CUTTING#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; P5-MAINTENANCE level 3 boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P5-016",
+    "candidateId": "HC-2016-RELL-ISS-LEAK-LOCATION",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P5-MAINTENANCE",
+    "eventType": "OPERATIONAL_DEPLOYMENT",
+    "claimedLevel": 3,
+    "actor": "NASA and ISS partners",
+    "occurredOn": "2016-12-01",
+    "occurredOnPrecision": "MONTH",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "A robot-mounted sensor located small ammonia leaks outside the ISS",
+    "rubricJustification": "Remote diagnostic localization only; the system did not autonomously isolate, seal, or repair the leaking hardware.",
+    "evidenceRefs": [
+      "HC-2016-RELL-ISS-LEAK-LOCATION#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; P5-MAINTENANCE level 3 boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P5-017",
+    "candidateId": "HC-2025-ISAAC-AUTONOMOUS-MULTIROBOT-SURVEY",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P5-MAINTENANCE",
+    "eventType": "FLIGHT_TEST",
+    "claimedLevel": 3,
+    "actor": "NASA",
+    "occurredOn": "2025-01-01",
+    "occurredOnPrecision": "YEAR",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "ISAAC demonstrated autonomous multi-robot interior surveying on the ISS",
+    "rubricJustification": "ISS analog survey and monitoring; it did not physically maintain a vehicle or prove long-duration uncrewed Gateway operations.",
+    "evidenceRefs": [
+      "HC-2025-ISAAC-AUTONOMOUS-MULTIROBOT-SURVEY#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; P5-MAINTENANCE level 3 boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P5-018",
+    "candidateId": "HC-2007-ORBITAL-EXPRESS-AUTONOMOUS-CAPTURE",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P5-MAINTENANCE",
+    "eventType": "FLIGHT_TEST",
+    "claimedLevel": 5,
+    "actor": "DARPA and industry partners",
+    "occurredOn": "2007-05-01",
+    "occurredOnPrecision": "MONTH",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "Orbital Express demonstrated fully autonomous rendezvous and capture",
+    "rubricJustification": "Purpose-built cooperative vehicles in a government demonstration, not open-ended servicing of arbitrary unprepared spacecraft.",
+    "evidenceRefs": [
+      "HC-2007-ORBITAL-EXPRESS-AUTONOMOUS-CAPTURE#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; P5-MAINTENANCE level 5 boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P5-019",
+    "candidateId": "HC-2007-ORBITAL-EXPRESS-SERVICING-TRANSFERS",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P5-MAINTENANCE",
+    "eventType": "FLIGHT_TEST",
+    "claimedLevel": 5,
+    "actor": "DARPA and industry partners",
+    "occurredOn": "2007-01-01",
+    "occurredOnPrecision": "YEAR",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "Orbital Express transferred propellant and replaceable modules in orbit",
+    "rubricJustification": "High-value in-orbit demonstration with compatible interfaces; it did not establish routine commercial servicing or settlement logistics.",
+    "evidenceRefs": [
+      "HC-2007-ORBITAL-EXPRESS-SERVICING-TRANSFERS#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; P5-MAINTENANCE level 5 boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P5-020",
+    "candidateId": "HC-2025-ISAAC-FAULT-LOGISTICS-DEMONSTRATIONS",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P5-OPS-INTEGRATION",
+    "eventType": "RETROSPECTIVE",
+    "claimedLevel": null,
+    "actor": "NASA",
+    "occurredOn": "2025-01-01",
+    "occurredOnPrecision": "YEAR",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "ISAAC exercised fault-response and logistics workflows with important simulation limits",
+    "rubricJustification": "The fault was synthetic, no ISS manipulator was available to clear it, and cargo transfer was software simulation rather than physical logistics.",
+    "evidenceRefs": [
+      "HC-2025-ISAAC-FAULT-LOGISTICS-DEMONSTRATIONS#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; non-progress classification and rubric boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P6-001",
+    "candidateId": "HC-1984-COMMERCIAL-SPACE-LAUNCH-ACT",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P6-LAUNCH-MARKET",
+    "eventType": "INSTITUTIONAL_ADVANCE",
+    "claimedLevel": 3,
+    "actor": "United States government",
+    "occurredOn": "1984-01-01",
+    "occurredOnPrecision": "YEAR",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "U.S. law established a federal framework for commercial launch licensing",
+    "rubricJustification": "National regulatory foundation for launch services, not evidence of a mature market, low prices, or settlement-specific logistics.",
+    "evidenceRefs": [
+      "HC-1984-COMMERCIAL-SPACE-LAUNCH-ACT#FAA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; P6-LAUNCH-MARKET level 3 boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P6-002",
+    "candidateId": "HC-1989-FIRST-FAA-LICENSED-LAUNCH",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P6-LAUNCH-MARKET",
+    "eventType": "COMMERCIALIZATION",
+    "claimedLevel": 3,
+    "actor": "U.S. commercial launch operator and FAA",
+    "occurredOn": "1989-01-01",
+    "occurredOnPrecision": "YEAR",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "The first FAA-licensed commercial space launch took place",
+    "rubricJustification": "Single licensed launch milestone, not sustained cadence, competition, affordability, or off-Earth supply-chain maturity.",
+    "evidenceRefs": [
+      "HC-1989-FIRST-FAA-LICENSED-LAUNCH#FAA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; P6-LAUNCH-MARKET level 3 boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P6-003",
+    "candidateId": "HC-2012-FIRST-CONTRACTED-CRS-MISSION",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P6-LAUNCH-MARKET",
+    "eventType": "COMMERCIALIZATION",
+    "claimedLevel": 3,
+    "actor": "SpaceX and NASA",
+    "occurredOn": "2012-10-28",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "The first contracted commercial resupply mission returned ISS cargo",
+    "rubricJustification": "Operational contracted service to one government-supported orbital destination, not a broad independent logistics market.",
+    "evidenceRefs": [
+      "HC-2012-FIRST-CONTRACTED-CRS-MISSION#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; P6-LAUNCH-MARKET level 3 boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P6-004",
+    "candidateId": "HC-2024-FAA-148-LICENSED-OPERATIONS",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P6-LAUNCH-MARKET",
+    "eventType": "COMMERCIALIZATION",
+    "claimedLevel": 3,
+    "actor": "FAA and licensed U.S. operators",
+    "occurredOn": "2024-11-14",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "FAA commercial space operations reached a new annual record",
+    "rubricJustification": "Aggregate launches and reentries across many missions; the count does not measure settlement logistics, prices, profitability, or provider diversity.",
+    "evidenceRefs": [
+      "HC-2024-FAA-148-LICENSED-OPERATIONS#FAA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; P6-LAUNCH-MARKET level 3 boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P6-005",
+    "candidateId": "HC-2008-FIRST-CRS-CONTRACT-AWARDS",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P6-LAUNCH-MARKET",
+    "eventType": "INSTITUTIONAL_ADVANCE",
+    "claimedLevel": 3,
+    "actor": "NASA, SpaceX, and Orbital Sciences",
+    "occurredOn": "2008-12-23",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "NASA placed its first station resupply service contracts with two providers",
+    "rubricJustification": "Contract awards created demand and provider diversity but do not demonstrate that either service had performed successfully.",
+    "evidenceRefs": [
+      "HC-2008-FIRST-CRS-CONTRACT-AWARDS#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; P6-LAUNCH-MARKET level 3 boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P6-006",
+    "candidateId": "HC-2014-FIRST-OPERATIONAL-CYGNUS-RESUPPLY",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P6-LAUNCH-MARKET",
+    "eventType": "COMMERCIALIZATION",
+    "claimedLevel": 3,
+    "actor": "Orbital Sciences and NASA",
+    "occurredOn": "2014-01-12",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "A second commercial provider began operational station cargo delivery",
+    "rubricJustification": "Operational service by a second provider to one government-supported station; it does not establish broad-market demand or off-Earth production.",
+    "evidenceRefs": [
+      "HC-2014-FIRST-OPERATIONAL-CYGNUS-RESUPPLY#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; P6-LAUNCH-MARKET level 3 boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P6-007",
+    "candidateId": "HC-1967-OUTER-SPACE-TREATY-IN-FORCE",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P6-GOV-FRAMEWORK",
+    "eventType": "INSTITUTIONAL_ADVANCE",
+    "claimedLevel": 5,
+    "actor": "States parties to the treaty",
+    "occurredOn": "1967-10-10",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "The Outer Space Treaty entered into force",
+    "rubricJustification": "Binding only for its parties and framed around state obligations; it does not supply a complete commercial settlement code.",
+    "evidenceRefs": [
+      "HC-1967-OUTER-SPACE-TREATY-IN-FORCE#UNOOSA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; P6-GOV-FRAMEWORK level 5 boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P6-008",
+    "candidateId": "HC-1972-LIABILITY-CONVENTION-IN-FORCE",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P6-GOV-FRAMEWORK",
+    "eventType": "INSTITUTIONAL_ADVANCE",
+    "claimedLevel": 5,
+    "actor": "States parties to the convention",
+    "occurredOn": "1972-09-01",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "The Space Liability Convention entered into force",
+    "rubricJustification": "State-centered international liability rules, not comprehensive private insurance coverage or adjudication for settlement commerce.",
+    "evidenceRefs": [
+      "HC-1972-LIABILITY-CONVENTION-IN-FORCE#UNOOSA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; P6-GOV-FRAMEWORK level 5 boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P6-009",
+    "candidateId": "HC-2015-US-COMMERCIAL-SPACE-RESOURCE-LAW",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P6-GOV-FRAMEWORK",
+    "eventType": "INSTITUTIONAL_ADVANCE",
+    "claimedLevel": 5,
+    "actor": "United States government",
+    "occurredOn": "2015-11-25",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "A U.S. commercial space law established national resource-utilization rights",
+    "rubricJustification": "U.S. national law applying within its jurisdiction; it is not a multilateral settlement or universally recognized property regime.",
+    "evidenceRefs": [
+      "HC-2015-US-COMMERCIAL-SPACE-RESOURCE-LAW#GOVINFO"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; P6-GOV-FRAMEWORK level 5 boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P6-010",
+    "candidateId": "HC-2017-LUXEMBOURG-SPACE-RESOURCES-LAW",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P6-GOV-FRAMEWORK",
+    "eventType": "INSTITUTIONAL_ADVANCE",
+    "claimedLevel": 5,
+    "actor": "Government of Luxembourg",
+    "occurredOn": "2017-08-01",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "Luxembourg's national space-resources law entered into force",
+    "rubricJustification": "National framework under Luxembourg jurisdiction, not an international resolution of celestial-resource rights.",
+    "evidenceRefs": [
+      "HC-2017-LUXEMBOURG-SPACE-RESOURCES-LAW#LSA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; P6-GOV-FRAMEWORK level 5 boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P6-011",
+    "candidateId": "HC-2019-COPUOS-LTS-GUIDELINES",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P6-GOV-FRAMEWORK",
+    "eventType": "INSTITUTIONAL_ADVANCE",
+    "claimedLevel": 3,
+    "actor": "United Nations COPUOS",
+    "occurredOn": "2019-06-01",
+    "occurredOnPrecision": "MONTH",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "COPUOS adopted long-term sustainability guidelines for outer space activities",
+    "rubricJustification": "Voluntary nonbinding guidance; adoption does not prove implementation, enforcement, or a settlement governance authority.",
+    "evidenceRefs": [
+      "HC-2019-COPUOS-LTS-GUIDELINES#UNOOSA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; P6-GOV-FRAMEWORK level 3 boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P6-012",
+    "candidateId": "HC-1998-ISS-INTERGOVERNMENTAL-FRAMEWORK",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P6-GOV-FRAMEWORK",
+    "eventType": "INSTITUTIONAL_ADVANCE",
+    "claimedLevel": 5,
+    "actor": "Fifteen International Space Station partner nations",
+    "occurredOn": "1998-01-29",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "Fifteen nations established a cooperative legal framework for the ISS",
+    "rubricJustification": "A durable governance framework for one orbital station, not sovereignty over territory, settlement law, or proof of an independent commercial economy.",
+    "evidenceRefs": [
+      "HC-1998-ISS-INTERGOVERNMENTAL-FRAMEWORK#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; P6-GOV-FRAMEWORK level 5 boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P6-013",
+    "candidateId": "HC-2006-COTS-SPACEX-AGREEMENT",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P6-FUNDING",
+    "eventType": "INSTITUTIONAL_ADVANCE",
+    "claimedLevel": 3,
+    "actor": "NASA and SpaceX",
+    "occurredOn": "2006-01-01",
+    "occurredOnPrecision": "YEAR",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "NASA began a funded commercial cargo demonstration partnership with SpaceX",
+    "rubricJustification": "Development agreement and milestone funding, not completed service, realized revenue, or a competitive settlement logistics market.",
+    "evidenceRefs": [
+      "HC-2006-COTS-SPACEX-AGREEMENT#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; P6-FUNDING level 3 boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P6-014",
+    "candidateId": "HC-2008-COTS-ORBITAL-AGREEMENT",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P6-FUNDING",
+    "eventType": "INSTITUTIONAL_ADVANCE",
+    "claimedLevel": 3,
+    "actor": "NASA and Orbital Sciences",
+    "occurredOn": "2008-02-19",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "NASA added a second funded commercial cargo development partner",
+    "rubricJustification": "Added development competition, but agreement value and plans did not prove operational delivery or market demand.",
+    "evidenceRefs": [
+      "HC-2008-COTS-ORBITAL-AGREEMENT#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; P6-FUNDING level 3 boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P6-015",
+    "candidateId": "HC-2021-COMMERCIAL-DESTINATION-DESIGN-AWARDS",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P6-FUNDING",
+    "eventType": "INSTITUTIONAL_ADVANCE",
+    "claimedLevel": 3,
+    "actor": "NASA and three industry teams",
+    "occurredOn": "2021-12-02",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "NASA awarded three commercial low-Earth orbit destination design agreements",
+    "rubricJustification": "Design and business-plan awards, not construction, launch, certification, occupancy, or realized private revenue.",
+    "evidenceRefs": [
+      "HC-2021-COMMERCIAL-DESTINATION-DESIGN-AWARDS#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; P6-FUNDING level 3 boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P6-016",
+    "candidateId": "HC-2024-VIPER-DEVELOPMENT-DISCONTINUED",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P6-FUNDING",
+    "eventType": "PROGRAM_CANCELLATION",
+    "claimedLevel": null,
+    "actor": "NASA",
+    "occurredOn": "2024-07-17",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "NASA stopped development of the assembled VIPER lunar rover",
+    "rubricJustification": "Negative program evidence despite assembled hardware; it must not be treated as a lunar prospecting flight or operational resource survey.",
+    "evidenceRefs": [
+      "HC-2024-VIPER-DEVELOPMENT-DISCONTINUED#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; non-progress classification and rubric boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P6-017",
+    "candidateId": "HC-1988-CSLA-LIABILITY-RISK-SHARING",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P6-INSURANCE-STD",
+    "eventType": "INSTITUTIONAL_ADVANCE",
+    "claimedLevel": 3,
+    "actor": "United States government and FAA",
+    "occurredOn": "1988-01-01",
+    "occurredOnPrecision": "YEAR",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "U.S. launch law added insurance and government risk-sharing provisions",
+    "rubricJustification": "Launch-specific U.S. liability framework with statutory conditions and limits, not general insurance for off-Earth property or inhabitants.",
+    "evidenceRefs": [
+      "HC-1988-CSLA-LIABILITY-RISK-SHARING#FAA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; P6-INSURANCE-STD level 3 boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P6-018",
+    "candidateId": "HC-2010-INTERNATIONAL-DOCKING-STANDARD",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P6-INSURANCE-STD",
+    "eventType": "INSTITUTIONAL_ADVANCE",
+    "claimedLevel": 3,
+    "actor": "International Space Station partner agencies",
+    "occurredOn": "2010-10-19",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "Space station partners released an international docking interface standard",
+    "rubricJustification": "Published interface definition; it did not by itself certify vehicles, require adoption, or create operating docking capacity.",
+    "evidenceRefs": [
+      "HC-2010-INTERNATIONAL-DOCKING-STANDARD#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; P6-INSURANCE-STD level 3 boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P6-019",
+    "candidateId": "HC-2022-LUNANET-INTEROPERABILITY-SPEC-V4",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P6-INSURANCE-STD",
+    "eventType": "INSTITUTIONAL_ADVANCE",
+    "claimedLevel": 3,
+    "actor": "NASA and international contributors",
+    "occurredOn": "2022-09-12",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "NASA released LunaNet interoperability specification version four",
+    "rubricJustification": "Architecture and interoperability specification, not an operational multi-provider lunar network or demonstrated service-level performance.",
+    "evidenceRefs": [
+      "HC-2022-LUNANET-INTEROPERABILITY-SPEC-V4#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; P6-INSURANCE-STD level 3 boundary checked separately in this mapping pass."
+    }
+  },
+  {
+    "backfillId": "BF-P6-020",
+    "candidateId": "HC-2020-COMMERCIAL-HUMAN-SYSTEM-CERTIFICATION",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P6-INSURANCE-STD",
+    "eventType": "INSTITUTIONAL_ADVANCE",
+    "claimedLevel": 3,
+    "actor": "NASA and SpaceX",
+    "occurredOn": "2020-11-10",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "NASA certified its first commercial human spaceflight transportation system",
+    "rubricJustification": "Certification for a specific Earth-to-ISS service, not generalized deep-space transport or an independent settlement passenger market.",
+    "evidenceRefs": [
+      "HC-2020-COMMERCIAL-HUMAN-SYSTEM-CERTIFICATION#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fact metadata checked; P6-INSURANCE-STD level 3 boundary checked separately in this mapping pass."
+    }
+  }
+]
