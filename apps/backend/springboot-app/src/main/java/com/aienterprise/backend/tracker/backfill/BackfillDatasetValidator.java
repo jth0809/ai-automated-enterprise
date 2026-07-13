@@ -31,6 +31,7 @@ public final class BackfillDatasetValidator {
     private static final ObjectMapper JSON = new ObjectMapper();
     private static final String NODE_SET_VERSION = "nodes-v1.0";
     private static final String RUBRIC_VERSION = "r2.0";
+    private static final int PRODUCTION_CANDIDATE_COUNT = 212;
     private static final Pattern BACKFILL_ID = Pattern.compile("BF-[A-Z0-9-]{1,77}");
     private static final Set<String> DATE_PRECISIONS = Set.of("DAY", "MONTH", "YEAR");
     private static final Set<String> EVENT_TYPES = Set.of(
@@ -92,11 +93,13 @@ public final class BackfillDatasetValidator {
         CorpusReport corpusReport = new HistoricalCorpusValidator().validate(candidatesResource);
         corpusReport.errors().forEach(error -> errors.add("candidates: " + error));
         if (enforceProductionCardinality) {
-            if (corpusReport.totalCount() != 210) {
-                errors.add("candidates: production corpus must contain exactly 210 candidates");
+            if (corpusReport.totalCount() != PRODUCTION_CANDIDATE_COUNT) {
+                errors.add("candidates: production corpus must contain exactly "
+                        + PRODUCTION_CANDIDATE_COUNT + " candidates");
             }
-            if (corpusReport.readyCount() != 210) {
-                errors.add("candidates: production corpus must contain exactly 210 READY candidates");
+            if (corpusReport.readyCount() != PRODUCTION_CANDIDATE_COUNT) {
+                errors.add("candidates: production corpus must contain exactly "
+                        + PRODUCTION_CANDIDATE_COUNT + " READY candidates");
             }
             if (corpusReport.rejectedCount() != 0) {
                 errors.add("candidates: production corpus must contain zero REJECTED candidates");

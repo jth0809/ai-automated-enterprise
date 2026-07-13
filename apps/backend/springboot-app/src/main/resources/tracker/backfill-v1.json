@@ -3197,6 +3197,144 @@
     }
   },
   {
+    "backfillId": "BF-P1-027",
+    "candidateId": "HC-1981-STS2-ORBITER-REFLIGHT",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P1-REUSE-LV",
+    "eventType": "FLIGHT_TEST",
+    "claimedLevel": 5,
+    "actor": "NASA",
+    "occurredOn": "1981-11-12",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "Columbia completed a second orbital mission",
+    "rubricJustification": "Orbiter reflight demonstrates partial-stack reuse in flight and remains capped at L5 because the launch architecture was not fully reusable.",
+    "evidenceRefs": [
+      "HC-1981-STS2-ORBITER-REFLIGHT#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Second orbiter flight supports capped partial-reuse credit only."
+    }
+  },
+  {
+    "backfillId": "BF-P1-028",
+    "candidateId": "HC-2007-ORBITAL-EXPRESS-SERVICING-TRANSFERS",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P1-ORBIT-REFUEL",
+    "eventType": "FLIGHT_TEST",
+    "claimedLevel": 7,
+    "actor": "DARPA and industry partners",
+    "occurredOn": "2007-01-01",
+    "occurredOnPrecision": "YEAR",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "Orbital Express transferred propellant and replaceable modules in orbit",
+    "rubricJustification": "Autonomous in-orbit fluid transfer exceeded a relevant-environment prototype but did not establish operational mission refueling or recurring service.",
+    "evidenceRefs": [
+      "HC-2007-ORBITAL-EXPRESS-SERVICING-TRANSFERS#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Fluid-transfer loop supports L7 without routine-service credit."
+    }
+  },
+  {
+    "backfillId": "BF-P1-029",
+    "candidateId": "HC-2012-DRAGON-ISS-CARGO-BERTHING",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P1-ORBIT-LOGISTICS",
+    "eventType": "FLIGHT_TEST",
+    "claimedLevel": 7,
+    "actor": "NASA and SpaceX",
+    "occurredOn": "2012-05-25",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "Dragon completed the first commercial cargo berthing at the ISS",
+    "rubricJustification": "The demonstration completed orbital cargo rendezvous, berthing, and station handoff but preceded routine operational service.",
+    "evidenceRefs": [
+      "HC-2012-DRAGON-ISS-CARGO-BERTHING#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Cargo handoff supports L7 demonstration credit."
+    }
+  },
+  {
+    "backfillId": "BF-P1-030",
+    "candidateId": "HC-2014-FIRST-OPERATIONAL-CYGNUS-RESUPPLY",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P1-ORBIT-LOGISTICS",
+    "eventType": "OPERATIONAL_DEPLOYMENT",
+    "claimedLevel": 8,
+    "actor": "Orbital Sciences and NASA",
+    "occurredOn": "2014-01-12",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "A second commercial provider began operational station cargo delivery",
+    "rubricJustification": "An operational resupply mission completed accountable cargo delivery and later waste handoff through an established station interface.",
+    "evidenceRefs": [
+      "HC-2014-FIRST-OPERATIONAL-CYGNUS-RESUPPLY#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Operational cargo delivery satisfies the L8 logistics anchor."
+    }
+  },
+  {
+    "backfillId": "BF-P1-031",
+    "candidateId": "HC-2008-JULES-VERNE-ISS-REFUEL",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P1-ORBIT-REFUEL",
+    "eventType": "OPERATIONAL_DEPLOYMENT",
+    "claimedLevel": 8,
+    "actor": "ESA",
+    "occurredOn": "2008-06-17",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "Jules Verne transferred mission propellant to the ISS",
+    "rubricJustification": "Automatic transfer of 811 kilograms into the ISS propulsion system satisfies operational refueling at useful quantity without proving routine multi-client service.",
+    "evidenceRefs": [
+      "HC-2008-JULES-VERNE-ISS-REFUEL#ESA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Useful-quantity operational transfer supports L8, not L9."
+    }
+  },
+  {
+    "backfillId": "BF-P1-032",
+    "candidateId": "HC-1972-APOLLO17-FINAL-LUNAR-MISSION",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P1-SURFACE-ASCENT",
+    "eventType": "PROGRAM_CANCELLATION",
+    "claimedLevel": null,
+    "actor": "NASA",
+    "occurredOn": "1972-12-19",
+    "occurredOnPrecision": "DAY",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "Apollo 17 completed the final Apollo lunar landing mission",
+    "rubricJustification": "The final Apollo lunar landing mission is the supported program-end transition for the demonstrated lunar surface-ascent line; it preserves L8 and starts dormancy.",
+    "evidenceRefs": [
+      "HC-1972-APOLLO17-FINAL-LUNAR-MISSION#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Program completion records lifecycle end without reducing the demonstrated level."
+    }
+  },
+  {
     "backfillId": "BF-P2-021",
     "candidateId": "HC-2000-ISS-PERMANENT-OCCUPANCY",
     "nodeSetVersion": "nodes-v1.0",

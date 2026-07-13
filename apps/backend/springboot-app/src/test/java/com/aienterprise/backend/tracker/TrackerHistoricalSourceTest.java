@@ -24,6 +24,8 @@ class TrackerHistoricalSourceTest {
 
     private static final ObjectMapper JSON = new ObjectMapper();
     private static final Set<String> HISTORICAL_ONLY = Set.of("FAA", "UNOOSA", "GOVINFO", "LSA");
+    private static final Set<String> CATALOG_CODES =
+            Set.of("NASA", "ESA", "FAA", "UNOOSA", "GOVINFO", "LSA");
 
     @Autowired
     private JdbcClient jdbc;
@@ -35,7 +37,7 @@ class TrackerHistoricalSourceTest {
         jdbc.sql("""
                 SELECT code, source_type, tier, site_domain, feed_active
                   FROM source_registry
-                 WHERE code IN ('NASA','FAA','UNOOSA','GOVINFO','LSA')
+                 WHERE code IN ('NASA','ESA','FAA','UNOOSA','GOVINFO','LSA')
                 """)
                 .query((rs, rowNum) -> new CatalogSource(
                         rs.getString("code"),
@@ -91,7 +93,7 @@ class TrackerHistoricalSourceTest {
                     source.path("domain").asText(),
                     source.path("feedActive").asBoolean()));
         }
-        assertEquals(Set.of("NASA", "FAA", "UNOOSA", "GOVINFO", "LSA"), result.keySet());
+        assertEquals(CATALOG_CODES, result.keySet());
         assertTrue(result.keySet().containsAll(HISTORICAL_ONLY));
         return result;
     }

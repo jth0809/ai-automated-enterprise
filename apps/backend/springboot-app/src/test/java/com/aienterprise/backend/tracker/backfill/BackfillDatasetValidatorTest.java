@@ -28,8 +28,8 @@ class BackfillDatasetValidatorTest {
                 new ClassPathResource("tracker/historical-candidates-v1.jsonl"),
                 new ClassPathResource("tracker/backfill-v1.json"));
 
-        assertEquals(140, result.claims().size());
-        assertEquals(136, result.candidates().size());
+        assertEquals(146, result.claims().size());
+        assertEquals(140, result.candidates().size());
         assertTrue(result.errors().isEmpty(), () -> String.join("\n", result.errors()));
     }
 
@@ -41,8 +41,8 @@ class BackfillDatasetValidatorTest {
         ValidatedBackfill result = new BackfillDatasetValidator(true)
                 .validate(candidates(candidate), mappings(mapping));
 
-        assertHasError(result, "production corpus must contain exactly 210 candidates");
-        assertHasError(result, "production corpus must contain exactly 210 READY candidates");
+        assertHasError(result, "production corpus must contain exactly 212 candidates");
+        assertHasError(result, "production corpus must contain exactly 212 READY candidates");
         assertHasError(result, "production mapping must contain 110-150 claims");
     }
 

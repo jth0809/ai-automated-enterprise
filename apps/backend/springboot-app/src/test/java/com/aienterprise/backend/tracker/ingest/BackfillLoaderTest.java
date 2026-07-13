@@ -21,6 +21,8 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.test.context.ActiveProfiles;
 
 import com.aienterprise.backend.tracker.domain.TrackerRepository;
+import com.aienterprise.backend.tracker.math.Params;
+import com.aienterprise.backend.tracker.math.Readiness;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -110,6 +112,50 @@ class BackfillLoaderTest {
             assertTrue(pillarOne.get(i) >= pillarOne.get(i - 1),
                     "pillar 1 readiness regressed at index " + i);
         }
+    }
+
+    @Test
+    void productionP1AuditReplaysApprovedLevelsDormancyAndReadiness() {
+        BackfillLoader production = loader(
+                new ClassPathResource("tracker/historical-candidates-v1.jsonl"),
+                new ClassPathResource("tracker/backfill-v1.json"),
+                "backfill-v1");
+
+        production.loadDatasetIfNeeded();
+
+        assertNodeState("P1-REUSE-LV", 5, "ACTIVE");
+        assertNodeState("P1-ORBIT-REFUEL", 8, "ACTIVE");
+        assertNodeState("P1-DEEP-PROP", 5, "DORMANT");
+        assertNodeState("P1-EDL-HEAVY", 5, "ACTIVE");
+        assertNodeState("P1-SURFACE-ASCENT", 8, "DORMANT");
+        assertNodeState("P1-CREW-SAFE", 8, "ACTIVE");
+        assertNodeState("P1-ORBIT-LOGISTICS", 8, "ACTIVE");
+        assertNodeState("P1-TRANSPORT-INTEGRATION", 3, "ACTIVE");
+
+        var surfaceAscent = repository.findNodeByCode("P1-SURFACE-ASCENT");
+        assertEquals(LocalDate.of(1972, 12, 19), surfaceAscent.programEndDate());
+        assertEquals(LocalDate.of(1987, 12, 19), surfaceAscent.dormantSince());
+
+        var p1Nodes = repository.findAllNodes().stream()
+                .filter(node -> node.pillar() == 1)
+                .toList();
+        assertEquals(0.4624,
+                Readiness.pillarReadiness(p1Nodes, Params.defaults()), 1e-9);
+        assertEquals(146, jdbc.sql("SELECT COUNT(*) FROM historical_evidence")
+                .query(Integer.class).single());
+        assertEquals(146, jdbc.sql("""
+                SELECT record_count FROM backfill_import
+                 WHERE dataset_version = 'backfill-v1'
+                """).query(Integer.class).single());
+
+        production.loadDatasetIfNeeded();
+
+        assertEquals(146, jdbc.sql("SELECT COUNT(*) FROM historical_evidence")
+                .query(Integer.class).single());
+        assertEquals(1, jdbc.sql("""
+                SELECT COUNT(*) FROM backfill_import
+                 WHERE dataset_version = 'backfill-v1'
+                """).query(Integer.class).single());
     }
 
     @Test
@@ -290,6 +336,12 @@ class BackfillLoaderTest {
                 .query(Integer.class).single());
         assertEquals(0, jdbc.sql("SELECT COUNT(*) FROM pillar_snapshot")
                 .query(Integer.class).single());
+    }
+
+    private void assertNodeState(String code, int level, String status) {
+        var node = repository.findNodeByCode(code);
+        assertEquals(level, node.currentLevel(), code);
+        assertEquals(status, node.nodeStatus(), code);
     }
 
     private BackfillLoader loader(Resource candidates, Resource mappings, String version) {
