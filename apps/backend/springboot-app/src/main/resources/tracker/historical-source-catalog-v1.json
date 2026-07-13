@@ -14,5 +14,29 @@
     "sourceType": "AGENCY",
     "tier": 1,
     "feedActive": false
+  },
+  {
+    "sourceCode": "UNOOSA",
+    "name": "United Nations Office for Outer Space Affairs",
+    "domain": "unoosa.org",
+    "sourceType": "AGENCY",
+    "tier": 1,
+    "feedActive": false
+  },
+  {
+    "sourceCode": "GOVINFO",
+    "name": "United States Government Publishing Office GovInfo",
+    "domain": "govinfo.gov",
+    "sourceType": "AGENCY",
+    "tier": 1,
+    "feedActive": false
+  },
+  {
+    "sourceCode": "LSA",
+    "name": "Luxembourg Space Agency",
+    "domain": "public.lu",
+    "sourceType": "AGENCY",
+    "tier": 1,
+    "feedActive": false
   }
 ]

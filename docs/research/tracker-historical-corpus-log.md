@@ -1,6 +1,6 @@
 # Tracker Historical Corpus Research Log
 
-Status: Pillars 1–5 complete; 160 candidates ready for mapping.
+Status: Pillars 1–6 complete; 190 candidates ready for mapping.
 
 This log tracks discovery queries, opened sources, source decisions, rejection
 reasons, and corpus counts. It never stores source titles, quotations, excerpts,
@@ -15,11 +15,14 @@ article bodies, HTML, PDF, images, or other source content.
 | P3 habitat and infrastructure | 25–35 | 30 |
 | P4 resources and energy | 25–35 | 30 |
 | P5 robotics and autonomy | 25–35 | 30 |
-| P6 economics and governance | 40–60 | 0 |
-| **Total discovery corpus** | **180–250** | **160** |
+| P6 economics and governance | 40–60 | 30 |
+| **Total discovery corpus** | **180–250** | **190** |
 
 The pillar figures are topic-family discovery targets, not node assignments.
 One candidate may carry multiple topic tags but contributes once to the total.
+P6 retained 30 high-confidence candidates rather than filling its initial 40–60
+allocation with weak or duplicative evidence; the required total corpus target is
+met at 190 and the mapping review can reject or request focused follow-up research.
 
 ## Research policy
 
@@ -56,6 +59,9 @@ One candidate may carry multiple topic tags but contributes once to the total.
 | P5-01 | P5 robotics and autonomy | Onboard navigation, autonomous planning, planetary mobility, and terminal guidance | 16 | 10 | 0 | Six JPL pages returned 403 and one NTRS PDF exceeded 5 MiB; equivalent NASA/NTRS HTML records were used without bypass. Local autonomy remains distinct from Earth-selected goals. |
 | P5-02 | P5 robotics and autonomy | Remote robotic servicing, free-flying assistants, and autonomous spacecraft caretaking | 8 | 10 | 0 | Ground teleoperation, diagnostics, concurrent robots, simulations, and onboard autonomous inspection are explicitly separated from physical autonomous repair. |
 | P5-03 | P5 robotics and autonomy | Autonomous rendezvous, science targeting, cooperative robots, excavation simulation, and navigation beacons | 10 | 10 | 0 | One JPL CADRE page returned 403 and was replaced by NASA Robotics; ground, simulation, sensor, and off-Earth results retain separate boundaries. |
+| P6-01 | P6 economics and governance | Commercial launch licensing, cargo and crew contracts, certification, and licensed cadence | 8 | 10 | 0 | Laws, development agreements, demonstrations, recurring services, contract ceilings, certification, and aggregate operation counts remain distinct. |
+| P6-02 | P6 economics and governance | Multilateral treaties, national resource laws, sustainability guidance, and Artemis cooperation | 7 | 10 | 0 | Congress.gov returned 403 and was replaced by GovInfo; binding scope, national jurisdiction, voluntary guidance, and nonbinding accords are explicit. |
+| P6-03 | P6 economics and governance | Launch risk sharing, interoperability standards, commercial destination funding, pricing, and lunar delivery | 10 | 10 | 0 | Both PDFs remained below 1.3 MiB; plans, prices, awards, standards, and one-off missions are not treated as operational markets. |
 
 ## Source decisions
 
@@ -69,6 +75,10 @@ One candidate may carry multiple topic tags but contributes once to the total.
 | NASA-JPL-WEB | NASA laboratory web page | Excluded from batch | Browser review succeeded but the transient fingerprint request returned HTTP 403; an equivalent NASA release was used without access-control bypass. |
 | NASA-DATED-BLOG | Retired dated NASA blog URL | Excluded from batch | The URL redirected to a generic blog archive that no longer contained the reviewed event record; a stable NASA mission article was used. |
 | NASA-NTRS-PDF | NASA-hosted technical report | Excluded from batch | The Deep Impact autonomy report exceeded the 5 MiB transient fingerprint limit; a smaller NTRS abstract that directly states the event was used. |
+| UNOOSA | United Nations space-law secretariat | Accepted, Tier 1 agency | Official treaty status and sustainability-guideline records directly establish dates, scope, and legal character. |
+| GOVINFO | U.S. Government Publishing Office | Accepted, Tier 1 agency | Official public-law metadata replaced a Congress.gov page that rejected the fingerprint client. |
+| LSA | Luxembourg Space Agency | Accepted, Tier 1 agency | Official national legal-framework guidance records the space-resources law and its effective date. |
+| CONGRESS-WEB | U.S. Congress bill page | Excluded from batch | The transient fingerprint request returned HTTP 403; GovInfo supplied equivalent official public-law metadata without access-control bypass. |
 
 ## Rejection summary
 
@@ -123,3 +133,10 @@ One candidate may carry multiple topic tags but contributes once to the total.
 | 2026-07-13 | P5 batch 3 source review and transient fingerprinting | 10 candidates, 9 accepted URLs, one 403 page replaced, no source bytes retained |
 | 2026-07-13 | P5 batch 3 final fact review | Ground/flight, sensor/control, targeting/mission planning, and simulation/operation boundaries confirmed |
 | 2026-07-13 | P5 completion corpus validation | 42/42 focused tests; 160 READY records, 0 rejected, 0 errors |
+| 2026-07-13 | P6 batch 1 source review and transient fingerprinting | 10 candidates, 8 accepted URLs, each response below 0.3 MiB, no source bytes retained |
+| 2026-07-13 | P6 batch 1 final fact review | Law/agreement, demo/service, ceiling/revenue, certification/market, and cadence/settlement boundaries confirmed |
+| 2026-07-13 | P6 batch 2 source review and transient fingerprinting | 10 candidates, 6 accepted URLs, one 403 page replaced, no source bytes retained |
+| 2026-07-13 | P6 batch 2 final fact review | Treaty-party, national-jurisdiction, voluntary-guideline, and nonbinding-accord boundaries confirmed |
+| 2026-07-13 | P6 batch 3 source review and transient fingerprinting | 10 candidates, 10 accepted URLs, largest response 1.3 MiB, no source bytes retained |
+| 2026-07-13 | P6 batch 3 final fact review | Insurance scope, standards/adoption, policy/demand, award/operation, and mission/ecosystem boundaries confirmed |
+| 2026-07-13 | P6 completion corpus validation | 42/42 focused tests; 190 READY records, 0 rejected, 0 errors; 180–250 target met |
