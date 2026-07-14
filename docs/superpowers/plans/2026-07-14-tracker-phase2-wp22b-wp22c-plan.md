@@ -4,13 +4,13 @@
 >
 > 승인 설계: [2026-07-14-tracker-phase2-design.md](../specs/2026-07-14-tracker-phase2-design.md)
 >
-> 상태: 실행 대기
+> 상태: 실행 중 — Task 1~5 완료, Task 6 진행 대기
 
 > **For agentic workers:** REQUIRED SUB-SKILL: superpowers:executing-plans로 아래 작업을 순서대로 실행한다. 사용자가 서브에이전트 사용을 금지했으므로 subagent-driven-development는 사용하지 않는다. 버그나 예상 밖 실패가 나오면 systematic-debugging을 먼저 적용한다.
 
 **Goal:** P2~P6 27개 노드를 공식 1차 근거로 감사하고, 35개 전체 노드의 감사 coverage를 확정한 뒤 1957년부터 현재까지 연속 주간 스냅샷을 재현한다.
 
-**Architecture:** 기존 참조형 JSONL/JSON 코퍼스와 BackfillLoader를 유지한다. 청구 수 목표를 제거하고 저장 안전 상한·35개 노드 coverage·프로그램 종료 의미를 validator에 넣는다. 역사 상태 재생은 WeeklyBackfillProjector로 분리해 UTC 월요일 스냅샷을 멱등 생성한다.
+**Architecture:** 기존 참조형 JSONL/JSON 코퍼스와 BackfillLoader를 유지한다. 청구 수 목표를 제거하고 저장 안전 상한·프로그램 종료 의미는 `BackfillDatasetValidator`에, 35개 노드 coverage와 청구·증거·재생 일치는 별도 `BackfillAuditValidator`에 둔다. 역사 상태 재생은 WeeklyBackfillProjector로 분리해 UTC 월요일 스냅샷을 멱등 생성한다.
 
 **Tech Stack:** Java 21, Spring Boot 4.1, JUnit 5, JdbcClient, Flyway, H2 Oracle mode, Jackson, JSON/JSONL, PowerShell, Git.
 
@@ -45,7 +45,13 @@
 ### 신규
 
 - apps/backend/springboot-app/src/main/java/com/aienterprise/backend/tracker/backfill/ProgramEndEffect.java
+- apps/backend/springboot-app/src/main/java/com/aienterprise/backend/tracker/backfill/BackfillAuditValidator.java
+- apps/backend/springboot-app/src/main/java/com/aienterprise/backend/tracker/backfill/NodeAuditApproval.java
+- apps/backend/springboot-app/src/main/java/com/aienterprise/backend/tracker/backfill/NodeAuditEntry.java
+- apps/backend/springboot-app/src/main/java/com/aienterprise/backend/tracker/backfill/ValidatedNodeAudit.java
 - apps/backend/springboot-app/src/main/java/com/aienterprise/backend/tracker/backfill/WeeklyBackfillProjector.java
+- apps/backend/springboot-app/src/main/resources/tracker/backfill-audit-v1.json
+- apps/backend/springboot-app/src/test/java/com/aienterprise/backend/tracker/backfill/BackfillAuditValidatorTest.java
 - apps/backend/springboot-app/src/test/java/com/aienterprise/backend/tracker/backfill/WeeklyBackfillProjectorTest.java
 - docs/research/tracker-phase2-p2-p6-audit.md
 - docs/runbooks/tracker-weekly-backfill-validation.md
@@ -54,11 +60,11 @@
 
 **Tests:** 전체 backend, backfill focused suite
 
-- [ ] 워크트리 상태를 기록하고 추적 제외 파일이 스테이지되지 않았음을 확인한다.
-- [ ] 캐시된 mvn.cmd를 찾고 오프라인 전체 테스트를 실행한다.
-- [ ] 현재 backfill validator, loader, production corpus focused tests를 실행한다.
-- [ ] 현재 P2~P6 replay level, node status, program_end_date, pillar readiness를 테스트 출력 또는 읽기 전용 검사로 기록한다.
-- [ ] 현재 4개 L0 노드와 P6-FUNDING의 VIPER 종료 효과를 red-test 입력으로 고정한다.
+- [x] 워크트리 상태를 기록하고 추적 제외 파일이 스테이지되지 않았음을 확인한다.
+- [x] 캐시된 mvn.cmd를 찾고 오프라인 전체 테스트를 실행한다.
+- [x] 현재 backfill validator, loader, production corpus focused tests를 실행한다.
+- [x] 현재 P2~P6 replay level, node status, program_end_date, pillar readiness를 테스트 출력 또는 읽기 전용 검사로 기록한다.
+- [x] 현재 4개 L0 노드와 P6-FUNDING의 VIPER 종료 효과를 red-test 입력으로 고정한다.
 
 검증 명령:
 
@@ -78,23 +84,24 @@
 - Modify BackfillDatasetValidatorTest.java
 - Modify BackfillLoaderTest.java
 
-- [ ] 먼저 다음 실패 테스트를 추가한다.
+- [x] 먼저 다음 실패 테스트를 추가한다.
   - production mapping이 150건을 넘어도 안전 상한 이하면 수량만으로 실패하지 않는다.
   - 후보 2 MiB 초과, mapping 1 MiB 초과, 항목 512건 초과가 실패한다.
   - factSummary 500자 초과, reviewerNote 2,000자 초과가 실패한다.
   - 동일 candidate/node/event/date/level 중복이 실패한다.
   - 한 노드 상태 변경 청구가 32건을 넘으면 실패한다.
-  - production audit coverage가 35개 node code보다 적으면 실패한다.
+  - 별도 audit resource의 coverage가 35개 node code보다 적으면 실패한다.
   - programEndEffect 생략은 NONE이다.
   - CAPABILITY_PROGRAM_END는 PROGRAM_CANCELLATION, OFFICIAL 이상, 비어 있지 않은 범위 메모를 요구한다.
-- [ ] focused tests를 실행해 예상 이유로 RED인지 확인한다.
-- [ ] ProgramEndEffect enum과 BackfillClaim 필드를 추가한다.
-- [ ] MAPPING_FIELDS와 materialization을 확장한다.
-- [ ] 정확한 후보 212건과 mapping 110~150건 계약을 제거하고 바이트·건수 안전 상한과 coverage를 구현한다.
-- [ ] rejected 후보 금지, node/rubric/source/리뷰 무결성은 유지한다.
-- [ ] 실패 메시지에 비밀·본문을 포함하지 않는다.
-- [ ] focused tests를 GREEN으로 만든다.
-- [ ] 커밋: feat(tracker): harden Phase 2 backfill contract
+- [x] focused tests를 실행해 예상 이유로 RED인지 확인한다.
+- [x] ProgramEndEffect enum과 BackfillClaim 필드를 추가한다.
+- [x] MAPPING_FIELDS와 materialization을 확장한다.
+- [x] 정확한 후보·mapping 수량 계약을 제거하고 바이트·건수 안전 상한을 구현한다.
+- [x] 별도 audit resource validator로 35개 coverage와 replay 일치를 구현한다.
+- [x] rejected 후보 금지, node/rubric/source/리뷰 무결성은 유지한다.
+- [x] 실패 메시지에 비밀·본문을 포함하지 않는다.
+- [x] focused tests를 GREEN으로 만든다.
+- [x] 커밋: feat(tracker): harden Phase 2 backfill contract (`9c82199`)
 
 ## Task 3: WP2.2-B1 P2·P3 공식 근거 전수 감사
 
@@ -107,12 +114,12 @@
 - Modify BackfillLoaderTest.java
 - Create docs/research/tracker-phase2-p2-p6-audit.md
 
-- [ ] 데이터 변경 전에 P2·P3 13개 노드 audit coverage와 현재 level을 검증하는 실패 테스트를 추가한다.
-- [ ] HEALTH-AUTONOMY와 THERMAL이 무조건 L0이어야 한다는 기대는 두지 않는다. 실제 rubric 조건과 근거가 결정하게 한다.
-- [ ] 기존 212 후보 중 관련 후보를 먼저 목록화하고, 각 후보가 실제 도달 조건을 직접 지지하는지 확인한다.
-- [ ] 인터넷 조사는 공식 1차 자료로 제한한다. NASA, ESA, 임무·프로그램 공식 페이지와 공식 기술 보고서를 우선한다.
-- [ ] 각 페이지에서 URL, locator, accessedOn, transient response SHA-256만 수집하고 factSummary를 독자적으로 작성한다. 응답 본문은 파일이나 DB에 저장하지 않는다.
-- [ ] P2 7개 노드를 각각 판정한다.
+- [x] 데이터 변경 전에 P2·P3 13개 노드 audit coverage와 현재 level을 검증하는 실패 테스트를 추가한다.
+- [x] HEALTH-AUTONOMY와 THERMAL이 무조건 L0이어야 한다는 기대는 두지 않는다. 실제 rubric 조건과 근거가 결정하게 한다.
+- [x] 기존 후보 중 관련 후보를 먼저 목록화하고, 각 후보가 실제 도달 조건을 직접 지지하는지 확인한다.
+- [x] 인터넷 조사는 공식 1차 자료로 제한한다. NASA, ESA, 임무·프로그램 공식 페이지와 공식 기술 보고서를 우선한다.
+- [x] 각 페이지에서 URL, locator, accessedOn, transient response SHA-256만 수집하고 factSummary를 독자적으로 작성한다. 응답 본문은 파일이나 DB에 저장하지 않는다.
+- [x] P2 7개 노드를 각각 판정한다.
   - ECLSS
   - FOOD
   - HEALTH-AUTONOMY
@@ -120,35 +127,35 @@
   - RAD
   - SURVIVAL-INTEGRATION
   - WASTE-CYCLE
-- [ ] P3 6개 노드를 각각 판정한다.
+- [x] P3 6개 노드를 각각 판정한다.
   - COMMS
   - CONSTRUCT
   - DUST
   - HABITAT-INTEGRATION
   - POWER
   - THERMAL
-- [ ] 각 노드에 현재 level 근거, next-level gap, status, 감사 메모를 기록한다.
-- [ ] 상태 청구는 두 독립 승인 필드를 유지하고, 단순 배경 자료는 매핑하지 않는다.
-- [ ] focused corpus/validator/loader tests를 GREEN으로 만든다.
-- [ ] 실제 결과의 claim/candidate 수와 readiness는 결과로 기록하되 목표로 사용하지 않는다.
-- [ ] 커밋: data(tracker): audit Phase 2 survival and habitat nodes
+- [x] 각 노드에 현재 level 근거, next-level gap, status, 감사 메모를 기록한다.
+- [x] 상태 청구는 두 독립 승인 필드를 유지하고, 단순 배경 자료는 매핑하지 않는다.
+- [x] focused corpus/validator/loader tests를 GREEN으로 만든다.
+- [x] 실제 결과의 claim/candidate 수와 readiness는 결과로 기록하되 목표로 사용하지 않는다.
+- [x] 커밋: data(tracker): audit Phase 2 survival and habitat nodes (`7c9dd0c`에 통합)
 
 ## Task 4: WP2.2-B2 P4~P6 공식 근거 전수 감사
 
 **Files:** Task 3의 data/test/research 파일
 
-- [ ] P4~P6 14개 노드의 coverage와 현재 level을 검증하는 실패 테스트를 추가한다.
-- [ ] P4 5개 노드 ISRU, MANUFACTURING, MATERIALS, NUKE, RESOURCE-INTEGRATION을 감사한다.
-- [ ] P5 4개 노드 AUTOCON, AUTONOMY, MAINTENANCE, OPS-INTEGRATION을 감사한다.
-- [ ] P6 5개 노드 FUNDING, GOV, INSURANCE, LAUNCH-MARKET, SETTLEMENT-INTEGRATION을 감사한다.
-- [ ] RESOURCE-INTEGRATION과 SETTLEMENT-INTEGRATION은 직접 통합 운영 증거가 없으면 L0을 유지하고 next-level gap을 명시한다.
-- [ ] VIPER 취소가 역량 전체 종료를 뜻하는지 공식 범위 문구로 검토한다. 개별 임무 취소라면 programEndEffect=NONE으로 바꾸고 P6-FUNDING의 node-wide dormancy를 해제한다.
-- [ ] 실제 대표 프로그램 계보 종료에만 CAPABILITY_PROGRAM_END를 사용한다.
-- [ ] 기존 unused 후보를 우선 사용하고, 새 공식 자료가 필요한 경우 Task 3의 저작권 안전 절차를 따른다.
-- [ ] 35/35 audit coverage, 중복 0, 검증 오류 0을 확인한다.
-- [ ] 전체 현재 상태와 readiness를 research 문서에 기록한다.
-- [ ] focused tests를 GREEN으로 만든다.
-- [ ] 커밋: data(tracker): complete Phase 2 node audit
+- [x] P4~P6 14개 노드의 coverage와 현재 level을 검증하는 실패 테스트를 추가한다.
+- [x] P4 5개 노드 ISRU, MANUFACTURING, MATERIALS, NUKE, RESOURCE-INTEGRATION을 감사한다.
+- [x] P5 4개 노드 AUTOCON, AUTONOMY, MAINTENANCE, OPS-INTEGRATION을 감사한다.
+- [x] P6 5개 노드 FUNDING, GOV, INSURANCE, LAUNCH-MARKET, SETTLEMENT-INTEGRATION을 감사한다.
+- [x] RESOURCE-INTEGRATION과 SETTLEMENT-INTEGRATION은 직접 통합 운영 증거가 없으면 L0을 유지하고 next-level gap을 명시한다.
+- [x] VIPER 취소가 역량 전체 종료를 뜻하는지 공식 범위 문구로 검토했다. 개별 임무 취소이므로 programEndEffect=NONE을 유지하고 P6-FUNDING의 node-wide dormancy를 해제했다.
+- [x] 실제 대표 프로그램 계보 종료에만 CAPABILITY_PROGRAM_END를 사용한다.
+- [x] 기존 unused 후보를 우선 사용하고, 새 공식 자료가 필요한 경우 Task 3의 저작권 안전 절차를 따랐다.
+- [x] 35/35 audit coverage, 중복 0, 검증 오류 0을 확인한다.
+- [x] 전체 현재 상태와 readiness를 research 문서에 기록한다.
+- [x] focused tests를 GREEN으로 만든다.
+- [x] 커밋: data(tracker): complete Phase 2 node audit (`7c9dd0c`)
 
 ## Task 5: BackfillLoader의 프로그램 종료 의미 수정
 
@@ -157,16 +164,16 @@
 - Modify BackfillLoader.java
 - Modify BackfillLoaderTest.java
 
-- [ ] 다음 실패 테스트를 추가한다.
+- [x] 다음 실패 테스트를 추가한다.
   - PROGRAM_CANCELLATION + NONE은 program_end_date를 설정하지 않는다.
   - CAPABILITY_PROGRAM_END만 종료일과 휴면 경계를 설정한다.
   - replay와 실제 import가 같은 규칙을 사용한다.
   - 과거 종료 뒤 새 진전 사건이 오면 종료·휴면이 해제된다.
-- [ ] applyStateTransition과 replayTransition이 ProgramEndEffect를 사용하도록 최소 수정한다.
-- [ ] event type 자체는 보존해 타임라인 의미를 잃지 않는다.
-- [ ] P1 Apollo 종료 계약이 필요하면 명시적으로 CAPABILITY_PROGRAM_END를 부여한다.
-- [ ] focused tests와 전체 backfill suite를 GREEN으로 만든다.
-- [ ] 커밋: fix(tracker): scope historical program endings
+- [x] applyStateTransition과 replayTransition이 ProgramEndEffect를 사용하도록 최소 수정한다.
+- [x] event type 자체는 보존해 타임라인 의미를 잃지 않는다.
+- [x] P1 Apollo와 NERVA 종료 계약에 명시적으로 CAPABILITY_PROGRAM_END를 부여한다.
+- [x] focused tests와 전체 backfill suite를 GREEN으로 만든다.
+- [x] 커밋: fix(tracker): scope historical program endings (`7c9dd0c`에 통합)
 
 ## Task 6: WeeklyBackfillProjector TDD
 
@@ -208,7 +215,7 @@
 - Modify docs/plans/multiplanetary-tracker-execution-plan.md
 - Append .superpowers/sdd/progress.md (Git 제외)
 
-- [ ] research 문서에 35/35 node matrix, 근거 ref, next-level gap, 실제 상태와 readiness를 기록한다.
+- [x] research 문서에 35/35 node matrix, 근거 ref, next-level gap, 실제 상태와 readiness를 기록한다.
 - [ ] runbook에 fresh H2/ATP-safe 검증 SQL, 예상 주 수 공식, 월요일 cadence, idempotency, hash를 기록한다.
 - [ ] 저장 파일 크기와 DB 예상 행 수를 기록해 위험이 낮음을 증명한다.
 - [ ] 마스터 WP2.2에는 완료 요약과 이 상세 계획 링크만 기록한다.
@@ -220,11 +227,10 @@
 
 ## WP2.2 완료 체크
 
-- [ ] P2~P6 27개와 전체 35개 노드 감사 완료
-- [ ] 부분 근거를 실제 level로 인정하고 목표 ETA 최적화 없음
-- [ ] node-wide 프로그램 종료 오판 제거
+- [x] P2~P6 27개와 전체 35개 노드 감사 완료
+- [x] 부분 근거를 실제 level로 인정하고 목표 ETA 최적화 없음
+- [x] node-wide 프로그램 종료 오판 제거
 - [ ] 1957-01-07부터 직전 완료 주까지 6개 필라 연속
 - [ ] 마지막 replay와 현재 상태 일치
 - [ ] 원문 저장 0, 파일 안전 상한 통과
 - [ ] 전체 backend와 egress 회귀 green
-
