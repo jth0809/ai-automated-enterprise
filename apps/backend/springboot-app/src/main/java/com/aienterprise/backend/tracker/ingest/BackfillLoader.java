@@ -9,10 +9,8 @@ import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.HexFormat;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.regex.Pattern;
@@ -33,6 +31,7 @@ import com.aienterprise.backend.tracker.backfill.HistoricalCandidate;
 import com.aienterprise.backend.tracker.backfill.HistoricalEvidenceReference;
 import com.aienterprise.backend.tracker.backfill.ProgramEndEffect;
 import com.aienterprise.backend.tracker.backfill.ValidatedBackfill;
+import com.aienterprise.backend.tracker.backfill.WeeklyBackfillProjector;
 import com.aienterprise.backend.tracker.domain.BackfillImportRow;
 import com.aienterprise.backend.tracker.domain.EventRow;
 import com.aienterprise.backend.tracker.domain.HistoricalEvidenceRow;
@@ -42,9 +41,7 @@ import com.aienterprise.backend.tracker.event.EventMerger;
 import com.aienterprise.backend.tracker.event.SourceEvidence;
 import com.aienterprise.backend.tracker.event.VerificationDeriver;
 import com.aienterprise.backend.tracker.event.VerificationLevel;
-import com.aienterprise.backend.tracker.math.LogitEta;
 import com.aienterprise.backend.tracker.math.Params;
-import com.aienterprise.backend.tracker.math.Readiness;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -58,7 +55,6 @@ public class BackfillLoader {
 
     private static final Logger log = LoggerFactory.getLogger(BackfillLoader.class);
     private static final ObjectMapper JSON = new ObjectMapper();
-    private static final int FIRST_SNAPSHOT_YEAR = 1960;
     private static final String NODE_SET_VERSION = "nodes-v1.0";
     private static final String RUBRIC_VERSION = "r2.0";
     private static final Pattern SHA256 = Pattern.compile("[0-9a-f]{64}");
@@ -69,6 +65,7 @@ public class BackfillLoader {
     private final Resource candidatesResource;
     private final Resource mappingsResource;
     private final String datasetVersion;
+    private final WeeklyBackfillProjector weeklyProjector;
 
     @Autowired
     public BackfillLoader(
@@ -76,11 +73,13 @@ public class BackfillLoader {
             @Value("${tracker.backfill-resource:tracker/backfill-v1.json}") String mappingsPath,
             @Value("${tracker.backfill-candidates-resource:tracker/historical-candidates-v1.jsonl}")
             String candidatesPath,
-            @Value("${tracker.backfill-dataset-version:backfill-v1}") String datasetVersion) {
+            @Value("${tracker.backfill-dataset-version:backfill-v1}") String datasetVersion,
+            WeeklyBackfillProjector weeklyProjector) {
         this(repository,
                 new ClassPathResource(candidatesPath),
                 new ClassPathResource(mappingsPath),
-                datasetVersion);
+                datasetVersion,
+                weeklyProjector);
     }
 
     BackfillLoader(
@@ -88,10 +87,21 @@ public class BackfillLoader {
             Resource candidatesResource,
             Resource mappingsResource,
             String datasetVersion) {
+        this(repository, candidatesResource, mappingsResource, datasetVersion,
+                new WeeklyBackfillProjector(repository));
+    }
+
+    BackfillLoader(
+            TrackerRepository repository,
+            Resource candidatesResource,
+            Resource mappingsResource,
+            String datasetVersion,
+            WeeklyBackfillProjector weeklyProjector) {
         this.repository = repository;
         this.candidatesResource = candidatesResource;
         this.mappingsResource = mappingsResource;
         this.datasetVersion = requireDatasetVersion(datasetVersion);
+        this.weeklyProjector = weeklyProjector;
     }
 
     @Transactional
@@ -105,7 +115,10 @@ public class BackfillLoader {
                 throw new IllegalStateException(
                         "Tracker backfill dataset hash mismatch for " + datasetVersion);
             }
-            return;
+            if (weeklyProjector.isCurrent(
+                    datasetSha256, NODE_SET_VERSION, RUBRIC_VERSION)) {
+                return;
+            }
         }
 
         ValidatedBackfill validated = new BackfillDatasetValidator(
@@ -121,22 +134,31 @@ public class BackfillLoader {
             return;
         }
 
-        long rubricVersionId = repository.rubricVersionIdByLabel(RUBRIC_VERSION);
-        Set<Long> preservedLiveNodeIds = repository.findNodeIdsWithConfirmedState();
         List<BackfillClaim> claims = new ArrayList<>(validated.claims());
         claims.sort(Comparator.comparing(BackfillClaim::occurredOn)
                 .thenComparing(BackfillClaim::backfillId));
-        for (BackfillClaim claim : claims) {
-            importClaim(claim, validated.candidates().get(claim.candidateId()),
-                    rubricVersionId, preservedLiveNodeIds);
+        if (existing.isEmpty()) {
+            long rubricVersionId = repository.rubricVersionIdByLabel(RUBRIC_VERSION);
+            Set<Long> preservedLiveNodeIds = repository.findNodeIdsWithConfirmedState();
+            for (BackfillClaim claim : claims) {
+                importClaim(claim, validated.candidates().get(claim.candidateId()),
+                        rubricVersionId, preservedLiveNodeIds);
+            }
+            applyCurrentDormancy();
+            weeklyProjector.project(
+                    claims, datasetSha256, NODE_SET_VERSION, RUBRIC_VERSION);
+            repository.recordBackfillImport(BackfillImportRow.draft(
+                    datasetVersion, datasetSha256, NODE_SET_VERSION,
+                    rubricVersionId, claims.size()));
+            log.info("tracker backfill imported {} reviewed claims from dataset {}",
+                    claims.size(), datasetVersion);
+            return;
         }
-        applyCurrentDormancy();
-        snapshotYearEnds(claims);
-        repository.recordBackfillImport(BackfillImportRow.draft(
-                datasetVersion, datasetSha256, NODE_SET_VERSION,
-                rubricVersionId, claims.size()));
-        log.info("tracker backfill imported {} reviewed claims from dataset {}",
-                claims.size(), datasetVersion);
+
+        WeeklyBackfillProjector.ProjectionSummary summary = weeklyProjector.project(
+                claims, datasetSha256, NODE_SET_VERSION, RUBRIC_VERSION);
+        log.info("tracker weekly backfill projection repaired through {} with {} inserted rows",
+                summary.throughMonday(), summary.insertedRows());
     }
 
     /**
@@ -276,78 +298,6 @@ public class BackfillLoader {
         }
     }
 
-    private void snapshotYearEnds(List<BackfillClaim> claims) {
-        Params params = Params.defaults();
-        List<NodeRow> nodes = repository.findAllNodes();
-        Map<String, ReplayState> states = new HashMap<>();
-        int lastYear = LocalDate.now(ZoneOffset.UTC).getYear() - 1;
-        int next = 0;
-        for (int year = FIRST_SNAPSHOT_YEAR; year <= lastYear; year++) {
-            while (next < claims.size() && claims.get(next).occurredOn().getYear() <= year) {
-                BackfillClaim claim = claims.get(next++);
-                replayTransition(states, claim);
-            }
-            LocalDate snapshotDate = LocalDate.of(year, 12, 31);
-            for (int pillar = 1; pillar <= 6; pillar++) {
-                double readiness = pillarReadiness(
-                        nodes, states, pillar, params, snapshotDate);
-                repository.replacePillarSnapshot(
-                        pillar, snapshotDate, readiness,
-                        LogitEta.logitClipped(readiness, params.epsilon()), params.version());
-            }
-        }
-    }
-
-    private static void replayTransition(
-            Map<String, ReplayState> states, BackfillClaim claim) {
-        ReplayState previous = states.getOrDefault(claim.nodeCode(), new ReplayState(0, null));
-        if ("PROGRAM_CANCELLATION".equals(claim.eventType())) {
-            if (claim.programEndEffect() == ProgramEndEffect.CAPABILITY_PROGRAM_END) {
-                states.put(claim.nodeCode(), new ReplayState(
-                        previous.level(), claim.occurredOn()));
-            }
-            return;
-        }
-        if (claim.claimedLevel() == null || NON_STATE_EVENTS.contains(claim.eventType())) {
-            return;
-        }
-        if ("ROLLBACK".equals(claim.eventType())) {
-            if (claim.claimedLevel() < previous.level()) {
-                states.put(claim.nodeCode(), new ReplayState(
-                        claim.claimedLevel(), previous.programEndDate()));
-            }
-            return;
-        }
-        states.put(claim.nodeCode(), new ReplayState(
-                Math.max(previous.level(), claim.claimedLevel()), null));
-    }
-
-    private static double pillarReadiness(
-            List<NodeRow> nodes,
-            Map<String, ReplayState> states,
-            int pillar,
-            Params params,
-            LocalDate asOf) {
-        double readiness = 0;
-        for (NodeRow node : nodes) {
-            if (node.pillar() != pillar) {
-                continue;
-            }
-            ReplayState state = states.getOrDefault(node.code(), new ReplayState(0, null));
-            if (state.level() == 0) {
-                continue;
-            }
-            LocalDate dormantSince = state.programEndDate() == null
-                    ? null
-                    : state.programEndDate().plusYears(params.dormancyTriggerYears());
-            boolean dormant = dormantSince != null && !asOf.isBefore(dormantSince);
-            readiness += node.weight() * Readiness.nodeReadiness(
-                    state.level(), dormant, state.programEndDate(),
-                    node.scaleType(), params, asOf);
-        }
-        return readiness;
-    }
-
     private DatasetContent readContent() {
         try {
             return new DatasetContent(
@@ -440,6 +390,4 @@ public class BackfillLoader {
             SourceEvidence sourceEvidence) {
     }
 
-    private record ReplayState(int level, LocalDate programEndDate) {
-    }
 }

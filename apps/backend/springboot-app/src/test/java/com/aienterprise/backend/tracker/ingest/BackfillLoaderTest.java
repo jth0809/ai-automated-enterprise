@@ -7,9 +7,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Clock;
+import java.time.DayOfWeek;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 import org.junit.jupiter.api.AfterEach;
@@ -26,6 +28,7 @@ import com.aienterprise.backend.tracker.backfill.BackfillAuditValidator;
 import com.aienterprise.backend.tracker.backfill.BackfillDatasetValidator;
 import com.aienterprise.backend.tracker.backfill.ValidatedBackfill;
 import com.aienterprise.backend.tracker.backfill.ValidatedNodeAudit;
+import com.aienterprise.backend.tracker.backfill.WeeklyBackfillProjector;
 import com.aienterprise.backend.tracker.domain.TrackerRepository;
 import com.aienterprise.backend.tracker.math.Params;
 import com.aienterprise.backend.tracker.math.Readiness;
@@ -47,6 +50,10 @@ import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 class BackfillLoaderTest {
 
     private static final ObjectMapper JSON = new ObjectMapper();
+    private static final Clock TEST_CLOCK = Clock.fixed(
+            Instant.parse("2026-07-14T00:00:00Z"), ZoneOffset.UTC);
+    private static final LocalDate FIRST_MONDAY = LocalDate.of(1957, 1, 7);
+    private static final LocalDate LAST_COMPLETED_MONDAY = LocalDate.of(2026, 7, 13);
 
     @Autowired
     private JdbcClient jdbc;
@@ -74,6 +81,8 @@ class BackfillLoaderTest {
         jdbc.sql("DELETE FROM historical_evidence").update();
         jdbc.sql("DELETE FROM backfill_import").update();
         jdbc.sql("DELETE FROM pillar_snapshot").update();
+        jdbc.sql("DELETE FROM ops_state WHERE state_key = 'BACKFILL_WEEKLY_PROJECTION_V1'")
+                .update();
         jdbc.sql("DELETE FROM event").update();
         jdbc.sql("""
                 UPDATE capability_node
@@ -107,10 +116,19 @@ class BackfillLoaderTest {
                 """).query(Integer.class).single();
         assertEquals(8, auditCount);
 
-        int expectedYears = LocalDate.now(ZoneOffset.UTC).getYear() - 1960;
-        assertEquals(expectedYears, jdbc.sql(
+        long expectedWeeks = ChronoUnit.WEEKS.between(
+                FIRST_MONDAY, LAST_COMPLETED_MONDAY) + 1;
+        assertEquals(expectedWeeks, jdbc.sql(
                 "SELECT COUNT(*) FROM pillar_snapshot WHERE pillar = 1")
-                .query(Integer.class).single());
+                .query(Long.class).single());
+        List<LocalDate> snapshotDates = jdbc.sql("""
+                SELECT snapshot_date FROM pillar_snapshot
+                 WHERE pillar = 1 ORDER BY snapshot_date
+                """).query(LocalDate.class).list();
+        assertEquals(FIRST_MONDAY, snapshotDates.getFirst());
+        assertEquals(LAST_COMPLETED_MONDAY, snapshotDates.getLast());
+        assertTrue(snapshotDates.stream()
+                .allMatch(date -> date.getDayOfWeek() == DayOfWeek.MONDAY));
         List<Double> pillarOne = jdbc.sql(
                 "SELECT readiness FROM pillar_snapshot WHERE pillar = 1 ORDER BY snapshot_date")
                 .query(Double.class).list();
@@ -168,6 +186,26 @@ class BackfillLoaderTest {
                 .toList();
         assertEquals(0.4624,
                 Readiness.pillarReadiness(p1Nodes, Params.defaults()), 1e-9);
+        long expectedWeeks = ChronoUnit.WEEKS.between(
+                FIRST_MONDAY, LAST_COMPLETED_MONDAY) + 1;
+        assertEquals(expectedWeeks * 6, jdbc.sql("""
+                SELECT COUNT(*) FROM pillar_snapshot WHERE pillar BETWEEN 1 AND 6
+                """).query(Long.class).single());
+        for (int pillar = 1; pillar <= 6; pillar++) {
+            int selectedPillar = pillar;
+            double expectedReadiness = Readiness.pillarReadiness(
+                    repository.findAllNodes().stream()
+                            .filter(node -> node.pillar() == selectedPillar)
+                            .toList(),
+                    Params.defaults());
+            double lastReadiness = jdbc.sql("""
+                    SELECT readiness FROM pillar_snapshot
+                     WHERE pillar = :pillar AND snapshot_date = :snapshotDate
+                    """).param("pillar", pillar)
+                    .param("snapshotDate", java.sql.Date.valueOf(LAST_COMPLETED_MONDAY))
+                    .query(Double.class).single();
+            assertEquals(expectedReadiness, lastReadiness, 0.00001, "pillar " + pillar);
+        }
         int importedEvidence = jdbc.sql("SELECT COUNT(*) FROM historical_evidence")
                 .query(Integer.class).single();
         int recordedClaims = jdbc.sql("""
@@ -262,6 +300,31 @@ class BackfillLoaderTest {
     }
 
     @Test
+    void existingImportWithMissingProjectionMarkerRebuildsSnapshotsOnly() {
+        loader.loadDatasetIfNeeded();
+        int events = jdbc.sql("SELECT COUNT(*) FROM event").query(Integer.class).single();
+        int evidence = jdbc.sql("SELECT COUNT(*) FROM historical_evidence")
+                .query(Integer.class).single();
+        jdbc.sql("DELETE FROM pillar_snapshot").update();
+        jdbc.sql("DELETE FROM ops_state WHERE state_key = 'BACKFILL_WEEKLY_PROJECTION_V1'")
+                .update();
+
+        loader.loadDatasetIfNeeded();
+
+        long expectedWeeks = ChronoUnit.WEEKS.between(
+                FIRST_MONDAY, LAST_COMPLETED_MONDAY) + 1;
+        assertEquals(expectedWeeks * 6,
+                jdbc.sql("SELECT COUNT(*) FROM pillar_snapshot")
+                        .query(Long.class).single());
+        assertEquals(events, jdbc.sql("SELECT COUNT(*) FROM event")
+                .query(Integer.class).single());
+        assertEquals(evidence, jdbc.sql("SELECT COUNT(*) FROM historical_evidence")
+                .query(Integer.class).single());
+        assertEquals(1, jdbc.sql("SELECT COUNT(*) FROM backfill_import")
+                .query(Integer.class).single());
+    }
+
+    @Test
     void canonicalJsonAndLfNormalizationProduceSameDatasetHash() throws IOException {
         loader.loadDatasetIfNeeded();
         String candidates = candidatesText().replace("\n", "\r\n");
@@ -345,12 +408,12 @@ class BackfillLoaderTest {
                  WHERE event_type = 'PROGRAM_CANCELLATION'
                 """).query(String.class).single());
 
-        double y2000 = snapshot(6, 2000);
-        double y2001 = snapshot(6, 2001);
-        double y2002 = snapshot(6, 2002);
-        double y2003 = snapshot(6, 2003);
-        double y2019 = snapshot(6, 2019);
-        double y2020 = snapshot(6, 2020);
+        double y2000 = snapshot(6, LocalDate.of(2000, 1, 3));
+        double y2001 = snapshot(6, LocalDate.of(2001, 1, 1));
+        double y2002 = snapshot(6, LocalDate.of(2002, 1, 7));
+        double y2003 = snapshot(6, LocalDate.of(2003, 1, 6));
+        double y2019 = snapshot(6, LocalDate.of(2019, 1, 7));
+        double y2020 = snapshot(6, LocalDate.of(2020, 1, 6));
         assertTrue(y2001 < y2000, "official rollback must lower the historical state");
         assertTrue(y2002 > y2001, "later evidence must restore the historical state");
         assertTrue(y2019 < y2003, "old cancellation must apply dormancy attenuation");
@@ -374,7 +437,9 @@ class BackfillLoaderTest {
     }
 
     private BackfillLoader loader(Resource candidates, Resource mappings, String version) {
-        return new BackfillLoader(repository, candidates, mappings, version);
+        return new BackfillLoader(
+                repository, candidates, mappings, version,
+                new WeeklyBackfillProjector(repository, TEST_CLOCK));
     }
 
     private BackfillLoader transitionLoader() {
@@ -444,13 +509,13 @@ class BackfillLoaderTest {
         return loader(resource(jsonl.toString()), resource(mappings.toString()), "backfill-transitions-v1");
     }
 
-    private double snapshot(int pillar, int year) {
+    private double snapshot(int pillar, LocalDate snapshotDate) {
         return jdbc.sql("""
                 SELECT readiness FROM pillar_snapshot
                  WHERE pillar = :pillar AND snapshot_date = :snapshotDate
                 """)
                 .param("pillar", pillar)
-                .param("snapshotDate", java.sql.Date.valueOf(LocalDate.of(year, 12, 31)))
+                .param("snapshotDate", java.sql.Date.valueOf(snapshotDate))
                 .query(Double.class)
                 .single();
     }

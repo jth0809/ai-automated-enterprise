@@ -46,6 +46,16 @@ class BackfillAuditValidatorTest {
         assertEquals(2, result.entries().stream()
                 .filter(entry -> entry.auditedLevel() == 0)
                 .count());
+        Map<String, WeeklyBackfillProjector.ProjectionNodeState> replay =
+                WeeklyBackfillProjector.replayStates(
+                        backfill.claims(), LocalDate.of(2026, 7, 13));
+        result.entries().forEach(entry -> {
+            WeeklyBackfillProjector.ProjectionNodeState state = replay.get(entry.nodeCode());
+            int level = state == null ? 0 : state.level();
+            String status = state == null ? "ACTIVE" : state.status();
+            assertEquals(entry.auditedLevel(), level, entry.nodeCode());
+            assertEquals(entry.status(), status, entry.nodeCode());
+        });
     }
 
     @Test

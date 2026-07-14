@@ -12,6 +12,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,9 +22,11 @@ import com.aienterprise.backend.tracker.event.SourceEvidence;
 public class TrackerRepository {
 
     private final JdbcClient jdbc;
+    private final JdbcTemplate jdbcTemplate;
 
-    public TrackerRepository(JdbcClient jdbc) {
+    public TrackerRepository(JdbcClient jdbc, JdbcTemplate jdbcTemplate) {
         this.jdbc = jdbc;
+        this.jdbcTemplate = jdbcTemplate;
     }
 
     public Optional<Long> insertArticleIfNew(
@@ -926,6 +929,55 @@ public class TrackerRepository {
                 .param("snapshotDate", date(snapshotDate))
                 .update();
         insertPillarSnapshot(pillar, snapshotDate, readiness, logitClipped, paramsVersion);
+    }
+
+    public int deleteBareHistoricalPillarSnapshots(LocalDate from, LocalDate through) {
+        return jdbc.sql("""
+                DELETE FROM pillar_snapshot
+                 WHERE pillar BETWEEN 1 AND 6
+                   AND snapshot_date BETWEEN :fromDate AND :throughDate
+                   AND trend_fit IS NULL
+                   AND trend_used IS NULL
+                   AND n_events_window IS NULL
+                   AND window_years IS NULL
+                   AND eta_year IS NULL
+                   AND eta_low IS NULL
+                   AND eta_high IS NULL
+                   AND displayed_eta_year IS NULL
+                """)
+                .param("fromDate", date(from))
+                .param("throughDate", date(through))
+                .update();
+    }
+
+    public List<SnapshotRow> findPillarSnapshotsBetween(
+            LocalDate from, LocalDate through) {
+        return jdbc.sql(SNAPSHOT_SELECT + """
+                 WHERE pillar BETWEEN 1 AND 6
+                   AND snapshot_date BETWEEN :fromDate AND :throughDate
+                 ORDER BY snapshot_date, pillar
+                """)
+                .param("fromDate", date(from))
+                .param("throughDate", date(through))
+                .query(TrackerRepository::mapSnapshot)
+                .list();
+    }
+
+    public void insertBareHistoricalPillarSnapshots(List<SnapshotRow> snapshots) {
+        if (snapshots.isEmpty()) {
+            return;
+        }
+        jdbcTemplate.batchUpdate("""
+                INSERT INTO pillar_snapshot
+                  (pillar, snapshot_date, readiness, logit_clipped, params_version)
+                VALUES (?, ?, ?, ?, ?)
+                """, snapshots, 1000, (statement, snapshot) -> {
+                    statement.setInt(1, snapshot.pillar());
+                    statement.setDate(2, date(snapshot.snapshotDate()));
+                    statement.setDouble(3, snapshot.readiness());
+                    statement.setDouble(4, snapshot.logitClipped());
+                    statement.setString(5, snapshot.paramsVersion());
+                });
     }
 
     public void replaceSnapshot(SnapshotRow snapshot) {

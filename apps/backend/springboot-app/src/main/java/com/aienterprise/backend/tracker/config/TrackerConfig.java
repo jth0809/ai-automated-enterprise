@@ -36,8 +36,9 @@ import net.javacrumbs.shedlock.spring.annotation.EnableSchedulerLock;
 public class TrackerConfig {
 
     @Bean
-    TrackerRepository trackerRepository(JdbcClient jdbcClient) {
-        return new TrackerRepository(jdbcClient);
+    TrackerRepository trackerRepository(
+            JdbcClient jdbcClient, JdbcTemplate jdbcTemplate) {
+        return new TrackerRepository(jdbcClient, jdbcTemplate);
     }
 
     @Bean(name = "trackerFeeds")
