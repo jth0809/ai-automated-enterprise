@@ -17,6 +17,8 @@ public record BackfillClaim(
         String expectedVerificationLevel,
         String eventTitle,
         String rubricJustification,
+        ProgramEndEffect programEndEffect,
+        String programEndScope,
         List<String> evidenceRefs,
         BackfillReview review) {
 

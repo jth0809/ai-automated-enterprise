@@ -8,6 +8,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -31,7 +32,11 @@ public final class BackfillDatasetValidator {
     private static final ObjectMapper JSON = new ObjectMapper();
     private static final String NODE_SET_VERSION = "nodes-v1.0";
     private static final String RUBRIC_VERSION = "r2.0";
-    private static final int PRODUCTION_CANDIDATE_COUNT = 212;
+    private static final long MAX_CANDIDATE_BYTES = 2L * 1024 * 1024;
+    private static final long MAX_MAPPING_BYTES = 1024L * 1024;
+    private static final int MAX_CANDIDATES = 512;
+    private static final int MAX_MAPPINGS = 512;
+    private static final int MAX_STATE_CLAIMS_PER_NODE = 32;
     private static final Pattern BACKFILL_ID = Pattern.compile("BF-[A-Z0-9-]{1,77}");
     private static final Set<String> DATE_PRECISIONS = Set.of("DAY", "MONTH", "YEAR");
     private static final Set<String> EVENT_TYPES = Set.of(
@@ -58,7 +63,7 @@ public final class BackfillDatasetValidator {
             "backfillId", "candidateId", "nodeSetVersion", "rubricVersion", "nodeCode",
             "eventType", "claimedLevel", "actor", "occurredOn", "occurredOnPrecision",
             "expectedVerificationLevel", "eventTitle", "rubricJustification",
-            "evidenceRefs", "review");
+            "programEndEffect", "programEndScope", "evidenceRefs", "review");
     private static final Set<String> REVIEW_FIELDS = Set.of("fact", "rubric", "reviewerNote");
     private static final Set<String> PROHIBITED_KEYS = Set.of(
             "quote", "evidencequote", "excerpt", "body", "bodyhtml", "bodytext",
@@ -66,7 +71,7 @@ public final class BackfillDatasetValidator {
             "pdf", "image");
 
     private final Resource sourceCatalog;
-    private final boolean enforceProductionCardinality;
+    private final boolean productionMode;
 
     public BackfillDatasetValidator() {
         this(new ClassPathResource("tracker/historical-source-catalog-v1.json"), true);
@@ -76,30 +81,34 @@ public final class BackfillDatasetValidator {
         this(sourceCatalog, false);
     }
 
-    public BackfillDatasetValidator(boolean enforceProductionCardinality) {
+    public BackfillDatasetValidator(boolean productionMode) {
         this(new ClassPathResource("tracker/historical-source-catalog-v1.json"),
-                enforceProductionCardinality);
+                productionMode);
     }
 
     private BackfillDatasetValidator(
-            Resource sourceCatalog, boolean enforceProductionCardinality) {
+            Resource sourceCatalog, boolean productionMode) {
         this.sourceCatalog = sourceCatalog;
-        this.enforceProductionCardinality = enforceProductionCardinality;
+        this.productionMode = productionMode;
     }
 
     public ValidatedBackfill validate(Resource candidatesResource, Resource mappingsResource) {
         List<String> errors = new ArrayList<>();
+        if (!withinSize(candidatesResource, MAX_CANDIDATE_BYTES,
+                "candidate resource", errors)
+                || !withinSize(mappingsResource, MAX_MAPPING_BYTES,
+                        "mapping resource", errors)) {
+            return new ValidatedBackfill(List.of(), Map.of(), errors);
+        }
 
         CorpusReport corpusReport = new HistoricalCorpusValidator().validate(candidatesResource);
         corpusReport.errors().forEach(error -> errors.add("candidates: " + error));
-        if (enforceProductionCardinality) {
-            if (corpusReport.totalCount() != PRODUCTION_CANDIDATE_COUNT) {
-                errors.add("candidates: production corpus must contain exactly "
-                        + PRODUCTION_CANDIDATE_COUNT + " candidates");
-            }
-            if (corpusReport.readyCount() != PRODUCTION_CANDIDATE_COUNT) {
-                errors.add("candidates: production corpus must contain exactly "
-                        + PRODUCTION_CANDIDATE_COUNT + " READY candidates");
+        if (corpusReport.totalCount() > MAX_CANDIDATES) {
+            errors.add("candidates: corpus exceeds " + MAX_CANDIDATES + " entries");
+        }
+        if (productionMode) {
+            if (corpusReport.readyCount() != corpusReport.totalCount()) {
+                errors.add("candidates: production corpus must contain only READY candidates");
             }
             if (corpusReport.rejectedCount() != 0) {
                 errors.add("candidates: production corpus must contain zero REJECTED candidates");
@@ -111,6 +120,7 @@ public final class BackfillDatasetValidator {
         List<BackfillClaim> claims = new ArrayList<>();
         Map<String, HistoricalCandidate> usedCandidates = new LinkedHashMap<>();
         Set<String> backfillIds = new HashSet<>();
+        Set<String> logicalClaims = new HashSet<>();
 
         JsonNode mappings = readJson(mappingsResource, "mappings", errors);
         if (mappings == null || !mappings.isArray()) {
@@ -119,16 +129,27 @@ public final class BackfillDatasetValidator {
             }
             return new ValidatedBackfill(claims, usedCandidates, errors);
         }
-        if (enforceProductionCardinality
-                && (mappings.size() < 110 || mappings.size() > 150)) {
-            errors.add("mappings: production mapping must contain 110-150 claims");
+        if (mappings.size() > MAX_MAPPINGS) {
+            errors.add("mappings: mapping exceeds " + MAX_MAPPINGS + " entries");
         }
 
         int index = 0;
         for (JsonNode mapping : mappings) {
             index++;
             validateMapping(mapping, index, allCandidates, sources,
-                    backfillIds, claims, usedCandidates, errors);
+                    backfillIds, logicalClaims, claims, usedCandidates, errors);
+        }
+        Map<String, Integer> stateClaimsByNode = new HashMap<>();
+        for (BackfillClaim claim : claims) {
+            if (claim.claimedLevel() != null) {
+                stateClaimsByNode.merge(claim.nodeCode(), 1, Integer::sum);
+            }
+        }
+        for (Map.Entry<String, Integer> entry : stateClaimsByNode.entrySet()) {
+            if (entry.getValue() > MAX_STATE_CLAIMS_PER_NODE) {
+                errors.add("mappings: node " + entry.getKey() + " exceeds "
+                        + MAX_STATE_CLAIMS_PER_NODE + " state-changing claims");
+            }
         }
         return new ValidatedBackfill(claims, usedCandidates, errors);
     }
@@ -139,6 +160,7 @@ public final class BackfillDatasetValidator {
             Map<String, HistoricalCandidate> candidates,
             Map<String, SourceMetadata> sources,
             Set<String> backfillIds,
+            Set<String> logicalClaims,
             List<BackfillClaim> claims,
             Map<String, HistoricalCandidate> usedCandidates,
             List<String> errors) {
@@ -204,6 +226,9 @@ public final class BackfillDatasetValidator {
         String eventTitle = boundedText(mapping, "eventTitle", 200, path, errors);
         String rubricJustification = boundedText(
                 mapping, "rubricJustification", 1000, path, errors);
+        ProgramEndEffect programEndEffect = programEndEffect(mapping, path, errors);
+        String programEndScope = optionalBoundedText(
+                mapping, "programEndScope", 500, path, errors);
         List<String> evidenceRefs = evidenceRefs(mapping, path, errors);
         BackfillReview review = review(mapping.get("review"), path, errors);
 
@@ -233,10 +258,35 @@ public final class BackfillDatasetValidator {
                         && !derived.atLeast(VerificationLevel.OFFICIAL)) {
                     errors.add(path + ": ROLLBACK requires OFFICIAL-or-higher evidence");
                 }
+                if (programEndEffect == ProgramEndEffect.CAPABILITY_PROGRAM_END
+                        && !derived.atLeast(VerificationLevel.OFFICIAL)) {
+                    errors.add(path
+                            + ": CAPABILITY_PROGRAM_END requires OFFICIAL-or-higher evidence");
+                }
             }
         }
         if ("ROLLBACK".equals(eventType) && nodeCode != null && !nodeCode.startsWith("P6-")) {
             errors.add(path + ": ROLLBACK is limited to Pillar 6 nodes");
+        }
+        if (programEndEffect == ProgramEndEffect.CAPABILITY_PROGRAM_END) {
+            if (!"PROGRAM_CANCELLATION".equals(eventType)) {
+                errors.add(path
+                        + ": CAPABILITY_PROGRAM_END requires PROGRAM_CANCELLATION");
+            }
+            if (programEndScope == null) {
+                errors.add(path + ": CAPABILITY_PROGRAM_END requires programEndScope");
+            }
+        } else if (programEndScope != null) {
+            errors.add(path + ": programEndScope requires CAPABILITY_PROGRAM_END");
+        }
+
+        if (errors.size() == errorCount) {
+            String logicalKey = String.join("\u001f",
+                    candidateId, nodeCode, eventType, occurredOn.toString(),
+                    claimedLevel == null ? "" : claimedLevel.toString());
+            if (!logicalClaims.add(logicalKey)) {
+                errors.add(path + ": duplicate logical claim");
+            }
         }
 
         if (errors.size() == errorCount) {
@@ -244,7 +294,7 @@ public final class BackfillDatasetValidator {
                     backfillId, candidateId, nodeSetVersion, rubricVersion, nodeCode,
                     eventType, claimedLevel, actor, occurredOn, precision,
                     expectedVerification, eventTitle, rubricJustification,
-                    evidenceRefs, review);
+                    programEndEffect, programEndScope, evidenceRefs, review);
             claims.add(claim);
             usedCandidates.putIfAbsent(candidateId, candidate);
         }
@@ -457,6 +507,53 @@ public final class BackfillDatasetValidator {
             return null;
         }
         return value;
+    }
+
+    private static String optionalBoundedText(
+            JsonNode object, String field, int maxLength, String path, List<String> errors) {
+        JsonNode node = object.get(field);
+        if (node == null || node.isNull()) {
+            return null;
+        }
+        if (!node.isTextual() || node.asText().isBlank()) {
+            errors.add(path + ": " + field + " must be a nonblank string");
+            return null;
+        }
+        String value = node.asText().trim();
+        if (value.length() > maxLength) {
+            errors.add(path + ": " + field + " exceeds " + maxLength + " characters");
+            return null;
+        }
+        return value;
+    }
+
+    private static ProgramEndEffect programEndEffect(
+            JsonNode mapping, String path, List<String> errors) {
+        String value = text(mapping, "programEndEffect");
+        if (value == null) {
+            return ProgramEndEffect.NONE;
+        }
+        try {
+            return ProgramEndEffect.valueOf(value);
+        } catch (IllegalArgumentException e) {
+            errors.add(path + ": invalid programEndEffect " + value);
+            return ProgramEndEffect.NONE;
+        }
+    }
+
+    private static boolean withinSize(
+            Resource resource, long maxBytes, String label, List<String> errors) {
+        try {
+            long bytes = resource.contentLength();
+            if (bytes > maxBytes) {
+                errors.add(label + " exceeds " + maxBytes + " UTF-8 bytes");
+                return false;
+            }
+            return true;
+        } catch (IOException e) {
+            errors.add(label + " size cannot be read");
+            return false;
+        }
     }
 
     private static String requiredText(

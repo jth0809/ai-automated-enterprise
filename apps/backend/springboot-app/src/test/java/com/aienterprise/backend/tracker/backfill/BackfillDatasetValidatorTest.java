@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.core.io.ByteArrayResource;
@@ -34,16 +35,115 @@ class BackfillDatasetValidatorTest {
     }
 
     @Test
-    void productionModeRejectsAnythingOtherThanTheApprovedCardinalities() {
+    void productionModeUsesSafetyBoundsInsteadOfApprovedCardinalities() {
         ObjectNode candidate = candidate("HC-VALID", evidence("NASA", "PRIMARY", 1));
         ObjectNode mapping = mapping("BF-1", "HC-VALID", "OFFICIAL", "NASA");
 
         ValidatedBackfill result = new BackfillDatasetValidator(true)
                 .validate(candidates(candidate), mappings(mapping));
 
-        assertHasError(result, "production corpus must contain exactly 212 candidates");
-        assertHasError(result, "production corpus must contain exactly 212 READY candidates");
-        assertHasError(result, "production mapping must contain 110-150 claims");
+        assertTrue(result.errors().isEmpty(), () -> String.join("\n", result.errors()));
+        assertFalse(result.errors().stream().anyMatch(error -> error.contains("exactly 212")));
+        assertFalse(result.errors().stream().anyMatch(error -> error.contains("110-150")));
+    }
+
+    @Test
+    void productionModeRejectsOversizedResourcesAndEntryCounts() {
+        ObjectNode candidate = candidate("HC-VALID", evidence("NASA", "PRIMARY", 1));
+        ObjectNode mapping = mapping("BF-1", "HC-VALID", "OFFICIAL", "NASA");
+
+        Resource oversizedCandidates = resource(" ".repeat(2 * 1024 * 1024 + 1));
+        Resource oversizedMappings = resource(toJson(JSON.createArrayNode().add(mapping))
+                + " ".repeat(1024 * 1024));
+        ArrayNode tooManyMappings = JSON.createArrayNode();
+        for (int i = 0; i < 513; i++) {
+            ObjectNode copy = mapping.deepCopy();
+            copy.put("backfillId", "BF-LIMIT-" + i);
+            tooManyMappings.add(copy);
+        }
+
+        assertHasError(new BackfillDatasetValidator(true)
+                .validate(oversizedCandidates, mappings(mapping)),
+                "candidate resource exceeds 2097152 UTF-8 bytes");
+        assertHasError(new BackfillDatasetValidator(true)
+                .validate(candidates(candidate), oversizedMappings),
+                "mapping resource exceeds 1048576 UTF-8 bytes");
+        assertHasError(new BackfillDatasetValidator(true)
+                .validate(candidates(candidate), resource(toJson(tooManyMappings))),
+                "mapping exceeds 512 entries");
+    }
+
+    @Test
+    void logicalDuplicateMappingFailsEvenWithDifferentBackfillIds() {
+        ObjectNode candidate = candidate("HC-VALID", evidence("AGENCY", "PRIMARY", 1));
+        ObjectNode first = mapping("BF-FIRST", "HC-VALID", "OFFICIAL", "AGENCY");
+        ObjectNode second = mapping("BF-SECOND", "HC-VALID", "OFFICIAL", "AGENCY");
+
+        assertHasError(validator(catalog(source("AGENCY", 1, "AGENCY")))
+                .validate(candidates(candidate), mappings(first, second)),
+                "duplicate logical claim");
+    }
+
+    @Test
+    void moreThanThirtyTwoStateClaimsForOneNodeRequiresManualReduction() {
+        ArrayNode candidateRows = JSON.createArrayNode();
+        ArrayNode mappingRows = JSON.createArrayNode();
+        for (int i = 0; i < 33; i++) {
+            String candidateId = "HC-SAFETY-" + i;
+            String occurredOn = LocalDate.of(1990, 1, 1).plusDays(i).toString();
+            ObjectNode candidate = candidate(candidateId, evidence("AGENCY", "PRIMARY", i + 1));
+            candidate.put("occurredOn", occurredOn);
+            candidateRows.add(candidate);
+            ObjectNode mapping = mapping("BF-SAFETY-" + i, candidateId, "OFFICIAL", "AGENCY");
+            mapping.put("occurredOn", occurredOn);
+            mappingRows.add(mapping);
+        }
+
+        assertHasError(validator(catalog(source("AGENCY", 1, "AGENCY")))
+                .validate(resource(asJsonLines(candidateRows)), resource(toJson(mappingRows))),
+                "node P1-ORBIT-REFUEL exceeds 32 state-changing claims");
+    }
+
+    @Test
+    void programEndEffectDefaultsToNone() {
+        ObjectNode candidate = candidate("HC-END", evidence("AGENCY", "PRIMARY", 1));
+        ObjectNode mapping = mapping("BF-END", "HC-END", "OFFICIAL", "AGENCY");
+        mapping.put("eventType", "PROGRAM_CANCELLATION");
+        mapping.putNull("claimedLevel");
+
+        ValidatedBackfill result = validator(catalog(source("AGENCY", 1, "AGENCY")))
+                .validate(candidates(candidate), mappings(mapping));
+
+        assertTrue(result.errors().isEmpty(), () -> String.join("\n", result.errors()));
+        assertEquals(ProgramEndEffect.NONE, result.claims().getFirst().programEndEffect());
+    }
+
+    @Test
+    void capabilityProgramEndRequiresCancellationOfficialEvidenceAndScope() {
+        ObjectNode candidate = candidate("HC-END", evidence("AGENCY", "PRIMARY", 1));
+        ObjectNode valid = mapping("BF-END", "HC-END", "OFFICIAL", "AGENCY");
+        valid.put("eventType", "PROGRAM_CANCELLATION");
+        valid.putNull("claimedLevel");
+        valid.put("programEndEffect", "CAPABILITY_PROGRAM_END");
+        valid.put("programEndScope", "The official source closes the representative program lineage.");
+
+        ValidatedBackfill accepted = validator(catalog(source("AGENCY", 1, "AGENCY")))
+                .validate(candidates(candidate), mappings(valid));
+        assertTrue(accepted.errors().isEmpty(), () -> String.join("\n", accepted.errors()));
+        assertEquals(ProgramEndEffect.CAPABILITY_PROGRAM_END,
+                accepted.claims().getFirst().programEndEffect());
+
+        ObjectNode wrongType = valid.deepCopy();
+        wrongType.put("eventType", "SETBACK");
+        ObjectNode missingScope = valid.deepCopy();
+        missingScope.remove("programEndScope");
+
+        assertHasError(validator(catalog(source("AGENCY", 1, "AGENCY")))
+                .validate(candidates(candidate), mappings(wrongType)),
+                "CAPABILITY_PROGRAM_END requires PROGRAM_CANCELLATION");
+        assertHasError(validator(catalog(source("AGENCY", 1, "AGENCY")))
+                .validate(candidates(candidate), mappings(missingScope)),
+                "CAPABILITY_PROGRAM_END requires programEndScope");
     }
 
     @Test
@@ -333,6 +433,14 @@ class BackfillDatasetValidatorTest {
             array.add(mapping);
         }
         return resource(toJson(array));
+    }
+
+    private static String asJsonLines(ArrayNode candidates) {
+        StringBuilder jsonl = new StringBuilder();
+        for (JsonNode candidate : candidates) {
+            jsonl.append(toJson(candidate)).append('\n');
+        }
+        return jsonl.toString();
     }
 
     private static Resource resource(String content) {
