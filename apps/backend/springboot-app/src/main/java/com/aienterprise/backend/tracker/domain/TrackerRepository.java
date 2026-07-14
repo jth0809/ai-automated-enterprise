@@ -629,31 +629,62 @@ public class TrackerRepository {
     }
 
     /**
-     * Pending review cases with full decision context, priority-desc then
-     * oldest-first. One bounded case query plus one bounded evidence query,
-     * grouped in Java — no N+1. Live quotations and approved historical
-     * references are exposed as distinct evidence kinds.
+     * Formal review history page. Status and reason are enum allowlists; only
+     * validated numeric bounds are formatted into the Oracle pagination
+     * clause. Evidence is fetched once for the current page, never per row.
      */
-    public List<ReviewCase> findPendingReviewCases(int limit) {
-        if (limit <= 0) {
-            return List.of();
+    public ReviewPage findReviewPage(
+            ReviewPage.Status status,
+            ReviewPage.Reason reason,
+            int page,
+            int size) {
+        if (status == null || page < 0 || size < 1 || size > 100) {
+            throw new IllegalArgumentException("Invalid review page bounds");
         }
-        int safeLimit = Math.min(limit, 200);
+        String reasonValue = reason == null ? null : reason.name();
+        long total = jdbc.sql("""
+                SELECT COUNT(*)
+                  FROM review_queue r
+                 WHERE r.status = :status
+                   AND (:reason IS NULL OR r.reason = :reason)
+                """)
+                .param("status", status.name())
+                .param("reason", reasonValue, Types.VARCHAR)
+                .query(Long.class)
+                .single();
+        long offset = (long) page * size;
         List<ReviewCase> skeletons = jdbc.sql("""
                 SELECT r.id AS review_id, r.reason, r.priority, r.fluke_status, r.fluke_result,
-                       r.created_at, r.status, r.reviewer_note,
+                       r.created_at, r.status, r.reviewer_note, r.resolved_at,
                        e.id AS event_id, e.event_type, e.occurred_on, e.actor,
                        e.verification_level, e.impact_score, e.claimed_level,
                        n.code AS node_code, n.name_ko, n.scale_type, n.current_level
                   FROM review_queue r
                   JOIN event e ON e.id = r.event_id
                   JOIN capability_node n ON n.id = e.node_id
-                 WHERE r.status = 'PENDING'
+                 WHERE r.status = :status
+                   AND (:reason IS NULL OR r.reason = :reason)
                  ORDER BY r.priority DESC, r.created_at, r.id
-                 FETCH FIRST %d ROWS ONLY
-                """.formatted(safeLimit))
+                 OFFSET %d ROWS FETCH NEXT %d ROWS ONLY
+                """.formatted(offset, size))
+                .param("status", status.name())
+                .param("reason", reasonValue, Types.VARCHAR)
                 .query(TrackerRepository::mapReviewCaseSkeleton)
                 .list();
+        List<ReviewCase> items = attachReviewEvidence(skeletons);
+        long totalPages = total == 0 ? 0 : ((total - 1) / size) + 1;
+        return new ReviewPage(items, page, size, total, totalPages, ReviewPage.STABLE_SORT);
+    }
+
+    /** Compatibility adapter for the original pending-only admin endpoint. */
+    public List<ReviewCase> findPendingReviewCases(int limit) {
+        if (limit <= 0) {
+            return List.of();
+        }
+        return findReviewPage(ReviewPage.Status.PENDING, null, 0, Math.min(limit, 100)).items();
+    }
+
+    private List<ReviewCase> attachReviewEvidence(List<ReviewCase> skeletons) {
         if (skeletons.isEmpty()) {
             return skeletons;
         }
@@ -728,7 +759,7 @@ public class TrackerRepository {
                         skeleton.scaleType(), skeleton.currentLevel(),
                         sourcesByEvent.getOrDefault(skeleton.eventId(), Set.of()).size(),
                         List.copyOf(evidenceByEvent.getOrDefault(skeleton.eventId(), List.of())),
-                        skeleton.status(), skeleton.reviewerNote()))
+                        skeleton.status(), skeleton.reviewerNote(), skeleton.resolvedAt()))
                 .toList();
     }
 
@@ -754,7 +785,8 @@ public class TrackerRepository {
                 0,
                 List.of(),
                 rs.getString("status"),
-                rs.getString("reviewer_note"));
+                rs.getString("reviewer_note"),
+                nullableInstant(rs.getTimestamp("resolved_at")));
     }
 
     private Optional<Long> reviewIdByEventAndReason(long eventId, String reason) {
@@ -1852,6 +1884,10 @@ public class TrackerRepository {
 
     private static LocalDate localDate(Date value) {
         return value == null ? null : value.toLocalDate();
+    }
+
+    private static Instant nullableInstant(Timestamp value) {
+        return value == null ? null : value.toInstant();
     }
 
     private static final String EVENT_SELECT = """
