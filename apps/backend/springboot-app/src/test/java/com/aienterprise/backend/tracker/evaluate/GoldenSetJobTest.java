@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
@@ -28,6 +29,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 
 import com.aienterprise.backend.tracker.domain.OpsState;
 import com.aienterprise.backend.tracker.domain.TrackerRepository;
+import com.aienterprise.backend.tracker.ops.StateFreezeService;
+import com.aienterprise.backend.tracker.ops.StateFreezeService.Trigger;
 
 import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 
@@ -47,11 +50,16 @@ class GoldenSetJobTest {
     @Mock
     private TrackerRepository repository;
 
+    @Mock
+    private StateFreezeService freezeService;
+
     private GoldenSetJob job;
 
     @BeforeEach
     void setUp() {
-        job = new GoldenSetJob(evaluator, repository, true, true, VERSIONS, CLOCK);
+        job = new GoldenSetJob(
+                evaluator, repository, freezeService,
+                true, true, VERSIONS, CLOCK);
     }
 
     @Test
@@ -76,7 +84,8 @@ class GoldenSetJobTest {
                 repository, mock(GoldenSetLoader.class),
                 new DeepClassifierGoldenAdapter(deep));
         GoldenSetJob disabled = new GoldenSetJob(
-                realEvaluator, repository, false, true, VERSIONS, CLOCK);
+                realEvaluator, repository, freezeService,
+                false, true, VERSIONS, CLOCK);
 
         disabled.runWeekly();
 
@@ -88,7 +97,8 @@ class GoldenSetJobTest {
     @Test
     void missingApiConfigurationSkipsWithoutEvaluation() {
         GoldenSetJob missingApi = new GoldenSetJob(
-                evaluator, repository, true, false, VERSIONS, CLOCK);
+                evaluator, repository, freezeService,
+                true, false, VERSIONS, CLOCK);
 
         missingApi.runWeekly();
 
@@ -113,6 +123,7 @@ class GoldenSetJobTest {
                 eq(GoldenSetJob.LIVE_ACTIVATED_KEY),
                 argThat((String value) -> value.matches("[0-9a-f]{64}")));
         verify(repository).putOpsState(GoldenSetJob.BASELINE_REQUIRED_KEY, "false");
+        verify(freezeService, never()).freeze(any(), any());
     }
 
     @Test
@@ -128,6 +139,7 @@ class GoldenSetJobTest {
         verify(repository, never()).putOpsState(eq(GoldenSetJob.LAST_LIVE_SUCCESS_KEY), any());
         verify(repository, never()).putOpsState(eq(GoldenSetJob.LIVE_ACTIVATED_KEY), any());
         verify(repository, never()).putOpsState(eq(GoldenSetJob.BASELINE_REQUIRED_KEY), any());
+        verify(freezeService).freeze(contains("44/50"), eq(Trigger.DRILL));
     }
 
     @Test
@@ -147,6 +159,7 @@ class GoldenSetJobTest {
         verify(repository, never()).putOpsState(
                 eq(GoldenSetJob.LIVE_ACTIVATED_KEY),
                 argThat((String value) -> !value.equals("0".repeat(64))));
+        verify(freezeService).freeze(contains("44/50"), eq(Trigger.AUTOMATIC));
     }
 
     @Test

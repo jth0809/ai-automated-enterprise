@@ -14,6 +14,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import com.aienterprise.backend.tracker.domain.TrackerRepository;
+import com.aienterprise.backend.tracker.ops.StateFreezeService;
+import com.aienterprise.backend.tracker.ops.StateFreezeService.Trigger;
 
 import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 
@@ -31,6 +33,7 @@ public class GoldenSetJob {
 
     private final GoldenSetEvaluator evaluator;
     private final TrackerRepository repository;
+    private final StateFreezeService freezeService;
     private final boolean liveEnabled;
     private final boolean apiConfigured;
     private final GoldenSetEvaluator.VersionTuple versions;
@@ -40,6 +43,7 @@ public class GoldenSetJob {
     public GoldenSetJob(
             GoldenSetEvaluator evaluator,
             TrackerRepository repository,
+            StateFreezeService freezeService,
             @Value("${tracker.golden-live-enabled:false}") boolean liveEnabled,
             @Value("${anthropic.api-key:}") String apiKey,
             @Value("${tracker.golden-dataset-version:golden-v1}") String datasetVersion,
@@ -48,7 +52,7 @@ public class GoldenSetJob {
             String modelVersion,
             @Value("${tracker.golden-rubric-version:r2.0}") String rubricVersion,
             @Value("${tracker.golden-schema-version:golden-output-v1}") String schemaVersion) {
-        this(evaluator, repository, liveEnabled,
+        this(evaluator, repository, freezeService, liveEnabled,
                 apiKey != null && !apiKey.isBlank(),
                 new GoldenSetEvaluator.VersionTuple(
                         datasetVersion, promptVersion, modelVersion,
@@ -59,12 +63,14 @@ public class GoldenSetJob {
     GoldenSetJob(
             GoldenSetEvaluator evaluator,
             TrackerRepository repository,
+            StateFreezeService freezeService,
             boolean liveEnabled,
             boolean apiConfigured,
             GoldenSetEvaluator.VersionTuple versions,
             Clock clock) {
         this.evaluator = evaluator;
         this.repository = repository;
+        this.freezeService = freezeService;
         this.liveEnabled = liveEnabled;
         this.apiConfigured = apiConfigured;
         this.versions = versions;
@@ -115,10 +121,25 @@ public class GoldenSetJob {
         }
 
         repository.putOpsState(LAST_RUN_STATUS_KEY, statusValue(report));
+        freezeOnUnsafeAgreement(report);
         if (mode == GoldenSetEvaluator.RunMode.LIVE_MODEL) {
             updateLiveState(report, fingerprint);
         }
         return report;
+    }
+
+    private void freezeOnUnsafeAgreement(GoldenSetEvaluator.Report report) {
+        if (report.agreement() >= MIN_LIVE_AGREEMENT
+                || report.mode() == GoldenSetEvaluator.RunMode.OFFLINE_REPLAY) {
+            return;
+        }
+        Trigger trigger = report.mode() == GoldenSetEvaluator.RunMode.DRILL
+                ? Trigger.DRILL : Trigger.AUTOMATIC;
+        freezeService.freeze(
+                "golden agreement below 0.90: "
+                        + report.matchedCount() + "/" + report.totalCount()
+                        + " (" + report.mode() + ")",
+                trigger);
     }
 
     private void updateLiveState(
