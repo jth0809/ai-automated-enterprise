@@ -29,5 +29,6 @@ public record ReviewCase(
         int sourceCount,
         List<ReviewEvidence> evidence,
         String status,
-        String reviewerNote) {
+        String reviewerNote,
+        Instant resolvedAt) {
 }

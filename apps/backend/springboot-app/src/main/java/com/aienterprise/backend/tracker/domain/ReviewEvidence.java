@@ -1,5 +1,22 @@
 package com.aienterprise.backend.tracker.domain;
 
-/** One quote-verified evidence record shown to the human reviewer. */
-public record ReviewEvidence(String articleTitle, String articleUrl, String evidenceQuote) {
+import java.time.LocalDate;
+
+public record ReviewEvidence(
+        EvidenceKind kind,
+        String sourceLabel,
+        String url,
+        String evidenceQuote,
+        String factSummary,
+        String locator,
+        LocalDate accessedOn) {
+
+    // One-release Java compatibility for callers that used the original names.
+    public String articleTitle() {
+        return sourceLabel;
+    }
+
+    public String articleUrl() {
+        return url;
+    }
 }

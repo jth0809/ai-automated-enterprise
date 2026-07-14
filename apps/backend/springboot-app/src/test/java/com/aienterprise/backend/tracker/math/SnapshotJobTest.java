@@ -17,13 +17,17 @@ import org.springframework.transaction.annotation.Transactional;
 import com.aienterprise.backend.tracker.domain.SnapshotRow;
 import com.aienterprise.backend.tracker.domain.TrackerRepository;
 import com.aienterprise.backend.tracker.ingest.BackfillLoader;
+import com.aienterprise.backend.tracker.ops.StateFreezeService;
+import com.aienterprise.backend.tracker.ops.StateFreezeService.Trigger;
 
 @SpringBootTest(
         webEnvironment = SpringBootTest.WebEnvironment.NONE,
         properties = {
                 "tracker.enabled=true",
                 "tracker.backfill-on-boot=false",
-                "tracker.backfill-resource=tracker/backfill-sample.json"})
+                "tracker.backfill-resource=tracker/backfill-sample.json",
+                "tracker.backfill-candidates-resource=tracker/backfill/historical-candidates-import.jsonl",
+                "tracker.backfill-dataset-version=backfill-test-v1"})
 @ActiveProfiles("test")
 @Transactional
 class SnapshotJobTest {
@@ -39,6 +43,9 @@ class SnapshotJobTest {
 
     @Autowired
     private SnapshotJob job;
+
+    @Autowired
+    private StateFreezeService freezeService;
 
     @Test
     void weeklySnapshotProducesAllPillarsWithOrderedEtaInterval() {
@@ -72,5 +79,20 @@ class SnapshotJobTest {
 
         // Shifts inside the allowance pass through unchanged.
         assertEquals(2100.1, SnapshotJob.dampDisplayed(2100.0, 2100.1, 7.0), 1e-9);
+    }
+
+    @Test
+    void frozenSnapshotRetainsLastDisplayedEtaWithoutUpdatingItsOpsState() {
+        repository.putOpsState("LAST_DISPLAYED_ETA", "2100.5");
+        var before = repository.findOpsState("LAST_DISPLAYED_ETA").orElseThrow();
+        freezeService.freeze("drift drill", Trigger.DRILL);
+
+        job.snapshotNow();
+
+        SnapshotRow overall = repository.findLatestSnapshot(0).orElseThrow();
+        assertEquals(2100.5, overall.displayedEtaYear(), 1e-9);
+        var after = repository.findOpsState("LAST_DISPLAYED_ETA").orElseThrow();
+        assertEquals(before.value(), after.value());
+        assertEquals(before.updatedAt(), after.updatedAt());
     }
 }

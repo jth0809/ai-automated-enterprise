@@ -125,6 +125,46 @@ class TrackerRepositoryTest {
     }
 
     @Test
+    void liveAndHistoricalEvidenceShareTypedProjectionWithoutDoubleCountingSource() {
+        long sourceId = id("source_registry", "code", "NASA");
+        long nodeId = id("capability_node", "code", "P1-ORBIT-REFUEL");
+        long rubricId = id("rubric_version", "version_label", "r2.0");
+        long articleId = repository.insertArticleIfNew(
+                "https://www.nasa.gov/combined-live", "7".repeat(64), sourceId,
+                "Combined live title", Instant.parse("2026-01-02T00:00:00Z"),
+                "Live body.").orElseThrow();
+        long eventId = repository.upsertEventByNaturalKey(
+                "P1-ORBIT-REFUEL|FLIGHT_TEST|combined|2026-W01",
+                EventRow.draft(nodeId, "FLIGHT_TEST", 5, "NASA",
+                        LocalDate.of(2026, 1, 2), "OFFICIAL", null, rubricId));
+        long classificationId = repository.insertClassification(new ClassificationRow(
+                0, articleId, null, "P1-ORBIT-REFUEL", "FLIGHT_TEST", 5, "NASA",
+                LocalDate.of(2026, 1, 2), "PRIMARY", "Verified live quote.",
+                true, "{}", rubricId));
+        repository.linkClassification(classificationId, eventId);
+        repository.insertHistoricalEvidence(HistoricalEvidenceRow.draft(
+                "BF-COMBINED", "HC-COMBINED", "YEAR", eventId, sourceId,
+                "https://www.nasa.gov/combined-historical", "official section",
+                LocalDate.of(2026, 7, 13), "6".repeat(64), "PRIMARY",
+                "Reviewer-authored combined historical summary.", "Reviewed."));
+        repository.insertReview(eventId, "LEVEL_JUMP");
+
+        ReviewCase review = repository.findPendingReviewCases(10).getFirst();
+        TimelineRow timeline = repository.findEventTimeline(10).stream()
+                .filter(row -> row.occurredOn().equals(LocalDate.of(2026, 1, 2)))
+                .findFirst().orElseThrow();
+
+        assertEquals(1, review.sourceCount());
+        assertEquals(2, review.evidence().size());
+        assertEquals(EvidenceKind.VERBATIM, review.evidence().get(0).kind());
+        assertEquals(EvidenceKind.HISTORICAL_REFERENCE, review.evidence().get(1).kind());
+        assertEquals(1, timeline.sourceCount());
+        assertEquals(EvidenceKind.VERBATIM, timeline.primaryEvidence().kind());
+        assertEquals("Verified live quote.", timeline.evidenceQuote());
+        assertEquals("YEAR", timeline.occurredOnPrecision());
+    }
+
+    @Test
     void reviewInsertionIsIdempotentPerEventAndReason() {
         long nodeId = id("capability_node", "code", "P1-ORBIT-REFUEL");
         long rubricId = id("rubric_version", "version_label", "r1.0");
@@ -161,8 +201,16 @@ class TrackerRepositoryTest {
     }
 
     @Test
-    void activeRubricVersionIdReturnsTheSeededActiveRow() {
-        assertEquals(id("rubric_version", "version_label", "r1.0"), repository.activeRubricVersionId());
+    void activeRubricVersionIdReturnsTheR2NodesV1Row() {
+        long activeId = repository.activeRubricVersionId();
+
+        String version = jdbc.sql("""
+                SELECT version_label FROM rubric_version
+                 WHERE id = :id
+                   AND active = 'Y'
+                   AND node_set_version = 'nodes-v1.0'
+                """).param("id", activeId).query(String.class).single();
+        assertEquals("r2.0", version);
     }
 
     @Test

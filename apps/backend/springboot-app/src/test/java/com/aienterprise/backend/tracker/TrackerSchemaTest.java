@@ -26,11 +26,17 @@ class TrackerSchemaTest {
     private JdbcClient jdbcClient;
 
     @Test
-    void capabilityNodeHasExactlyTwentySeededRows() {
+    void capabilityNodeHasExactlyThirtyFiveVersionedRows() {
         Integer count = jdbcClient.sql("SELECT COUNT(*) FROM capability_node")
                 .query(Integer.class)
                 .single();
-        assertEquals(20, count);
+        assertEquals(35, count);
+
+        Integer versioned = jdbcClient.sql("""
+                SELECT COUNT(*) FROM capability_node
+                 WHERE node_set_version = 'nodes-v1.0'
+                """).query(Integer.class).single();
+        assertEquals(35, versioned);
     }
 
     @Test
@@ -46,11 +52,11 @@ class TrackerSchemaTest {
     }
 
     @Test
-    void sourceRegistryHasExactlySixteenSeededRows() {
+    void sourceRegistryHasExactlyTwentySeededAndHistoricalRows() {
         Integer count = jdbcClient.sql("SELECT COUNT(*) FROM source_registry")
                 .query(Integer.class)
                 .single();
-        assertEquals(16, count);
+        assertEquals(20, count);
     }
 
     @Test

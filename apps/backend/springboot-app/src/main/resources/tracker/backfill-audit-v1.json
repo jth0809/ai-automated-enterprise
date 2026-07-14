@@ -1,0 +1,247 @@
+[
+  {
+    "nodeCode": "P1-REUSE-LV", "nodeSetVersion": "nodes-v1.0", "rubricVersion": "r2.0", "auditedOn": "2026-07-14", "auditedLevel": 5, "status": "ACTIVE",
+    "levelClaimIds": ["BF-P1-022"], "levelEvidenceRefs": ["HC-2021-FALCON9-100-RECOVERIES#NASA"], "statusClaimIds": [],
+    "nextLevelGap": "No evidence yet shows an orbital-class architecture repeatedly recovering and reflying every mission-critical stage and spacecraft.",
+    "statusRationale": "The approved corpus contains current reflight evidence and no capability-wide program end.",
+    "reviews": [{"reviewerId":"phase2-fact-audit","focus":"FACT","decision":"APPROVED"},{"reviewerId":"phase2-rubric-audit","focus":"RUBRIC","decision":"APPROVED"}]
+  },
+  {
+    "nodeCode": "P1-ORBIT-REFUEL", "nodeSetVersion": "nodes-v1.0", "rubricVersion": "r2.0", "auditedOn": "2026-07-14", "auditedLevel": 8, "status": "ACTIVE",
+    "levelClaimIds": ["BF-P1-031"], "levelEvidenceRefs": ["HC-2008-JULES-VERNE-ISS-REFUEL#ESA"], "statusClaimIds": ["BF-P1-006"],
+    "nextLevelGap": "Routine, repeatable settlement-scale depot transfer across multiple missions has not been directly demonstrated.",
+    "statusRationale": "OSAM-1 ended, but that project cancellation is explicitly non-node-wide and does not erase other demonstrated transfer capability.",
+    "reviews": [{"reviewerId":"phase2-fact-audit","focus":"FACT","decision":"APPROVED"},{"reviewerId":"phase2-rubric-audit","focus":"RUBRIC","decision":"APPROVED"}]
+  },
+  {
+    "nodeCode": "P1-DEEP-PROP", "nodeSetVersion": "nodes-v1.0", "rubricVersion": "r2.0", "auditedOn": "2026-07-14", "auditedLevel": 5, "status": "DORMANT",
+    "levelClaimIds": ["BF-P1-008"], "levelEvidenceRefs": ["HC-1969-NERVA-XE-GROUND-TESTS#NASA"], "statusClaimIds": ["BF-P1-009"],
+    "nextLevelGap": "No flight evidence joins settlement-scale thrust or power, thermal control, and required lifetime beyond the near-Earth system.",
+    "statusRationale": "The NERVA operating lineage ended in 1973 and no later qualifying state claim restored it within the 15-year dormancy window.",
+    "reviews": [{"reviewerId":"phase2-fact-audit","focus":"FACT","decision":"APPROVED"},{"reviewerId":"phase2-rubric-audit","focus":"RUBRIC","decision":"APPROVED"}]
+  },
+  {
+    "nodeCode": "P1-EDL-HEAVY", "nodeSetVersion": "nodes-v1.0", "rubricVersion": "r2.0", "auditedOn": "2026-07-14", "auditedLevel": 5, "status": "ACTIVE",
+    "levelClaimIds": ["BF-P1-013"], "levelEvidenceRefs": ["HC-2022-LOFTID-REENTRY-DEMO#NASA"], "statusClaimIds": [],
+    "nextLevelGap": "No controlled atmospheric landing has delivered at least 10 tonnes of usable cargo to a non-Earth destination.",
+    "statusRationale": "Recent flight demonstrations remain active evidence and no capability-wide program end is recorded.",
+    "reviews": [{"reviewerId":"phase2-fact-audit","focus":"FACT","decision":"APPROVED"},{"reviewerId":"phase2-rubric-audit","focus":"RUBRIC","decision":"APPROVED"}]
+  },
+  {
+    "nodeCode": "P1-SURFACE-ASCENT", "nodeSetVersion": "nodes-v1.0", "rubricVersion": "r2.0", "auditedOn": "2026-07-14", "auditedLevel": 8, "status": "DORMANT",
+    "levelClaimIds": ["BF-P1-016"], "levelEvidenceRefs": ["HC-1969-APOLLO11-LUNAR-ASCENT#NASA"], "statusClaimIds": ["BF-P1-032"],
+    "nextLevelGap": "No current program repeatedly operates crew or settlement-cargo ascent from a non-Earth surface into a sustained logistics chain.",
+    "statusRationale": "Apollo 17 closed the demonstrated lunar surface-ascent operating lineage and no later qualifying state claim restored it.",
+    "reviews": [{"reviewerId":"phase2-fact-audit","focus":"FACT","decision":"APPROVED"},{"reviewerId":"phase2-rubric-audit","focus":"RUBRIC","decision":"APPROVED"}]
+  },
+  {
+    "nodeCode": "P1-CREW-SAFE", "nodeSetVersion": "nodes-v1.0", "rubricVersion": "r2.0", "auditedOn": "2026-07-14", "auditedLevel": 8, "status": "ACTIVE",
+    "levelClaimIds": ["BF-P1-018"], "levelEvidenceRefs": ["HC-2018-SOYUZ-MS10-ABORT-RECOVERY#NASA"], "statusClaimIds": [],
+    "nextLevelGap": "The corpus does not show repeated end-to-end emergency coverage across a complete settlement transport route and all credible failure phases.",
+    "statusRationale": "Operational abort and crew recovery evidence remains active with no capability-wide end.",
+    "reviews": [{"reviewerId":"phase2-fact-audit","focus":"FACT","decision":"APPROVED"},{"reviewerId":"phase2-rubric-audit","focus":"RUBRIC","decision":"APPROVED"}]
+  },
+  {
+    "nodeCode": "P1-ORBIT-LOGISTICS", "nodeSetVersion": "nodes-v1.0", "rubricVersion": "r2.0", "auditedOn": "2026-07-14", "auditedLevel": 8, "status": "ACTIVE",
+    "levelClaimIds": ["BF-P1-030"], "levelEvidenceRefs": ["HC-2014-FIRST-OPERATIONAL-CYGNUS-RESUPPLY#NASA"], "statusClaimIds": [],
+    "nextLevelGap": "No evidence establishes a settlement-scale, multi-organization logistics standard with sustained accountable handoff beyond low Earth orbit.",
+    "statusRationale": "Operational resupply evidence remains current and no capability-wide program end is recorded.",
+    "reviews": [{"reviewerId":"phase2-fact-audit","focus":"FACT","decision":"APPROVED"},{"reviewerId":"phase2-rubric-audit","focus":"RUBRIC","decision":"APPROVED"}]
+  },
+  {
+    "nodeCode": "P1-TRANSPORT-INTEGRATION", "nodeSetVersion": "nodes-v1.0", "rubricVersion": "r2.0", "auditedOn": "2026-07-14", "auditedLevel": 3, "status": "ACTIVE",
+    "levelClaimIds": ["BF-P1-026"], "levelEvidenceRefs": ["HC-2021-PERSEVERANCE-MARS-LANDING#NASA"], "statusClaimIds": [],
+    "nextLevelGap": "No single accountable campaign has exercised reuse, orbital logistics, refueling, deep-space propulsion, landing, ascent, and crew safety as one governed route.",
+    "statusRationale": "A partial integrated transport precedent is retained and no capability-wide end is recorded.",
+    "reviews": [{"reviewerId":"phase2-fact-audit","focus":"FACT","decision":"APPROVED"},{"reviewerId":"phase2-rubric-audit","focus":"RUBRIC","decision":"APPROVED"}]
+  },
+  {
+    "nodeCode": "P2-ECLSS", "nodeSetVersion": "nodes-v1.0", "rubricVersion": "r2.0", "auditedOn": "2026-07-14", "auditedLevel": 3, "status": "ACTIVE",
+    "levelClaimIds": ["BF-P2-004"], "levelEvidenceRefs": ["HC-2023-ISS-98PCT-WATER-RECOVERY#NASA"], "statusClaimIds": [],
+    "nextLevelGap": "The evidence does not yet demonstrate a destination-independent closed atmosphere-and-water loop sustained under settlement crew load.",
+    "statusRationale": "ISS closure evidence is active and no capability-wide program end is recorded.",
+    "reviews": [{"reviewerId":"phase2-fact-audit","focus":"FACT","decision":"APPROVED"},{"reviewerId":"phase2-rubric-audit","focus":"RUBRIC","decision":"APPROVED"}]
+  },
+  {
+    "nodeCode": "P2-FOOD", "nodeSetVersion": "nodes-v1.0", "rubricVersion": "r2.0", "auditedOn": "2026-07-14", "auditedLevel": 3, "status": "ACTIVE",
+    "levelClaimIds": ["BF-P2-008"], "levelEvidenceRefs": ["HC-2021-ISS-PEPPER-SECOND-HARVEST#NASA"], "statusClaimIds": [],
+    "nextLevelGap": "No sustained system supplies a nutritionally material share of crew demand with repeatable safe processing and yield.",
+    "statusRationale": "Repeated edible-crop demonstrations remain active evidence without a capability-wide end.",
+    "reviews": [{"reviewerId":"phase2-fact-audit","focus":"FACT","decision":"APPROVED"},{"reviewerId":"phase2-rubric-audit","focus":"RUBRIC","decision":"APPROVED"}]
+  },
+  {
+    "nodeCode": "P2-RAD", "nodeSetVersion": "nodes-v1.0", "rubricVersion": "r2.0", "auditedOn": "2026-07-14", "auditedLevel": 5, "status": "ACTIVE",
+    "levelClaimIds": ["BF-P2-012"], "levelEvidenceRefs": ["HC-2022-ARTEMIS1-ORION-RADIATION-VALIDATION#NASA"], "statusClaimIds": [],
+    "nextLevelGap": "No crewed deep-space or surface deployment has yet shown sustained dose control through operational forecasting, sheltering, and shielding.",
+    "statusRationale": "Recent flight validation remains active and no capability-wide program end is recorded.",
+    "reviews": [{"reviewerId":"phase2-fact-audit","focus":"FACT","decision":"APPROVED"},{"reviewerId":"phase2-rubric-audit","focus":"RUBRIC","decision":"APPROVED"}]
+  },
+  {
+    "nodeCode": "P2-MED", "nodeSetVersion": "nodes-v1.0", "rubricVersion": "r2.0", "auditedOn": "2026-07-14", "auditedLevel": 5, "status": "ACTIVE",
+    "levelClaimIds": ["BF-P2-014"], "levelEvidenceRefs": ["HC-2012-ARED-BONE-STUDY#NASA"], "statusClaimIds": [],
+    "nextLevelGap": "Long-duration partial-gravity clinical outcomes and countermeasures have not been demonstrated in a settlement-relevant population.",
+    "statusRationale": "Operational microgravity countermeasure evidence remains active and no capability-wide end is recorded.",
+    "reviews": [{"reviewerId":"phase2-fact-audit","focus":"FACT","decision":"APPROVED"},{"reviewerId":"phase2-rubric-audit","focus":"RUBRIC","decision":"APPROVED"}]
+  },
+  {
+    "nodeCode": "P2-WASTE-CYCLE", "nodeSetVersion": "nodes-v1.0", "rubricVersion": "r2.0", "auditedOn": "2026-07-14", "auditedLevel": 3, "status": "ACTIVE",
+    "levelClaimIds": ["BF-P2-018"], "levelEvidenceRefs": ["HC-2019-OSCAR-SUBORBITAL-TRASH-TO-GAS#NASA"], "statusClaimIds": [],
+    "nextLevelGap": "No crewed habitat has safely and repeatedly converted solid and organic waste into qualified reusable resources at operational scale.",
+    "statusRationale": "Flight demonstration evidence remains active and no capability-wide program end is recorded.",
+    "reviews": [{"reviewerId":"phase2-fact-audit","focus":"FACT","decision":"APPROVED"},{"reviewerId":"phase2-rubric-audit","focus":"RUBRIC","decision":"APPROVED"}]
+  },
+  {
+    "nodeCode": "P2-HEALTH-AUTONOMY", "nodeSetVersion": "nodes-v1.0", "rubricVersion": "r2.0", "auditedOn": "2026-07-14", "auditedLevel": 3, "status": "ACTIVE",
+    "levelClaimIds": ["BF-P2-019"], "levelEvidenceRefs": ["HC-2020-ISS-AMOS-FIRST-AUTONOMOUS-SCANS#NASA"], "statusClaimIds": [],
+    "nextLevelGap": "Autonomous interpretation, diagnosis, treatment selection, and treatment delivery without real-time Earth support remain unproven.",
+    "statusRationale": "AMOS supports partial in-flight procedure autonomy and no capability-wide program end is recorded.",
+    "reviews": [{"reviewerId":"phase2-fact-audit","focus":"FACT","decision":"APPROVED"},{"reviewerId":"phase2-rubric-audit","focus":"RUBRIC","decision":"APPROVED"}]
+  },
+  {
+    "nodeCode": "P2-SURVIVAL-INTEGRATION", "nodeSetVersion": "nodes-v1.0", "rubricVersion": "r2.0", "auditedOn": "2026-07-14", "auditedLevel": 5, "status": "ACTIVE",
+    "levelClaimIds": ["BF-P2-021"], "levelEvidenceRefs": ["HC-2000-ISS-PERMANENT-OCCUPANCY#NASA"], "statusClaimIds": [],
+    "nextLevelGap": "No continuously crewed settlement has operated all P2 elements for 26 months while receiving no Earth-origin material.",
+    "statusRationale": "Continuous habitation provides partial integration evidence and no capability-wide program end is recorded.",
+    "reviews": [{"reviewerId":"phase2-fact-audit","focus":"FACT","decision":"APPROVED"},{"reviewerId":"phase2-rubric-audit","focus":"RUBRIC","decision":"APPROVED"}]
+  },
+  {
+    "nodeCode": "P3-CONSTRUCT", "nodeSetVersion": "nodes-v1.0", "rubricVersion": "r2.0", "auditedOn": "2026-07-14", "auditedLevel": 3, "status": "ACTIVE",
+    "levelClaimIds": ["BF-P3-005"], "levelEvidenceRefs": ["HC-2021-MARS-DUNE-ALPHA-PRINTED#NASA"], "statusClaimIds": [],
+    "nextLevelGap": "No destination operation has built and qualified a habitat-scale structure from local material under relevant environmental loads.",
+    "statusRationale": "Integrated terrestrial analog construction evidence remains active without a capability-wide end.",
+    "reviews": [{"reviewerId":"phase2-fact-audit","focus":"FACT","decision":"APPROVED"},{"reviewerId":"phase2-rubric-audit","focus":"RUBRIC","decision":"APPROVED"}]
+  },
+  {
+    "nodeCode": "P3-POWER", "nodeSetVersion": "nodes-v1.0", "rubricVersion": "r2.0", "auditedOn": "2026-07-14", "auditedLevel": 3, "status": "ACTIVE",
+    "levelClaimIds": ["BF-P3-022"], "levelEvidenceRefs": ["HC-2021-ISS-IROSA-FIRST-INTEGRATION#NASA"], "statusClaimIds": [],
+    "nextLevelGap": "A destination surface grid has not sustained generation, storage, distribution, and credible fault recovery for habitat loads.",
+    "statusRationale": "In-space array integration is active partial evidence and no capability-wide program end is recorded.",
+    "reviews": [{"reviewerId":"phase2-fact-audit","focus":"FACT","decision":"APPROVED"},{"reviewerId":"phase2-rubric-audit","focus":"RUBRIC","decision":"APPROVED"}]
+  },
+  {
+    "nodeCode": "P3-COMMS", "nodeSetVersion": "nodes-v1.0", "rubricVersion": "r2.0", "auditedOn": "2026-07-14", "auditedLevel": 3, "status": "ACTIVE",
+    "levelClaimIds": ["BF-P3-024"], "levelEvidenceRefs": ["HC-2024-LN1-LUNAR-NAVIGATION-BEACON#NASA"], "statusClaimIds": [],
+    "nextLevelGap": "No persistent destination network has demonstrated interoperable relay, surface coverage, timing, and degraded-mode operation at settlement scale.",
+    "statusRationale": "Lunar navigation-beacon flight evidence is active and no capability-wide program end is recorded.",
+    "reviews": [{"reviewerId":"phase2-fact-audit","focus":"FACT","decision":"APPROVED"},{"reviewerId":"phase2-rubric-audit","focus":"RUBRIC","decision":"APPROVED"}]
+  },
+  {
+    "nodeCode": "P3-THERMAL", "nodeSetVersion": "nodes-v1.0", "rubricVersion": "r2.0", "auditedOn": "2026-07-14", "auditedLevel": 3, "status": "ACTIVE",
+    "levelClaimIds": ["BF-P3-025"], "levelEvidenceRefs": ["HC-1995-LSSIF-INTEGRATED-THERMAL-TEST#NASA"], "statusClaimIds": [],
+    "nextLevelGap": "A surface habitat has not operated habitat-scale heat transport and rejection across destination cycles and credible faults.",
+    "statusRationale": "The integrated crew-chamber prototype supports partial credit and no capability-wide program end is recorded.",
+    "reviews": [{"reviewerId":"phase2-fact-audit","focus":"FACT","decision":"APPROVED"},{"reviewerId":"phase2-rubric-audit","focus":"RUBRIC","decision":"APPROVED"}]
+  },
+  {
+    "nodeCode": "P3-DUST", "nodeSetVersion": "nodes-v1.0", "rubricVersion": "r2.0", "auditedOn": "2026-07-14", "auditedLevel": 3, "status": "ACTIVE",
+    "levelClaimIds": ["BF-P3-019"], "levelEvidenceRefs": ["HC-2025-BLUE-GHOST-RAC-DUST-MEASUREMENT#NASA"], "statusClaimIds": [],
+    "nextLevelGap": "No sustained destination system integrates dust prevention, removal, containment, and monitoring across suits, airlocks, habitats, and mechanisms.",
+    "statusRationale": "Recent lunar dust measurement evidence is active and no capability-wide program end is recorded.",
+    "reviews": [{"reviewerId":"phase2-fact-audit","focus":"FACT","decision":"APPROVED"},{"reviewerId":"phase2-rubric-audit","focus":"RUBRIC","decision":"APPROVED"}]
+  },
+  {
+    "nodeCode": "P3-HABITAT-INTEGRATION", "nodeSetVersion": "nodes-v1.0", "rubricVersion": "r2.0", "auditedOn": "2026-07-14", "auditedLevel": 5, "status": "ACTIVE",
+    "levelClaimIds": ["BF-P3-020"], "levelEvidenceRefs": ["HC-2024-CHAPEA-378-DAY-ANALOG#NASA"], "statusClaimIds": [],
+    "nextLevelGap": "The integrated habitat has not operated at a non-Earth destination through actual environmental cycles, logistics constraints, and faults.",
+    "statusRationale": "The long-duration analog supports integration credit and no capability-wide program end is recorded.",
+    "reviews": [{"reviewerId":"phase2-fact-audit","focus":"FACT","decision":"APPROVED"},{"reviewerId":"phase2-rubric-audit","focus":"RUBRIC","decision":"APPROVED"}]
+  },
+  {
+    "nodeCode": "P4-ISRU-PROP", "nodeSetVersion": "nodes-v1.0", "rubricVersion": "r2.0", "auditedOn": "2026-07-14", "auditedLevel": 5, "status": "ACTIVE",
+    "levelClaimIds": ["BF-P4-006"], "levelEvidenceRefs": ["HC-2023-MOXIE-MISSION-COMPLETION#NASA"], "statusClaimIds": ["BF-P4-004"],
+    "nextLevelGap": "No destination system has sustained settlement-scale production and operational use of local propellant, water, or oxygen.",
+    "statusRationale": "Resource Prospector ended, but that project cancellation is non-node-wide; MOXIE flight evidence remains active.",
+    "reviews": [{"reviewerId":"phase2-fact-audit","focus":"FACT","decision":"APPROVED"},{"reviewerId":"phase2-rubric-audit","focus":"RUBRIC","decision":"APPROVED"}]
+  },
+  {
+    "nodeCode": "P4-NUKE", "nodeSetVersion": "nodes-v1.0", "rubricVersion": "r2.0", "auditedOn": "2026-07-14", "auditedLevel": 5, "status": "ACTIVE",
+    "levelClaimIds": ["BF-P4-008"], "levelEvidenceRefs": ["HC-2018-KRUSTY-FULL-POWER-GROUND-TEST#NASA"], "statusClaimIds": [],
+    "nextLevelGap": "No settlement-scale fission power system has operated in flight or on a destination surface with its full heat-rejection and load chain.",
+    "statusRationale": "Full-power ground testing remains active evidence and no capability-wide program end is recorded.",
+    "reviews": [{"reviewerId":"phase2-fact-audit","focus":"FACT","decision":"APPROVED"},{"reviewerId":"phase2-rubric-audit","focus":"RUBRIC","decision":"APPROVED"}]
+  },
+  {
+    "nodeCode": "P4-MATERIALS", "nodeSetVersion": "nodes-v1.0", "rubricVersion": "r2.0", "auditedOn": "2026-07-14", "auditedLevel": 3, "status": "ACTIVE",
+    "levelClaimIds": ["BF-P4-014"], "levelEvidenceRefs": ["HC-2019-ISS-CEMENT-HYDRATION-STUDY#NASA"], "statusClaimIds": [],
+    "nextLevelGap": "A destination-scale structural component made from the candidate material has not been qualified under combined service loads and aging.",
+    "statusRationale": "Space-exposure material evidence remains active and no capability-wide program end is recorded.",
+    "reviews": [{"reviewerId":"phase2-fact-audit","focus":"FACT","decision":"APPROVED"},{"reviewerId":"phase2-rubric-audit","focus":"RUBRIC","decision":"APPROVED"}]
+  },
+  {
+    "nodeCode": "P4-MANUFACTURING", "nodeSetVersion": "nodes-v1.0", "rubricVersion": "r2.0", "auditedOn": "2026-07-14", "auditedLevel": 3, "status": "ACTIVE",
+    "levelClaimIds": ["BF-P4-020"], "levelEvidenceRefs": ["HC-2024-FIRST-METAL-3D-PRINT-IN-SPACE#NASA"], "statusClaimIds": ["BF-P4-019"],
+    "nextLevelGap": "No destination operation has qualified useful tools, spares, or structures made from local or recycled feedstock.",
+    "statusRationale": "OSAM-2 ended, but that project cancellation is non-node-wide; in-space manufacturing evidence remains active.",
+    "reviews": [{"reviewerId":"phase2-fact-audit","focus":"FACT","decision":"APPROVED"},{"reviewerId":"phase2-rubric-audit","focus":"RUBRIC","decision":"APPROVED"}]
+  },
+  {
+    "nodeCode": "P4-RESOURCE-INTEGRATION", "nodeSetVersion": "nodes-v1.0", "rubricVersion": "r2.0", "auditedOn": "2026-07-14", "auditedLevel": 0, "status": "ACTIVE",
+    "levelClaimIds": [], "levelEvidenceRefs": [], "statusClaimIds": [],
+    "nextLevelGap": "The reviewed official corpus contains no direct evidence of one system jointly extracting, processing, storing, distributing, and using destination resources.",
+    "statusRationale": "L0 records absence of direct integration evidence, not absence of component research; no capability-wide program end is recorded.",
+    "reviews": [{"reviewerId":"phase2-fact-audit","focus":"FACT","decision":"APPROVED"},{"reviewerId":"phase2-rubric-audit","focus":"RUBRIC","decision":"APPROVED"}]
+  },
+  {
+    "nodeCode": "P5-AUTOCON", "nodeSetVersion": "nodes-v1.0", "rubricVersion": "r2.0", "auditedOn": "2026-07-14", "auditedLevel": 3, "status": "ACTIVE",
+    "levelClaimIds": ["BF-P5-004"], "levelEvidenceRefs": ["HC-2024-ARMADAS-AUTONOMOUS-GROUND-ASSEMBLY#NASA"], "statusClaimIds": ["BF-P5-003"],
+    "nextLevelGap": "No destination deployment has autonomously built and verified settlement-scale infrastructure from site preparation through acceptance.",
+    "statusRationale": "OSAM-2 ended, but that project cancellation is non-node-wide; autonomous assembly prototypes remain active evidence.",
+    "reviews": [{"reviewerId":"phase2-fact-audit","focus":"FACT","decision":"APPROVED"},{"reviewerId":"phase2-rubric-audit","focus":"RUBRIC","decision":"APPROVED"}]
+  },
+  {
+    "nodeCode": "P5-AUTONOMY", "nodeSetVersion": "nodes-v1.0", "rubricVersion": "r2.0", "auditedOn": "2026-07-14", "auditedLevel": 7, "status": "ACTIVE",
+    "levelClaimIds": ["BF-P5-010"], "levelEvidenceRefs": ["HC-2021-PERSEVERANCE-AUTONAV#NASA"], "statusClaimIds": [],
+    "nextLevelGap": "No system has sustained full settlement operations across planning, navigation, resource constraints, faults, and handoffs with bounded Earth support.",
+    "statusRationale": "Operational planetary autonomy evidence remains active and no capability-wide program end is recorded.",
+    "reviews": [{"reviewerId":"phase2-fact-audit","focus":"FACT","decision":"APPROVED"},{"reviewerId":"phase2-rubric-audit","focus":"RUBRIC","decision":"APPROVED"}]
+  },
+  {
+    "nodeCode": "P5-MAINTENANCE", "nodeSetVersion": "nodes-v1.0", "rubricVersion": "r2.0", "auditedOn": "2026-07-14", "auditedLevel": 5, "status": "ACTIVE",
+    "levelClaimIds": ["BF-P5-019"], "levelEvidenceRefs": ["HC-2007-ORBITAL-EXPRESS-SERVICING-TRANSFERS#NASA"], "statusClaimIds": [],
+    "nextLevelGap": "No autonomous destination system has diagnosed and physically restored representative settlement hardware through repeated real faults.",
+    "statusRationale": "Orbital servicing evidence remains active and no capability-wide program end is recorded.",
+    "reviews": [{"reviewerId":"phase2-fact-audit","focus":"FACT","decision":"APPROVED"},{"reviewerId":"phase2-rubric-audit","focus":"RUBRIC","decision":"APPROVED"}]
+  },
+  {
+    "nodeCode": "P5-OPS-INTEGRATION", "nodeSetVersion": "nodes-v1.0", "rubricVersion": "r2.0", "auditedOn": "2026-07-14", "auditedLevel": 3, "status": "ACTIVE",
+    "levelClaimIds": ["BF-P5-020"], "levelEvidenceRefs": ["HC-2025-ISAAC-FAULT-LOGISTICS-DEMONSTRATIONS#NASA"], "statusClaimIds": [],
+    "nextLevelGap": "No destination campaign has sustained integrated autonomous construction, operations, logistics, and maintenance through representative faults.",
+    "statusRationale": "Integrated fault-and-logistics demonstrations support partial credit and no capability-wide program end is recorded.",
+    "reviews": [{"reviewerId":"phase2-fact-audit","focus":"FACT","decision":"APPROVED"},{"reviewerId":"phase2-rubric-audit","focus":"RUBRIC","decision":"APPROVED"}]
+  },
+  {
+    "nodeCode": "P6-LAUNCH-MARKET", "nodeSetVersion": "nodes-v1.0", "rubricVersion": "r2.0", "auditedOn": "2026-07-14", "auditedLevel": 6, "status": "ACTIVE",
+    "levelClaimIds": ["BF-P6-004"], "levelEvidenceRefs": ["HC-2024-FAA-148-LICENSED-OPERATIONS#FAA"], "statusClaimIds": [],
+    "nextLevelGap": "A durable settlement logistics market with repeatable service, price, cadence, and multiple-cycle demand has not been demonstrated.",
+    "statusRationale": "Licensed commercial operating cadence remains active and no capability-wide market end is recorded.",
+    "reviews": [{"reviewerId":"phase2-fact-audit","focus":"FACT","decision":"APPROVED"},{"reviewerId":"phase2-rubric-audit","focus":"RUBRIC","decision":"APPROVED"}]
+  },
+  {
+    "nodeCode": "P6-GOV-FRAMEWORK", "nodeSetVersion": "nodes-v1.0", "rubricVersion": "r2.0", "auditedOn": "2026-07-14", "auditedLevel": 6, "status": "ACTIVE",
+    "levelClaimIds": ["BF-P6-009"], "levelEvidenceRefs": ["HC-2015-US-COMMERCIAL-SPACE-RESOURCE-LAW#GOVINFO"], "statusClaimIds": [],
+    "nextLevelGap": "No comprehensive binding and implementable regime covers jurisdiction, registration, safety, resources, rights, liability, and disputes for persistent settlement.",
+    "statusRationale": "Binding national resource-law evidence remains active and no capability-wide institutional end is recorded.",
+    "reviews": [{"reviewerId":"phase2-fact-audit","focus":"FACT","decision":"APPROVED"},{"reviewerId":"phase2-rubric-audit","focus":"RUBRIC","decision":"APPROVED"}]
+  },
+  {
+    "nodeCode": "P6-FUNDING", "nodeSetVersion": "nodes-v1.0", "rubricVersion": "r2.0", "auditedOn": "2026-07-14", "auditedLevel": 3, "status": "ACTIVE",
+    "levelClaimIds": ["BF-P6-015"], "levelEvidenceRefs": ["HC-2021-COMMERCIAL-DESTINATION-DESIGN-AWARDS#NASA"], "statusClaimIds": ["BF-P6-016"],
+    "nextLevelGap": "Repeatable capital formation and operating finance have not supported settlement infrastructure across more than one political or venture cycle.",
+    "statusRationale": "VIPER was one project cancellation and explicitly does not end the broader funding capability or NASA lunar program.",
+    "reviews": [{"reviewerId":"phase2-fact-audit","focus":"FACT","decision":"APPROVED"},{"reviewerId":"phase2-rubric-audit","focus":"RUBRIC","decision":"APPROVED"}]
+  },
+  {
+    "nodeCode": "P6-INSURANCE-STD", "nodeSetVersion": "nodes-v1.0", "rubricVersion": "r2.0", "auditedOn": "2026-07-14", "auditedLevel": 3, "status": "ACTIVE",
+    "levelClaimIds": ["BF-P6-019"], "levelEvidenceRefs": ["HC-2022-LUNANET-INTEROPERABILITY-SPEC-V4#NASA"], "statusClaimIds": [],
+    "nextLevelGap": "No routinely used settlement stack combines actuarial risk transfer, certification, interoperable standards, payment, and escrow across organizations.",
+    "statusRationale": "Published interoperability standards remain active and no capability-wide institutional end is recorded.",
+    "reviews": [{"reviewerId":"phase2-fact-audit","focus":"FACT","decision":"APPROVED"},{"reviewerId":"phase2-rubric-audit","focus":"RUBRIC","decision":"APPROVED"}]
+  },
+  {
+    "nodeCode": "P6-SETTLEMENT-INTEGRATION", "nodeSetVersion": "nodes-v1.0", "rubricVersion": "r2.0", "auditedOn": "2026-07-14", "auditedLevel": 0, "status": "ACTIVE",
+    "levelClaimIds": [], "levelEvidenceRefs": [], "statusClaimIds": [],
+    "nextLevelGap": "The reviewed official corpus contains no direct evidence of one persistent off-Earth activity operating launch markets, finance, governance, standards, and risk transfer as a single settlement economy.",
+    "statusRationale": "L0 records absence of direct integration evidence, not absence of component institutions; no capability-wide program end is recorded.",
+    "reviews": [{"reviewerId":"phase2-fact-audit","focus":"FACT","decision":"APPROVED"},{"reviewerId":"phase2-rubric-audit","focus":"RUBRIC","decision":"APPROVED"}]
+  }
+]

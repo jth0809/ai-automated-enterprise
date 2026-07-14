@@ -1,0 +1,308 @@
+{
+  "datasetVersion": "golden-v1",
+  "nodeSetVersion": "nodes-v1.0",
+  "rubricVersion": "r2.0",
+  "expectedSchemaVersion": "golden-output-v1",
+  "cases": [
+    {
+      "caseCode": "GOLD-001", "fixtureKind": "SYNTHETIC", "title": "Reusable orbital stage completes a recovery flight",
+      "body": "Aster Works flew an orbital-class booster and recovered it intact after the mission on January 12.",
+      "expectedOutput": {"relevant": true, "nodeCode": "P1-REUSE-LV", "eventType": "FLIGHT_TEST", "claimedLevel": 5, "actor": "Aster Works", "occurredOn": "2026-01-12", "publicationPath": "PRIMARY"},
+      "notes": "Authored duplicate-pair fixture; provenance identifies a rubric anchor only.", "provenanceRefs": ["BF-P1-022"], "scenarioTags": ["P1", "STATE"], "pairCode": "PAIR-REUSE-01", "pairExpectation": "DUPLICATE", "active": true
+    },
+    {
+      "caseCode": "GOLD-002", "fixtureKind": "HUMAN_PARAPHRASE", "title": "Recovered booster returns from the same January mission",
+      "body": "The January 12 Aster Works mission ended with the orbital booster safely recovered for inspection.",
+      "expectedOutput": {"relevant": true, "nodeCode": "P1-REUSE-LV", "eventType": "FLIGHT_TEST", "claimedLevel": 5, "actor": "Aster Works", "occurredOn": "2026-01-12", "publicationPath": "THIRD_PARTY"},
+      "notes": "Independently worded human paraphrase of the synthetic event.", "provenanceRefs": ["BF-P1-022"], "scenarioTags": ["P1", "STATE"], "pairCode": "PAIR-REUSE-01", "pairExpectation": "DUPLICATE", "active": true
+    },
+    {
+      "caseCode": "GOLD-003", "fixtureKind": "SYNTHETIC", "title": "Depot transfers propellant to an operational spacecraft",
+      "body": "North Arc Depot moved 900 kilograms of propellant into a visiting spacecraft during an accountable orbital service.",
+      "expectedOutput": {"relevant": true, "nodeCode": "P1-ORBIT-REFUEL", "eventType": "OPERATIONAL_DEPLOYMENT", "claimedLevel": 8, "actor": "North Arc Depot", "occurredOn": "2026-01-18", "publicationPath": "PRIMARY"},
+      "notes": "Synthetic operational transfer case.", "provenanceRefs": ["BF-P1-031"], "scenarioTags": ["P1", "STATE", "LEVEL_BOUNDARY"], "pairCode": null, "pairExpectation": null, "active": true
+    },
+    {
+      "caseCode": "GOLD-004", "fixtureKind": "HUMAN_PARAPHRASE", "title": "Deep-space propulsion unit finishes integrated ground run",
+      "body": "Helios Lab completed a full-power ground demonstration of a deep-space propulsion unit with its feed and thermal systems connected.",
+      "expectedOutput": {"relevant": true, "nodeCode": "P1-DEEP-PROP", "eventType": "PROTOTYPE_DEMO", "claimedLevel": 5, "actor": "Helios Lab", "occurredOn": "2026-01-21", "publicationPath": "PRIMARY"},
+      "notes": "Human-authored paraphrase without source wording.", "provenanceRefs": ["BF-P1-008"], "scenarioTags": ["P1", "STATE"], "pairCode": null, "pairExpectation": null, "active": true
+    },
+    {
+      "caseCode": "GOLD-005", "fixtureKind": "SYNTHETIC", "title": "Heavy entry demonstrator survives flight test",
+      "body": "Red Shield completed a high-energy entry flight with a scaled heavy-cargo decelerator and recovered its instrument package.",
+      "expectedOutput": {"relevant": true, "nodeCode": "P1-EDL-HEAVY", "eventType": "FLIGHT_TEST", "claimedLevel": 5, "actor": "Red Shield", "occurredOn": "2026-01-24", "publicationPath": "PRIMARY"},
+      "notes": "Synthetic relevant-environment flight case.", "provenanceRefs": ["BF-P1-013"], "scenarioTags": ["P1", "STATE"], "pairCode": null, "pairExpectation": null, "active": true
+    },
+    {
+      "caseCode": "GOLD-006", "fixtureKind": "HUMAN_PARAPHRASE", "title": "Surface vehicle carries crew from the Moon to orbit",
+      "body": "Selene Crew Services reports that its crewed ascent vehicle left the lunar surface and reached the planned orbit.",
+      "expectedOutput": {"relevant": true, "nodeCode": "P1-SURFACE-ASCENT", "eventType": "OPERATIONAL_DEPLOYMENT", "claimedLevel": 8, "actor": "Selene Crew Services", "occurredOn": "2026-01-28", "publicationPath": "PRIMARY"},
+      "notes": "Fictional human paraphrase for an operational boundary.", "provenanceRefs": ["BF-P1-016"], "scenarioTags": ["P1", "STATE", "LEVEL_BOUNDARY"], "pairCode": null, "pairExpectation": null, "active": true
+    },
+    {
+      "caseCode": "GOLD-007", "fixtureKind": "SYNTHETIC", "title": "Abort system returns crew capsule safely",
+      "body": "During an ascent anomaly, Harbor Flight triggered its abort system and recovered every crew member without injury.",
+      "expectedOutput": {"relevant": true, "nodeCode": "P1-CREW-SAFE", "eventType": "OPERATIONAL_DEPLOYMENT", "claimedLevel": 8, "actor": "Harbor Flight", "occurredOn": "2026-02-02", "publicationPath": "PRIMARY"},
+      "notes": "Synthetic crew-safety operational case.", "provenanceRefs": ["BF-P1-018"], "scenarioTags": ["P1", "STATE"], "pairCode": null, "pairExpectation": null, "active": true
+    },
+    {
+      "caseCode": "GOLD-008", "fixtureKind": "HUMAN_PARAPHRASE", "title": "Second provider completes routine orbital cargo delivery",
+      "body": "A separate logistics operator delivered manifested cargo to the station and accepted waste for disposal on departure.",
+      "expectedOutput": {"relevant": true, "nodeCode": "P1-ORBIT-LOGISTICS", "eventType": "OPERATIONAL_DEPLOYMENT", "claimedLevel": 8, "actor": "Cobalt Logistics", "occurredOn": "2026-02-06", "publicationPath": "THIRD_PARTY"},
+      "notes": "Human-authored operational logistics paraphrase.", "provenanceRefs": ["BF-P1-030"], "scenarioTags": ["P1", "STATE"], "pairCode": null, "pairExpectation": null, "active": true
+    },
+    {
+      "caseCode": "GOLD-009", "fixtureKind": "SYNTHETIC", "title": "Integrated transport campaign delivers settlers and cargo",
+      "body": "Pathfinder Union operated launch, transfer, landing, ascent, and orbital logistics as one accountable campaign for a surface outpost.",
+      "expectedOutput": {"relevant": true, "nodeCode": "P1-TRANSPORT-INTEGRATION", "eventType": "OPERATIONAL_DEPLOYMENT", "claimedLevel": 9, "actor": "Pathfinder Union", "occurredOn": "2026-02-10", "publicationPath": "PRIMARY"},
+      "notes": "Synthetic finish-line arrival case, not a real-world claim.", "provenanceRefs": ["BF-P1-026"], "scenarioTags": ["P1", "STATE", "ARRIVAL", "LEVEL_BOUNDARY"], "pairCode": null, "pairExpectation": null, "active": true
+    },
+    {
+      "caseCode": "GOLD-010", "fixtureKind": "HUMAN_PARAPHRASE", "title": "Closed-loop habitat recovers nearly all water",
+      "body": "A habitat trial recirculated crew wastewater through connected treatment hardware for a full mission simulation.",
+      "expectedOutput": {"relevant": true, "nodeCode": "P2-ECLSS", "eventType": "PROTOTYPE_DEMO", "claimedLevel": 3, "actor": "Closed Habitat Lab", "occurredOn": "2026-02-14", "publicationPath": "PRIMARY"},
+      "notes": "Short human paraphrase of a generic closed-loop milestone.", "provenanceRefs": ["BF-P2-004"], "scenarioTags": ["P2", "STATE"], "pairCode": null, "pairExpectation": null, "active": true
+    },
+    {
+      "caseCode": "GOLD-011", "fixtureKind": "SYNTHETIC", "title": "Habitat harvest supplies a measured share of crew food",
+      "body": "Green Module harvested vegetables repeatedly and supplied fifteen percent of the trial crew's planned nutrition for six months.",
+      "expectedOutput": {"relevant": true, "nodeCode": "P2-FOOD", "eventType": "PROTOTYPE_DEMO", "claimedLevel": 3, "actor": "Green Module", "occurredOn": "2026-02-18", "publicationPath": "PRIMARY"},
+      "notes": "Synthetic food-production boundary case.", "provenanceRefs": ["BF-P2-008"], "scenarioTags": ["P2", "STATE"], "pairCode": null, "pairExpectation": null, "active": true
+    },
+    {
+      "caseCode": "GOLD-012", "fixtureKind": "HUMAN_PARAPHRASE", "title": "Crew radiation system completes deep-space validation",
+      "body": "Dosimeters and shelter procedures were validated together during a crew-rated deep-space mission simulation.",
+      "expectedOutput": {"relevant": true, "nodeCode": "P2-RAD", "eventType": "FLIGHT_TEST", "claimedLevel": 5, "actor": "Orion Health Team", "occurredOn": "2026-02-21", "publicationPath": "THIRD_PARTY"},
+      "notes": "Human paraphrase with no copied sentence.", "provenanceRefs": ["BF-P2-012"], "scenarioTags": ["P2", "STATE"], "pairCode": null, "pairExpectation": null, "active": true
+    },
+    {
+      "caseCode": "GOLD-013", "fixtureKind": "SYNTHETIC", "title": "Countermeasure trial protects bone and muscle",
+      "body": "Longstay Medical completed a controlled orbital exercise trial and measured preserved bone and muscle function after nine months.",
+      "expectedOutput": {"relevant": true, "nodeCode": "P2-MED", "eventType": "FLIGHT_TEST", "claimedLevel": 5, "actor": "Longstay Medical", "occurredOn": "2026-02-25", "publicationPath": "PRIMARY"},
+      "notes": "Synthetic medical countermeasure trial.", "provenanceRefs": ["BF-P2-014"], "scenarioTags": ["P2", "STATE"], "pairCode": null, "pairExpectation": null, "active": true
+    },
+    {
+      "caseCode": "GOLD-014", "fixtureKind": "HUMAN_PARAPHRASE", "title": "Waste processor produces reusable feedstock",
+      "body": "A sealed habitat processor converted mixed dry waste into clean gas and stable manufacturing feedstock during repeated runs.",
+      "expectedOutput": {"relevant": true, "nodeCode": "P2-WASTE-CYCLE", "eventType": "PROTOTYPE_DEMO", "claimedLevel": 3, "actor": "Cycle Lab", "occurredOn": "2026-03-01", "publicationPath": "PRIMARY"},
+      "notes": "Human-authored paraphrase of a generic waste-cycle test.", "provenanceRefs": ["BF-P2-018"], "scenarioTags": ["P2", "STATE"], "pairCode": null, "pairExpectation": null, "active": true
+    },
+    {
+      "caseCode": "GOLD-015", "fixtureKind": "SYNTHETIC", "title": "Crew performs autonomous medical scan",
+      "body": "With delayed ground contact, a crew member followed onboard guidance and completed a diagnostic scan without live specialist coaching.",
+      "expectedOutput": {"relevant": true, "nodeCode": "P2-HEALTH-AUTONOMY", "eventType": "PROTOTYPE_DEMO", "claimedLevel": 3, "actor": "Autonomous Care Trial", "occurredOn": "2026-03-04", "publicationPath": "PRIMARY"},
+      "notes": "Synthetic acquisition-only autonomy case; it does not imply autonomous treatment.", "provenanceRefs": ["BF-P2-019"], "scenarioTags": ["P2", "STATE"], "pairCode": null, "pairExpectation": null, "active": true
+    },
+    {
+      "caseCode": "GOLD-016", "fixtureKind": "HUMAN_PARAPHRASE", "title": "Integrated survival habitat completes two-year trial",
+      "body": "A crewed habitat operated connected air, water, food, medical, radiation, and waste systems for twenty-six months with scheduled resupply.",
+      "expectedOutput": {"relevant": true, "nodeCode": "P2-SURVIVAL-INTEGRATION", "eventType": "OPERATIONAL_DEPLOYMENT", "claimedLevel": 5, "actor": "Continuity Habitat", "occurredOn": "2026-03-08", "publicationPath": "THIRD_PARTY"},
+      "notes": "Human paraphrase deliberately below the no-resupply finish line.", "provenanceRefs": ["BF-P2-021"], "scenarioTags": ["P2", "STATE", "LEVEL_BOUNDARY"], "pairCode": null, "pairExpectation": null, "active": true
+    },
+    {
+      "caseCode": "GOLD-017", "fixtureKind": "SYNTHETIC", "title": "Robot prints a pressurized habitat shell",
+      "body": "Regolith Build Lab printed and pressure-tested a full-scale habitat shell using a simulated local-soil mixture.",
+      "expectedOutput": {"relevant": true, "nodeCode": "P3-CONSTRUCT", "eventType": "PROTOTYPE_DEMO", "claimedLevel": 3, "actor": "Regolith Build Lab", "occurredOn": "2026-03-11", "publicationPath": "PRIMARY"},
+      "notes": "Synthetic construction prototype.", "provenanceRefs": ["BF-P3-005"], "scenarioTags": ["P3", "STATE"], "pairCode": null, "pairExpectation": null, "active": true
+    },
+    {
+      "caseCode": "GOLD-018", "fixtureKind": "HUMAN_PARAPHRASE", "title": "Surface power network balances generation and storage",
+      "body": "A lunar analog network supplied variable loads from solar arrays and batteries while recovering from a simulated inverter fault.",
+      "expectedOutput": {"relevant": true, "nodeCode": "P3-POWER", "eventType": "PROTOTYPE_DEMO", "claimedLevel": 3, "actor": "Polar Power Lab", "occurredOn": "2026-03-15", "publicationPath": "PRIMARY"},
+      "notes": "Human-authored integrated power paraphrase.", "provenanceRefs": ["BF-P3-022"], "scenarioTags": ["P3", "STATE"], "pairCode": null, "pairExpectation": null, "active": true
+    },
+    {
+      "caseCode": "GOLD-019", "fixtureKind": "SYNTHETIC", "title": "Navigation beacon supports surface traverse",
+      "body": "Luna Grid broadcast a navigation signal that an autonomous rover used throughout a twenty-kilometer surface traverse.",
+      "expectedOutput": {"relevant": true, "nodeCode": "P3-COMMS", "eventType": "FLIGHT_TEST", "claimedLevel": 3, "actor": "Luna Grid", "occurredOn": "2026-03-18", "publicationPath": "PRIMARY"},
+      "notes": "Synthetic surface communications and navigation case.", "provenanceRefs": ["BF-P3-024"], "scenarioTags": ["P3", "STATE"], "pairCode": null, "pairExpectation": null, "active": true
+    },
+    {
+      "caseCode": "GOLD-020", "fixtureKind": "HUMAN_PARAPHRASE", "title": "Habitat thermal loop rejects a simulated lunar heat load",
+      "body": "An occupied chamber maintained temperature while its connected cooling loop rejected variable heat into a lunar-environment simulator.",
+      "expectedOutput": {"relevant": true, "nodeCode": "P3-THERMAL", "eventType": "PROTOTYPE_DEMO", "claimedLevel": 3, "actor": "Thermal Habitat Lab", "occurredOn": "2026-03-22", "publicationPath": "PRIMARY"},
+      "notes": "Human paraphrase of a generic integrated chamber test.", "provenanceRefs": ["BF-P3-025"], "scenarioTags": ["P3", "STATE"], "pairCode": null, "pairExpectation": null, "active": true
+    },
+    {
+      "caseCode": "GOLD-021", "fixtureKind": "SYNTHETIC", "title": "Dust controls protect suit joint and airlock",
+      "body": "Dust Shield tested an airlock brush, suit-joint seal, and electrostatic surface together through repeated abrasive cycles.",
+      "expectedOutput": {"relevant": true, "nodeCode": "P3-DUST", "eventType": "PROTOTYPE_DEMO", "claimedLevel": 3, "actor": "Dust Shield", "occurredOn": "2026-03-25", "publicationPath": "PRIMARY"},
+      "notes": "Synthetic multi-component dust control case.", "provenanceRefs": ["BF-P3-019"], "scenarioTags": ["P3", "STATE"], "pairCode": null, "pairExpectation": null, "active": true
+    },
+    {
+      "caseCode": "GOLD-022", "fixtureKind": "HUMAN_PARAPHRASE", "title": "Crewed habitat analog completes year-long integrated mission",
+      "body": "Four crew members finished a year-long isolated habitat mission with coupled power, thermal, communications, and maintenance operations.",
+      "expectedOutput": {"relevant": true, "nodeCode": "P3-HABITAT-INTEGRATION", "eventType": "OPERATIONAL_DEPLOYMENT", "claimedLevel": 5, "actor": "Frontier Habitat Team", "occurredOn": "2026-03-29", "publicationPath": "THIRD_PARTY"},
+      "notes": "Human-authored analog mission paraphrase.", "provenanceRefs": ["BF-P3-020"], "scenarioTags": ["P3", "STATE"], "pairCode": null, "pairExpectation": null, "active": true
+    },
+    {
+      "caseCode": "GOLD-023", "fixtureKind": "SYNTHETIC", "title": "Atmospheric processor makes propellant oxidizer",
+      "body": "Red Basin Processor produced and stored oxygen continuously from a simulated planetary atmosphere for one thousand hours.",
+      "expectedOutput": {"relevant": true, "nodeCode": "P4-ISRU-PROP", "eventType": "PROTOTYPE_DEMO", "claimedLevel": 5, "actor": "Red Basin Processor", "occurredOn": "2026-04-02", "publicationPath": "PRIMARY"},
+      "notes": "Synthetic resource-production endurance case.", "provenanceRefs": ["BF-P4-006"], "scenarioTags": ["P4", "STATE"], "pairCode": null, "pairExpectation": null, "active": true
+    },
+    {
+      "caseCode": "GOLD-024", "fixtureKind": "HUMAN_PARAPHRASE", "title": "Compact fission unit reaches full power",
+      "body": "A compact surface reactor prototype operated at rated power with conversion and heat-rejection equipment attached.",
+      "expectedOutput": {"relevant": true, "nodeCode": "P4-NUKE", "eventType": "PROTOTYPE_DEMO", "claimedLevel": 5, "actor": "Fission Surface Lab", "occurredOn": "2026-04-06", "publicationPath": "PRIMARY"},
+      "notes": "Human-authored reactor-system paraphrase.", "provenanceRefs": ["BF-P4-008"], "scenarioTags": ["P4", "STATE"], "pairCode": null, "pairExpectation": null, "active": true
+    },
+    {
+      "caseCode": "GOLD-025", "fixtureKind": "SYNTHETIC", "title": "Local-soil composite survives structural cycling",
+      "body": "Frontier Materials fabricated beams from simulated local soil and cycled them under combined pressure and thermal loads.",
+      "expectedOutput": {"relevant": true, "nodeCode": "P4-MATERIALS", "eventType": "PROTOTYPE_DEMO", "claimedLevel": 3, "actor": "Frontier Materials", "occurredOn": "2026-04-09", "publicationPath": "PRIMARY"},
+      "notes": "Synthetic materials qualification case.", "provenanceRefs": ["BF-P4-014"], "scenarioTags": ["P4", "STATE"], "pairCode": null, "pairExpectation": null, "active": true
+    },
+    {
+      "caseCode": "GOLD-026", "fixtureKind": "HUMAN_PARAPHRASE", "title": "Orbital printer produces a load-bearing repair part",
+      "body": "An orbital manufacturing trial printed a metal bracket and verified it against the intended mechanical load.",
+      "expectedOutput": {"relevant": true, "nodeCode": "P4-MANUFACTURING", "eventType": "FLIGHT_TEST", "claimedLevel": 3, "actor": "Orbital Forge", "occurredOn": "2026-04-13", "publicationPath": "THIRD_PARTY"},
+      "notes": "Human paraphrase of a generic useful-part demonstration.", "provenanceRefs": ["BF-P4-020"], "scenarioTags": ["P4", "STATE"], "pairCode": null, "pairExpectation": null, "active": true
+    },
+    {
+      "caseCode": "GOLD-027", "fixtureKind": "SYNTHETIC", "title": "Resource chain delivers oxygen to a habitat user",
+      "body": "One field system excavated material, processed oxygen, stored it, and delivered it through a distribution line to a habitat load.",
+      "expectedOutput": {"relevant": true, "nodeCode": "P4-RESOURCE-INTEGRATION", "eventType": "PROTOTYPE_DEMO", "claimedLevel": 3, "actor": "Integrated Resource Trial", "occurredOn": "2026-04-17", "publicationPath": "PRIMARY"},
+      "notes": "Entirely hypothetical integration evidence; it does not alter the audited L0 state.", "provenanceRefs": ["BF-P4-020"], "scenarioTags": ["P4", "STATE", "ARRIVAL"], "pairCode": null, "pairExpectation": null, "active": true
+    },
+    {
+      "caseCode": "GOLD-028", "fixtureKind": "HUMAN_PARAPHRASE", "title": "Robots assemble a habitat frame without direct control",
+      "body": "A team of robots selected parts and assembled a full-scale frame while supervisors issued goals rather than joint commands.",
+      "expectedOutput": {"relevant": true, "nodeCode": "P5-AUTOCON", "eventType": "PROTOTYPE_DEMO", "claimedLevel": 3, "actor": "Assembly Robotics Lab", "occurredOn": "2026-04-21", "publicationPath": "PRIMARY"},
+      "notes": "Human-authored autonomous construction paraphrase.", "provenanceRefs": ["BF-P5-004"], "scenarioTags": ["P5", "STATE"], "pairCode": null, "pairExpectation": null, "active": true
+    },
+    {
+      "caseCode": "GOLD-029", "fixtureKind": "SYNTHETIC", "title": "Rover plans a long traverse without ground steering",
+      "body": "Farpath Rover selected routes, avoided hazards, and completed a two-day traverse while Earth sent only high-level objectives.",
+      "expectedOutput": {"relevant": true, "nodeCode": "P5-AUTONOMY", "eventType": "FLIGHT_TEST", "claimedLevel": 7, "actor": "Farpath Rover", "occurredOn": "2026-04-25", "publicationPath": "PRIMARY"},
+      "notes": "Synthetic high-autonomy field case.", "provenanceRefs": ["BF-P5-010"], "scenarioTags": ["P5", "STATE"], "pairCode": null, "pairExpectation": null, "active": true
+    },
+    {
+      "caseCode": "GOLD-030", "fixtureKind": "HUMAN_PARAPHRASE", "title": "Servicer replaces a failed orbital module",
+      "body": "An autonomous servicer diagnosed a failed module, exchanged it, and verified restored operation in orbit.",
+      "expectedOutput": {"relevant": true, "nodeCode": "P5-MAINTENANCE", "eventType": "FLIGHT_TEST", "claimedLevel": 5, "actor": "Orbit Service One", "occurredOn": "2026-04-29", "publicationPath": "PRIMARY"},
+      "notes": "Human paraphrase of a generic servicing milestone.", "provenanceRefs": ["BF-P5-019"], "scenarioTags": ["P5", "STATE"], "pairCode": null, "pairExpectation": null, "active": true
+    },
+    {
+      "caseCode": "GOLD-031", "fixtureKind": "SYNTHETIC", "title": "Autonomous base coordinates logistics and maintenance",
+      "body": "Outpost Control scheduled construction, inventory moves, inspections, and repairs for thirty days with delayed human review.",
+      "expectedOutput": {"relevant": true, "nodeCode": "P5-OPS-INTEGRATION", "eventType": "PROTOTYPE_DEMO", "claimedLevel": 3, "actor": "Outpost Control", "occurredOn": "2026-05-03", "publicationPath": "PRIMARY"},
+      "notes": "Synthetic integrated operations case.", "provenanceRefs": ["BF-P5-020"], "scenarioTags": ["P5", "STATE"], "pairCode": null, "pairExpectation": null, "active": true
+    },
+    {
+      "caseCode": "GOLD-032", "fixtureKind": "HUMAN_PARAPHRASE", "title": "Licensed launch market completes its annual operations",
+      "body": "Meridian Launch completed eighty licensed orbital launches during 2026 across several paying customers.",
+      "expectedOutput": {"relevant": true, "nodeCode": "P6-LAUNCH-MARKET", "eventType": "COMMERCIALIZATION", "claimedLevel": 6, "actor": "Meridian Launch", "occurredOn": "2026-05-07", "publicationPath": "THIRD_PARTY"},
+      "notes": "Human-authored market-scale fixture.", "provenanceRefs": ["BF-P6-004"], "scenarioTags": ["P6", "STATE"], "pairCode": "PAIR-MARKET-01", "pairExpectation": "DUPLICATE", "active": true
+    },
+    {
+      "caseCode": "GOLD-033", "fixtureKind": "SYNTHETIC", "title": "Resource-use statute enters force",
+      "body": "The fictional Ardent Republic enacted a law defining licensing, ownership, inspection, and penalties for off-world resource operations.",
+      "expectedOutput": {"relevant": true, "nodeCode": "P6-GOV-FRAMEWORK", "eventType": "INSTITUTIONAL_ADVANCE", "claimedLevel": 6, "actor": "Ardent Republic", "occurredOn": "2026-05-11", "publicationPath": "PRIMARY"},
+      "notes": "Fictional legal framework; no jurisdictional text is copied.", "provenanceRefs": ["BF-P6-009"], "scenarioTags": ["P6", "STATE"], "pairCode": null, "pairExpectation": null, "active": true
+    },
+    {
+      "caseCode": "GOLD-034", "fixtureKind": "HUMAN_PARAPHRASE", "title": "Second funding round supports orbital habitat design",
+      "body": "A public program and private investors jointly funded a second design phase for a commercial orbital habitat.",
+      "expectedOutput": {"relevant": true, "nodeCode": "P6-FUNDING", "eventType": "INSTITUTIONAL_ADVANCE", "claimedLevel": 3, "actor": "Habitat Finance Consortium", "occurredOn": "2026-05-15", "publicationPath": "THIRD_PARTY"},
+      "notes": "Human-authored financing paraphrase.", "provenanceRefs": ["BF-P6-015"], "scenarioTags": ["P6", "STATE"], "pairCode": null, "pairExpectation": null, "active": true
+    },
+    {
+      "caseCode": "GOLD-035", "fixtureKind": "SYNTHETIC", "title": "Interoperability standard is used in a paid mission",
+      "body": "Two operators used the same navigation and custody standard under an insured cargo contract for a lunar delivery.",
+      "expectedOutput": {"relevant": true, "nodeCode": "P6-INSURANCE-STD", "eventType": "COMMERCIALIZATION", "claimedLevel": 3, "actor": "Lunar Standards Group", "occurredOn": "2026-05-19", "publicationPath": "PRIMARY"},
+      "notes": "Synthetic standards-and-insurance use case.", "provenanceRefs": ["BF-P6-019"], "scenarioTags": ["P6", "STATE"], "pairCode": null, "pairExpectation": null, "active": true
+    },
+    {
+      "caseCode": "GOLD-036", "fixtureKind": "HUMAN_PARAPHRASE", "title": "Settlement economy completes an integrated service cycle",
+      "body": "A fictional surface settlement used licensing, finance, insurance, standards, and customer payments in one accountable cargo cycle.",
+      "expectedOutput": {"relevant": true, "nodeCode": "P6-SETTLEMENT-INTEGRATION", "eventType": "OPERATIONAL_DEPLOYMENT", "claimedLevel": 3, "actor": "Cedar Settlement", "occurredOn": "2026-05-23", "publicationPath": "PRIMARY"},
+      "notes": "Entirely fictional integration case; the production audit remains L0.", "provenanceRefs": ["BF-P6-019"], "scenarioTags": ["P6", "STATE", "ARRIVAL"], "pairCode": null, "pairExpectation": null, "active": true
+    },
+    {
+      "caseCode": "GOLD-037", "fixtureKind": "SYNTHETIC", "title": "Funding program loses its recurring appropriation",
+      "body": "The Habitat Finance Consortium lost its recurring appropriation after audit findings and returned to a single-study budget.",
+      "expectedOutput": {"relevant": true, "nodeCode": "P6-FUNDING", "eventType": "ROLLBACK", "claimedLevel": 2, "actor": "Habitat Finance Consortium", "occurredOn": "2026-05-27", "publicationPath": "PRIMARY"},
+      "notes": "Synthetic rollback boundary.", "provenanceRefs": ["BF-P6-015"], "scenarioTags": ["P6", "STATE", "ROLLBACK"], "pairCode": null, "pairExpectation": null, "active": true
+    },
+    {
+      "caseCode": "GOLD-038", "fixtureKind": "HUMAN_PARAPHRASE", "title": "Representative deep-propulsion program is formally ended",
+      "body": "The agency closed the only funded deep-propulsion flight program and archived its remaining hardware without a successor.",
+      "expectedOutput": {"relevant": true, "nodeCode": "P1-DEEP-PROP", "eventType": "PROGRAM_CANCELLATION", "claimedLevel": null, "actor": "Fictional Space Agency", "occurredOn": "2026-05-30", "publicationPath": "PRIMARY"},
+      "notes": "Human-authored capability-ending cancellation fixture.", "provenanceRefs": ["BF-P1-008"], "scenarioTags": ["P1", "NON_STATE", "CANCELLATION"], "pairCode": null, "pairExpectation": null, "active": true
+    },
+    {
+      "caseCode": "GOLD-039", "fixtureKind": "SYNTHETIC", "title": "Surface power test stops after inverter damage",
+      "body": "Polar Power Lab halted its integrated trial when an inverter fault damaged the distribution bus.",
+      "expectedOutput": {"relevant": true, "nodeCode": "P3-POWER", "eventType": "SETBACK", "claimedLevel": null, "actor": "Polar Power Lab", "occurredOn": "2026-06-02", "publicationPath": "PRIMARY"},
+      "notes": "Synthetic non-state setback.", "provenanceRefs": ["BF-P3-022"], "scenarioTags": ["P3", "NON_STATE"], "pairCode": null, "pairExpectation": null, "active": true
+    },
+    {
+      "caseCode": "GOLD-040", "fixtureKind": "HUMAN_PARAPHRASE", "title": "Company announces future orbital printer",
+      "body": "Orbital Forge announced that it intends to test a larger printer in three years, but no hardware has been built.",
+      "expectedOutput": {"relevant": true, "nodeCode": "P4-MANUFACTURING", "eventType": "ANNOUNCEMENT_ONLY", "claimedLevel": null, "actor": "Orbital Forge", "occurredOn": "2026-06-05", "publicationPath": "PRIMARY"},
+      "notes": "Human-authored announcement-only boundary.", "provenanceRefs": ["BF-P4-020"], "scenarioTags": ["P4", "NON_STATE"], "pairCode": null, "pairExpectation": null, "active": true
+    },
+    {
+      "caseCode": "GOLD-041", "fixtureKind": "SYNTHETIC", "title": "Review summarizes an old water-recovery test",
+      "body": "A new review article summarizes a decade-old closed-loop water trial and reports no new experiment or deployment.",
+      "expectedOutput": {"relevant": true, "nodeCode": "P2-ECLSS", "eventType": "RETROSPECTIVE", "claimedLevel": null, "actor": "Systems Review Group", "occurredOn": "2026-06-08", "publicationPath": "THIRD_PARTY"},
+      "notes": "Synthetic retrospective with no state advance.", "provenanceRefs": ["BF-P2-004"], "scenarioTags": ["P2", "NON_STATE"], "pairCode": null, "pairExpectation": null, "active": true
+    },
+    {
+      "caseCode": "GOLD-042", "fixtureKind": "HUMAN_PARAPHRASE", "title": "Museum opens a space-themed restaurant",
+      "body": "A city museum opened a restaurant decorated with planets and rockets; no aerospace system was developed or tested.",
+      "expectedOutput": {"relevant": false, "nodeCode": null, "eventType": null, "claimedLevel": null, "actor": null, "occurredOn": null, "publicationPath": null},
+      "notes": "Clearly irrelevant human-authored negative.", "provenanceRefs": ["BF-P1-022"], "scenarioTags": ["IRRELEVANT"], "pairCode": null, "pairExpectation": null, "active": true
+    },
+    {
+      "caseCode": "GOLD-043", "fixtureKind": "SYNTHETIC", "title": "Astronomers catalog a distant galaxy",
+      "body": "A research team measured the color of a distant galaxy, with no result about transport, habitats, resources, autonomy, or institutions.",
+      "expectedOutput": {"relevant": false, "nodeCode": null, "eventType": null, "claimedLevel": null, "actor": null, "occurredOn": null, "publicationPath": null},
+      "notes": "Synthetic science-only negative case.", "provenanceRefs": ["BF-P3-024"], "scenarioTags": ["IRRELEVANT"], "pairCode": null, "pairExpectation": null, "active": true
+    },
+    {
+      "caseCode": "GOLD-044", "fixtureKind": "HUMAN_PARAPHRASE", "title": "Autonomous rover completes a hazard-avoidance run",
+      "body": "Farpath Rover selected a safe route around three hazards and completed the test without steering commands.",
+      "expectedOutput": {"relevant": true, "nodeCode": "P5-AUTONOMY", "eventType": "PROTOTYPE_DEMO", "claimedLevel": 3, "actor": "Farpath Rover", "occurredOn": "2026-06-11", "publicationPath": "PRIMARY"},
+      "notes": "The drill classifier will return a non-substring evidence quote for this authored body.", "provenanceRefs": ["BF-P5-010"], "scenarioTags": ["P5", "STATE", "QUOTE_MISMATCH"], "pairCode": null, "pairExpectation": null, "active": true
+    },
+    {
+      "caseCode": "GOLD-045", "fixtureKind": "SYNTHETIC", "title": "Habitat controller restores a failed pump",
+      "body": "Outpost Control diagnosed a failed cooling pump, reassigned flow, and verified stable habitat temperatures.",
+      "expectedOutput": {"relevant": true, "nodeCode": "P5-OPS-INTEGRATION", "eventType": "PROTOTYPE_DEMO", "claimedLevel": 3, "actor": "Outpost Control", "occurredOn": "2026-06-14", "publicationPath": "PRIMARY"},
+      "notes": "The drill classifier will emit a schema-invalid response for this case.", "provenanceRefs": ["BF-P5-020"], "scenarioTags": ["P5", "STATE", "SCHEMA_ERROR"], "pairCode": null, "pairExpectation": null, "active": true
+    },
+    {
+      "caseCode": "GOLD-046", "fixtureKind": "HUMAN_PARAPHRASE", "title": "Paper proposes a new radiation shielding material",
+      "body": "A peer-reviewed theory paper models a layered shield but reports no fabricated sample or experiment.",
+      "expectedOutput": {"relevant": true, "nodeCode": "P2-RAD", "eventType": "THEORY_PAPER", "claimedLevel": 1, "actor": "Shield Theory Group", "occurredOn": "2026-06-17", "publicationPath": "PRIMARY"},
+      "notes": "Human-authored lower level boundary.", "provenanceRefs": ["BF-P2-012"], "scenarioTags": ["P2", "STATE", "LEVEL_BOUNDARY"], "pairCode": null, "pairExpectation": null, "active": true
+    },
+    {
+      "caseCode": "GOLD-047", "fixtureKind": "SYNTHETIC", "title": "Unresupplied survival system completes twenty-six months",
+      "body": "Continuity Habitat sustained its crew for twenty-six months with integrated air, water, food, health, radiation, and waste systems and no material resupply.",
+      "expectedOutput": {"relevant": true, "nodeCode": "P2-SURVIVAL-INTEGRATION", "eventType": "OPERATIONAL_DEPLOYMENT", "claimedLevel": 9, "actor": "Continuity Habitat", "occurredOn": "2026-06-20", "publicationPath": "PRIMARY"},
+      "notes": "Synthetic finish-line equivalence case.", "provenanceRefs": ["BF-P2-021"], "scenarioTags": ["P2", "STATE", "ARRIVAL", "LEVEL_BOUNDARY"], "pairCode": null, "pairExpectation": null, "active": true
+    },
+    {
+      "caseCode": "GOLD-048", "fixtureKind": "SYNTHETIC", "title": "Meridian reports eighty paid launches in 2026",
+      "body": "Meridian Launch says its 2026 manifest closed with eighty licensed orbital missions for multiple customers.",
+      "expectedOutput": {"relevant": true, "nodeCode": "P6-LAUNCH-MARKET", "eventType": "COMMERCIALIZATION", "claimedLevel": 6, "actor": "Meridian Launch", "occurredOn": "2026-05-07", "publicationPath": "PRIMARY"},
+      "notes": "Second independently worded item for the launch-market duplicate pair.", "provenanceRefs": ["BF-P6-004"], "scenarioTags": ["P6", "STATE"], "pairCode": "PAIR-MARKET-01", "pairExpectation": "DUPLICATE", "active": true
+    },
+    {
+      "caseCode": "GOLD-049", "fixtureKind": "HUMAN_PARAPHRASE", "title": "Servicer repairs the first failed pump",
+      "body": "Orbit Service Two replaced a failed pump in orbit and returned the client payload to service on June 1.",
+      "expectedOutput": {"relevant": true, "nodeCode": "P5-MAINTENANCE", "eventType": "FLIGHT_TEST", "claimedLevel": 5, "actor": "Orbit Service Two", "occurredOn": "2026-06-01", "publicationPath": "PRIMARY"},
+      "notes": "First event in a deliberately distinct near-expression pair.", "provenanceRefs": ["BF-P5-019"], "scenarioTags": ["P5", "STATE"], "pairCode": "PAIR-SERVICE-DISTINCT-01", "pairExpectation": "DISTINCT", "active": true
+    },
+    {
+      "caseCode": "GOLD-050", "fixtureKind": "SYNTHETIC", "title": "Servicer repairs a separate valve weeks later",
+      "body": "Orbit Service Two exchanged a failed valve on another payload and verified operation on June 20.",
+      "expectedOutput": {"relevant": true, "nodeCode": "P5-MAINTENANCE", "eventType": "FLIGHT_TEST", "claimedLevel": 5, "actor": "Orbit Service Two", "occurredOn": "2026-06-20", "publicationPath": "PRIMARY"},
+      "notes": "Second event is outside the merge date window and must remain distinct.", "provenanceRefs": ["BF-P5-019"], "scenarioTags": ["P5", "STATE"], "pairCode": "PAIR-SERVICE-DISTINCT-01", "pairExpectation": "DISTINCT", "active": true
+    }
+  ]
+}

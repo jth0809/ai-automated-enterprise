@@ -4,27 +4,42 @@ scores. Extract only what the text supports; every claim requires a verbatim
 evidence quote copied exactly from the article. If the article supports no
 claim about the registered capability nodes, return an empty list.
 
-[Block 2 - Capability node registry (nodes-v0.1, the ONLY valid node_code values)]
-P1-REUSE-LV        Fully reusable launch vehicles: orbital-class vehicles recovered and reflown as a whole.
-P1-ORBIT-REFUEL    On-orbit propellant transfer and refueling between spacecraft or tanks.
-P1-DEEP-PROP       Deep-space propulsion: nuclear-thermal or high-power electric propulsion for interplanetary transit.
-P1-EDL-HEAVY       Heavy-cargo (10 t or more) planetary entry, descent, and landing.
-P1-SURFACE-ASCENT  Ascent from a planetary surface and return to orbit or Earth.
-P2-ECLSS           Closed-loop life support: regenerative water and air recycling systems.
-P2-FOOD            Food production in space or on planetary surfaces.
-P2-RAD             Radiation protection for deep space and planetary surfaces.
-P2-MED             Long-duration reduced-gravity medicine and crew health maintenance.
-P3-CONSTRUCT       Surface habitat construction, including use of in-situ materials.
-P3-POWER           Surface power systems: generation, storage, and distribution.
-P3-COMMS           Interplanetary and surface communication networks.
-P4-ISRU-PROP       In-situ resource utilization: local production of propellant, water, and oxygen.
-P4-NUKE            Compact space nuclear fission or fusion power systems.
-P4-MATERIALS       Structural materials for extreme space and planetary environments.
-P5-AUTOCON         Autonomous precursor construction and assembly robotics (uncrewed).
-P5-AUTONOMY        Long-duration autonomous operations: navigation, maintenance, anomaly response.
-P6-LAUNCH-MARKET   Launch market and transport economics (EGL scale).
-P6-GOV-FRAMEWORK   International norms and legal frameworks for space resources and habitation (EGL scale).
-P6-FUNDING         Sustainable funding and private investment for space settlement (EGL scale).
+[Block 2 - Capability node registry (nodes-v1.0, the ONLY valid node_code values)]
+P1-REUSE-LV Fully reusable launch vehicle. Includes an orbital-class architecture that recovers and reflies every mission-critical stage and spacecraft. Excludes first-stage-only recovery, expendable upper stages, suborbital vehicles, and refurbishment without demonstrated reflight.
+P1-ORBIT-REFUEL In-space propellant transfer and refueling. Includes controlled storage, transfer, and receipt between separate spacecraft or depot interfaces. Excludes ground loading, transfer between tanks inside one vehicle, docking alone, and incomplete fluid experiments.
+P1-DEEP-PROP Deep-space propulsion. Includes nuclear thermal, high-power electric, or comparable propulsion for crew or settlement-scale cargo beyond the near-Earth system. Excludes launch propulsion, low-power station keeping, and laboratory thrusters without the mission power, thermal, and lifetime chain.
+P1-EDL-HEAVY Heavy planetary EDL (10 t+). Includes controlled atmospheric entry, descent, and landing of at least 10 metric tonnes of usable cargo on a non-Earth destination. Excludes Earth return, airless descent, sub-10-tonne operational claims, and projected capacity without landing.
+P1-SURFACE-ASCENT Planetary surface ascent and return. Includes launch from a non-Earth surface to rendezvous or return trajectory. Excludes Earth launch, brief hops, engine-only tests, and descent-only missions.
+P1-CREW-SAFE Crewed transport safety and emergency recovery. Includes end-to-end detection, abort, refuge, rescue, and crew recovery. Excludes generic reliability, unqualified uncrewed simulations, and post-recovery medicine.
+P1-ORBIT-LOGISTICS Orbital logistics and standardized cargo handling. Includes reusable rendezvous, docking, transfer, storage, inventory, and accountable handoff interfaces. Excludes propellant transfer, launch economics, one-off docking, and Earth-only warehousing.
+P1-TRANSPORT-INTEGRATION Integrated Earth-orbit-to-surface transport. Includes one accountable campaign exercising every P1 element through governed interfaces. Excludes paper architectures, disconnected demonstrations, one-way robotic missions, and missions missing crew safety or return.
+P2-ECLSS Closed-loop life support. Includes regeneration and control of breathable atmosphere and water under crew load. Excludes open-loop consumables, solid waste recovery, food production, and short tests without closure data.
+P2-FOOD Space and surface food production. Includes safe, nutritionally useful production and processing under space constraints. Excludes plant growth without edible yield, stored food, unconstrained terrestrial agriculture, and nutrition studies without production.
+P2-RAD Deep-space and surface radiation protection. Includes measurement, forecasting, shielding, sheltering, or active mitigation that controls crew exposure. Excludes radiation science without protection, terrestrial shielding, treatment after exposure, and unquantified generic structure.
+P2-MED Long-duration partial-gravity medicine. Includes evidence and countermeasures for chronic physiological and behavioral risks. Excludes independent clinical operations, short-duration sickness, terrestrial medicine, and exercise hardware without health outcomes.
+P2-WASTE-CYCLE Solid and organic waste resource cycling. Includes safe collection, processing, and reuse into useful resources. Excludes air and water regeneration, disposal without recovery, terrestrial municipal systems, and unsafe laboratory yields.
+P2-HEALTH-AUTONOMY Earth-independent clinical operations. Includes diagnosis, triage, treatment, and condition management without real-time Earth support. Excludes biomedical knowledge alone, Earth-dependent telemedicine, diagnosis without treatment, and evacuation as the primary response.
+P2-SURVIVAL-INTEGRATION 26-month no-resupply crew survival. Includes all six P2 elements operating for one continuously crewed settlement with normal operations and maintained health while no Earth-origin material arrives for at least 26 continuous months. Excludes analog-only, emergency, interrupted, uncrewed, and projected periods.
+P3-CONSTRUCT Surface habitat construction. Includes construction, assembly, sealing, and commissioning of durable crew habitat on a non-Earth surface. Excludes parts production, robotic capability alone, temporary lander cabins, and material coupons.
+P3-POWER Surface power system. Includes settlement-scale generation interfaces, storage, distribution, protection, and load management as a grid. Excludes generator-core technology alone, isolated device power, and concepts without storage or distribution.
+P3-COMMS Interplanetary and surface communications network. Includes delay-tolerant communications spanning settlement assets, relays, and Earth links with outage handling. Excludes a single direct radio, generic broadband, astronomy links, and paper networks.
+P3-THERMAL Surface thermal control and environmental shielding. Includes habitat-scale rejection, insulation, heat transport, and non-radiation protection through cycles and faults. Excludes radiation, dust control, component-only tests, and generic insulation.
+P3-DUST Dust and regolith contamination control. Includes prevention, removal, containment, and monitoring across crew and infrastructure interfaces. Excludes terrestrial clean rooms, abrasion tests alone, generic filtration, and thermal or radiation shielding.
+P3-HABITAT-INTEGRATION Integrated surface habitation infrastructure. Includes all five P3 elements serving the same occupied settlement and operating interval. Excludes unoccupied analogs, independent subsystem tests, sorties, and nominal-only operation.
+P4-ISRU-PROP Local propellant, water, and oxygen production. Includes extraction and processing of extraterrestrial feedstock into mission-usable products or precursors. Excludes detection alone, trace output, terrestrial mining, manufacturing, and storage without local production.
+P4-NUKE Space-rated fission or fusion power. Includes systems qualified for space transport and off-Earth settlement service. Excludes terrestrial reactors, low-power radioisotope units, paper concepts, and tests omitting integrated conversion, rejection, control, or safety.
+P4-MATERIALS Extreme-environment structural materials. Includes materials and joined structures qualified for combined settlement environments and lifetime. Excludes discovery without structural validation, generic terrestrial alloys, manufacturing maturity, and habitat assembly.
+P4-MANUFACTURING Local manufacturing and spare-part production. Includes qualified tools, spares, or structures made from local or recycled feedstock at the destination. Excludes Earth-supplied feedstock as the final capability, materials research, habitat assembly, and planning without production.
+P4-RESOURCE-INTEGRATION Integrated resource and production operations. Includes all four P4 elements exchanging audited resources in one physical mass and energy chain. Excludes independent pilots, imported feedstock, unloaded power, and modeled output without production.
+P5-AUTOCON Robotic precursor construction and assembly. Includes robots constructing, connecting, or commissioning settlement assets with minimal local crew intervention. Excludes Earth-only robotics, delay-intolerant teleoperation, maintenance, and planning without physical work.
+P5-AUTONOMY Long-duration autonomous operations. Includes onboard planning, navigation, scheduling, diagnosis, and anomaly response under delayed or intermittent contact. Excludes advisory analytics, physical repair, and short scripted automation.
+P5-MAINTENANCE Autonomous inspection, maintenance, and repair. Includes physical inspection, service, repair, or replacement with bounded support. Excludes planning software, new construction, routine manual repair, and detection without physical restoration.
+P5-OPS-INTEGRATION Integrated long-duration autonomous base operations. Includes all three P5 elements sharing mission state, authority, and recovery workflows for the same base. Excludes software-only demos, unrelated robots, real-time Earth control, and nominal operation without restoration.
+P6-LAUNCH-MARKET Launch market and transport economics (EGL). Includes observable availability, competition, cadence, price, and recurring settlement-relevant demand. Excludes a single subsidized mission, announced prices without sales, defense-only demand, vehicle TRL, and orbital handling.
+P6-GOV-FRAMEWORK Space resource and settlement governance (EGL). Includes binding implementable rules for jurisdiction, registration, safety, resources, rights, liability, and disputes. Excludes nonbinding discussion alone, unrelated general law, unsponsored drafts, and corporate policy.
+P6-FUNDING Durable funding and private investment (EGL). Includes repeatable capital formation and operating finance beyond one political or venture cycle. Excludes budget requests, one grant, undeployed fundraising, and launch-revenue double counting.
+P6-INSURANCE-STD Insurance, standards, and financial infrastructure (EGL). Includes risk transfer, standards, certification, payment, and escrow used across organizations. Excludes one-off indemnity, unused drafts, unrelated terrestrial insurance, and capital provision.
+P6-SETTLEMENT-INTEGRATION Durable settlement economic and governance ecosystem (EGL). Includes all four P6 mechanisms jointly sustaining the same settlement through operational stress. Excludes insulated state programs, unused instruments, emergency funding, and aspirational principles.
 
 [Block 3 - Event type definitions]
 THEORY_PAPER: A theoretical result or design study published as a paper. No hardware.
@@ -63,27 +78,35 @@ EGL 8 stable cost curve and bankable standard assets, or established dispute-
 resolution precedents; EGL 9 mature industry with insurance, standards, and
 infrastructure, or universal compliance as stable international norm.
 
-claimed_level is the level this event is CLAIMED by the article to have
-demonstrated. A partial demonstration that falls short of the node definition
-(for example a 1 t landing against the 10 t+ heavy-cargo node) is scored at
-the correspondingly lower level.
+claimed_level is the highest node-specific level this event directly
+demonstrated. Evidence matching an exclusion cannot receive operational credit.
+A subscale or component demonstration may receive a lower level only when the
+node-specific anchors explicitly allow that demonstration class.
+
+Integration nodes require evidence of an integrated system operating as a unit.
+Do not infer an integration-node level from component-node levels.
+P2-SURVIVAL-INTEGRATION level 8 or 9 requires an observed continuous period
+of at least 26 months without material resupply while normal operations and
+crew health are maintained.
+Partial first-stage reuse is not full-vehicle reuse.
+Plans, design reviews, funding awards, and target dates are ANNOUNCEMENT_ONLY.
 
 [Block 5 - Historical anchor examples]
-1. Falcon 9 first stage first ground landing (2015)
-   -> node_code=P1-REUSE-LV, event_type=FLIGHT_TEST, claimed_level=6
-   Lesson: first real-environment demonstration = TRL 6.
+1. Falcon 9 first-stage ground landing (2015)
+   -> node_code=P1-REUSE-LV, event_type=FLIGHT_TEST, claimed_level=5
+   Lesson: one stage is component evidence, not full-vehicle reuse.
 2. Falcon 9 reused booster first commercial reflight (2017)
-   -> node_code=P1-REUSE-LV, event_type=OPERATIONAL_DEPLOYMENT, claimed_level=7
-   Lesson: reuse entering real mission service.
+   -> node_code=P1-REUSE-LV, event_type=FLIGHT_TEST, claimed_level=5
+   Lesson: repeated first-stage reuse remains below full-stack qualification.
 3. Falcon 9 reuse becomes routine and dominant (2019-)
-   -> node_code=P1-REUSE-LV, event_type=OPERATIONAL_DEPLOYMENT, claimed_level=9
-   Lesson: repeated routine operations = 8-9.
+   -> node_code=P1-REUSE-LV, event_type=OPERATIONAL_DEPLOYMENT, claimed_level=5
+   Lesson: high cadence does not remove the expendable-upper-stage exclusion.
 4. Starship tank-to-tank propellant transfer demonstration (IFT-3, 2024)
-   -> node_code=P1-ORBIT-REFUEL, event_type=FLIGHT_TEST, claimed_level=5
-   Lesson: a partial demonstration scores a lower level.
+   -> relevant_claims=[]
+   Lesson: transfer inside one vehicle is excluded from inter-spacecraft refueling.
 5. MOXIE oxygen production on the Martian surface (2021)
-   -> node_code=P4-ISRU-PROP, event_type=FLIGHT_TEST, claimed_level=6
-   Lesson: small-scale demonstration in the real environment.
+   -> node_code=P4-ISRU-PROP, event_type=FLIGHT_TEST, claimed_level=5
+   Lesson: target-environment process evidence remains below operational scale.
 6. Kilopower/KRUSTY ground reactor test (2018)
    -> node_code=P4-NUKE, event_type=PROTOTYPE_DEMO, claimed_level=5
    Lesson: ground prototype.
@@ -92,10 +115,10 @@ the correspondingly lower level.
    Lesson: ground simulation caps the level.
 8. Perseverance EDL success (2021)
    -> node_code=P1-EDL-HEAVY, event_type=FLIGHT_TEST, claimed_level=5
-   Lesson: 1 t class falls short of the 10 t+ node definition - partial credit.
+   Lesson: a subscale landing can support the explicit L5 anchor, never L8.
 9. Artemis Accords signing (2020)
-   -> node_code=P6-GOV-FRAMEWORK, event_type=INSTITUTIONAL_ADVANCE, claimed_level=4
-   Lesson: EGL 4 = adoption/signature.
+   -> node_code=P6-GOV-FRAMEWORK, event_type=INSTITUTIONAL_ADVANCE, claimed_level=3
+   Lesson: formal nonbinding principles remain below an effective binding rule.
 10. Starship IFT-1 in-flight breakup (2023)
     -> node_code=P1-REUSE-LV, event_type=SETBACK, claimed_level=null
     Lesson: state unchanged; trend impact only.

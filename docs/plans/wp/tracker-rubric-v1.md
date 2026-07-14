@@ -1,6 +1,10 @@
-# WP0.3 — 루브릭 v1 (노드 세트 v0.1 · 프롬프트 · 검증/채점 규칙 명세)
+# WP0.3 — 루브릭 r1.0 보관본 (노드 세트 v0.1)
 
-> 기준: 컨셉 v2.11. 이 문서의 프롬프트 전문과 노드 목록이 `rubric_version` 'r1.0'의 내용이다. 앵커의 정확한 날짜·세부는 WP2.3 골든셋 구축 시 인간 검수로 확정한다(초안 표기).
+> 상태: **보관됨**. 이 문서의 20노드 목록과 프롬프트 구조는
+> `rubric_version='r1.0'`, `node_set_version='nodes-v0.1'`의 역사적 시드다.
+> 현재 승인 레지스트리는 [Tracker Capability Nodes v1.0](tracker-nodes-v1.md)이며,
+> 활성 루브릭은 `r2.0`이다. LF 정규화 Stage 2 프롬프트 SHA-256은
+> `bb77587b3d5d47971251d058ba54b41f47ea0a1b9df21b372b42933aec7a36b0`이다.
 
 ## 1. 노드 세트 v0.1 (Phase 1 시드, 20개 — P2에서 35개로 확장)
 
@@ -27,8 +31,9 @@
 | P6-GOV-FRAMEWORK | 6 | 우주 자원·거주 국제 규범/법제 | EGL | 0.35 |
 | P6-FUNDING | 6 | 지속 가능 자금 조달·민간 투자 | EGL | 0.25 |
 
-- 통합 실증 노드(예: "26개월 무보급 연속 운영" 정점 포함)는 P2의 35노드 세트(`nodes-v1.0`)에서 추가 — v0.1은 요소 역량만.
-- 초기 가중치는 임시값(균형 배분에 판단 가감). P2에서 AHP로 대체.
+- 통합 실증 노드와 26개월 무보급 관측 조건은 승인된 `nodes-v1.0`에서
+  추가되었다. 아래 v0.1 목록은 재현·감사용으로만 유지한다.
+- 이 문서의 초기 가중치는 현재 값을 나타내지 않는다.
 
 ## 2. Stage 1 게이트 프롬프트 (전문)
 
@@ -54,7 +59,7 @@ Title: {title}
 Excerpt: {excerpt_or_first_1000_chars}
 ```
 
-## 3. Stage 2 심층 분류 시스템 프롬프트 (구조 — 캐싱 대상 고정 블록)
+## 3. Stage 2 심층 분류 시스템 프롬프트 (r1.0 보관 구조)
 
 ```
 [블록 1 — 역할·원칙]
@@ -92,15 +97,15 @@ recent-events list in the user message; return the matching natural_key or "NEW"
 
 | # | 사건 (연도) | node_code | event_type | claimed_level | 교훈 포인트 |
 |---|---|---|---|---|---|
-| 1 | 팰컨9 1단 최초 지상 착륙 (2015) | P1-REUSE-LV | FLIGHT_TEST | 6 | 최초 실환경 시연 = TRL 6 |
-| 2 | 팰컨9 재사용 부스터 상업 재비행 (2017) | P1-REUSE-LV | OPERATIONAL_DEPLOYMENT | 7 | 재사용의 실임무 투입 |
-| 3 | 팰컨9 재사용 정례화·주력화 (2019~) | P1-REUSE-LV | OPERATIONAL_DEPLOYMENT | 9 | 반복 실운용 = 8~9 |
-| 4 | 스타십 탱크 간 추진제 이송 실증 (IFT-3, 2024) | P1-ORBIT-REFUEL | FLIGHT_TEST | 5 | 부분 실증은 낮은 level |
-| 5 | MOXIE 화성 표면 산소 생산 (2021) | P4-ISRU-PROP | FLIGHT_TEST | 6 | 실환경 소형 실증 |
+| 1 | 팰컨9 1단 최초 지상 착륙 (2015) | P1-REUSE-LV | FLIGHT_TEST | 5 | 1단 실증은 완전 재사용 발사체의 구성요소 근거 |
+| 2 | 팰컨9 재사용 부스터 상업 재비행 (2017) | P1-REUSE-LV | FLIGHT_TEST | 5 | 반복 1단 재사용도 전체 스택 자격은 아님 |
+| 3 | 팰컨9 재사용 정례화·주력화 (2019~) | P1-REUSE-LV | OPERATIONAL_DEPLOYMENT | 5 | 높은 빈도도 소모성 상단 제외 조건을 해소하지 않음 |
+| 4 | 스타십 차량 내부 탱크 간 추진제 이송 실증 (IFT-3, 2024) | (해당 없음) | — | — | 한 차량 내부 이송은 궤도 급유 노드에서 제외 |
+| 5 | MOXIE 화성 표면 산소 생산 (2021) | P4-ISRU-PROP | FLIGHT_TEST | 5 | 실환경 공정 근거지만 운영 규모 미달 |
 | 6 | Kilopower/KRUSTY 지상 원자로 시험 (2018) | P4-NUKE | PROTOTYPE_DEMO | 5 | 지상 프로토타입 |
 | 7 | 中 웨궁-365 폐쇄 생태 370일 유인 실험 (2018) | P2-ECLSS | PROTOTYPE_DEMO | 5 | 지상 시뮬레이션 상한 |
-| 8 | 퍼서비어런스 EDL 성공 (2021) | P1-EDL-HEAVY | FLIGHT_TEST | 5 | 1t급 — 10t+ 노드 정의 미달 → 부분 점수 |
-| 9 | 아르테미스 협정 서명 (2020) | P6-GOV-FRAMEWORK | INSTITUTIONAL_ADVANCE | 4 | EGL 4 = 채택·서명 |
+| 8 | 퍼서비어런스 EDL 성공 (2021) | P1-EDL-HEAVY | FLIGHT_TEST | 5 | 명시된 하위 규모 L5 앵커이며 L8 근거가 아님 |
+| 9 | 아르테미스 협정 서명 (2020) | P6-GOV-FRAMEWORK | INSTITUTIONAL_ADVANCE | 3 | 공식 비구속 원칙은 법적 효력 규칙보다 낮음 |
 | 10 | 스타십 IFT-1 공중 폭발 (2023) | P1-REUSE-LV | SETBACK | (레벨 없음) | 상태 유지, 추세 하향 |
 | 11 | "NASA, 2030년대 유인 화성 로드맵 발표" | P1-DEEP-PROP 등 | ANNOUNCEMENT_ONLY | (레벨 없음) | 계획은 성취가 아님 — 상태 0 |
 | 12 | "ISS 20주년: 인류 우주 상주 회고" | P2-ECLSS | RETROSPECTIVE | (레벨 없음) | occurred_on = 원 사건일, 상태 무변화 |

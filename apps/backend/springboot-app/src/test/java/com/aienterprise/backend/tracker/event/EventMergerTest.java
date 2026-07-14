@@ -1,6 +1,7 @@
 package com.aienterprise.backend.tracker.event;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -13,6 +14,8 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.aienterprise.backend.tracker.domain.ClassificationRow;
+import com.aienterprise.backend.tracker.domain.EventRow;
+import com.aienterprise.backend.tracker.domain.NodeRow;
 import com.aienterprise.backend.tracker.domain.TrackerRepository;
 
 @SpringBootTest(
@@ -78,6 +81,110 @@ class EventMergerTest {
                 .param("id", verified.id()).query(Integer.class).single());
         assertEquals(1, jdbc.sql("SELECT COUNT(*) FROM article_classification WHERE id = :id AND event_id IS NULL")
                 .param("id", unverifiedId).query(Integer.class).single());
+    }
+
+    private static final String SUBSTANTIVE_QUOTE =
+            "Falcon booster completed a full static fire test";
+
+    @Test
+    void safeSemanticMatchLinksAcrossDifferentNaturalKeys() {
+        LocalDate when = LocalDate.of(2026, 1, 30);
+        ClassificationRow first = claim("SPACENEWS", "sa", when, "SpaceX", SUBSTANTIVE_QUOTE);
+        ClassificationRow second = claim("NASA", "sb", when, "SpaceX Alliance", SUBSTANTIVE_QUOTE);
+
+        long firstEvent = merger.mergeClaim(first);
+        long secondEvent = merger.mergeClaim(second);
+
+        assertEquals(firstEvent, secondEvent);
+        assertEquals(1, eventCount());
+    }
+
+    @Test
+    void exactNaturalKeyWinsRegardlessOfQuote() {
+        LocalDate when = LocalDate.of(2026, 1, 30);
+        ClassificationRow first = claim("SPACENEWS", "xa", when, "SpaceX", SUBSTANTIVE_QUOTE);
+        ClassificationRow second = claim("NASA", "xb", when, "SpaceX",
+                "Unrelated note about garden tomatoes growing in summer");
+
+        long firstEvent = merger.mergeClaim(first);
+        long secondEvent = merger.mergeClaim(second);
+
+        assertEquals(firstEvent, secondEvent);
+        assertEquals(1, eventCount());
+    }
+
+    @Test
+    void ambiguousSemanticMatchCreatesANewEvent() {
+        LocalDate when = LocalDate.of(2026, 1, 30);
+        long firstEvent = merger.mergeClaim(
+                claim("SPACENEWS", "aa", when, "Alpha Team", SUBSTANTIVE_QUOTE));
+        long secondEvent = insertEventWithQuote("Beta Team", when, SUBSTANTIVE_QUOTE);
+
+        long thirdEvent = merger.mergeClaim(
+                claim("NASA", "ac", when, "Gamma Team", SUBSTANTIVE_QUOTE));
+
+        assertNotEquals(firstEvent, thirdEvent);
+        assertNotEquals(secondEvent, thirdEvent);
+        assertEquals(3, eventCount());
+    }
+
+    @Test
+    void reRunningTheSameClaimIsIdempotent() {
+        LocalDate when = LocalDate.of(2026, 1, 30);
+        ClassificationRow claim = claim("SPACENEWS", "ia", when, "SpaceX", SUBSTANTIVE_QUOTE);
+
+        long firstEvent = merger.mergeClaim(claim);
+        long secondEvent = merger.mergeClaim(claim);
+
+        assertEquals(firstEvent, secondEvent);
+        assertEquals(1, eventCount());
+        assertEquals(1, jdbc.sql(
+                "SELECT COUNT(*) FROM article_classification WHERE id = :id AND event_id = :eventId")
+                .param("id", claim.id()).param("eventId", firstEvent)
+                .query(Integer.class).single());
+    }
+
+    private int eventCount() {
+        return jdbc.sql("SELECT COUNT(*) FROM event").query(Integer.class).single();
+    }
+
+    private ClassificationRow claim(
+            String sourceCode, String discriminator, LocalDate occurredOn, String actor, String quote) {
+        long id = insertClassificationRow(sourceCode, discriminator, occurredOn, actor, quote, true);
+        long articleId = jdbc.sql("SELECT article_id FROM article_classification WHERE id = :id")
+                .param("id", id).query(Long.class).single();
+        return new ClassificationRow(id, articleId, null, "P1-ORBIT-REFUEL", "FLIGHT_TEST", 6,
+                actor, occurredOn, "THIRD_PARTY", quote, true, "{}", repository.activeRubricVersionId());
+    }
+
+    private long insertClassificationRow(
+            String sourceCode, String discriminator, LocalDate occurredOn,
+            String actor, String quote, boolean quoteVerified) {
+        long sourceId = jdbc.sql("SELECT id FROM source_registry WHERE code = :code")
+                .param("code", sourceCode).query(Long.class).single();
+        long articleId = repository.insertArticleIfNew(
+                "https://example.test/" + sourceCode + "/" + discriminator,
+                discriminator.repeat(64).substring(0, 64), sourceId,
+                "A title", Instant.parse("2026-02-01T00:00:00Z"), "Body").orElseThrow();
+        return repository.insertClassification(new ClassificationRow(
+                0, articleId, null, "P1-ORBIT-REFUEL", "FLIGHT_TEST", 6, actor,
+                occurredOn, "THIRD_PARTY", quote, quoteVerified, "{}",
+                repository.activeRubricVersionId()));
+    }
+
+    /** Creates a distinct event directly (bypassing the merger) with a verified quote. */
+    private long insertEventWithQuote(String actor, LocalDate occurredOn, String quote) {
+        NodeRow node = repository.findNodeByCode("P1-ORBIT-REFUEL");
+        long rubricId = repository.activeRubricVersionId();
+        String naturalKey = EventMerger.naturalKey("P1-ORBIT-REFUEL", "FLIGHT_TEST", actor, occurredOn);
+        long eventId = repository.upsertEventByNaturalKey(naturalKey, EventRow.draft(
+                node.id(), "FLIGHT_TEST", 6, actor, occurredOn, "CLAIMED",
+                occurredOn.plusDays(90), rubricId));
+        long classificationId = insertClassificationRow(
+                "NASASPACEFLIGHT", "seed-" + actor.replaceAll("\\s", ""),
+                occurredOn, actor, quote, true);
+        repository.linkClassification(classificationId, eventId);
+        return eventId;
     }
 
     private ClassificationRow classified(String sourceCode, String discriminator, String path, LocalDate occurredOn) {

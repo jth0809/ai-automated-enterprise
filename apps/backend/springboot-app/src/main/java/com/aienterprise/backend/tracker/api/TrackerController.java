@@ -77,6 +77,7 @@ public class TrackerController {
         for (TimelineRow row : repository.findEventTimeline(limit)) {
             Map<String, Object> entry = new LinkedHashMap<>();
             entry.put("occurredOn", row.occurredOn());
+            entry.put("occurredOnPrecision", row.occurredOnPrecision());
             entry.put("nodeName", row.nodeName());
             entry.put("eventType", row.eventType());
             entry.put("levelFrom", row.levelFrom());
@@ -85,6 +86,7 @@ public class TrackerController {
             entry.put("verificationLevel", row.verificationLevel());
             entry.put("sourceCount", row.sourceCount());
             entry.put("evidenceQuote", row.evidenceQuote());
+            entry.put("primaryEvidence", row.primaryEvidence());
             body.add(entry);
         }
         return ResponseEntity.ok(body);

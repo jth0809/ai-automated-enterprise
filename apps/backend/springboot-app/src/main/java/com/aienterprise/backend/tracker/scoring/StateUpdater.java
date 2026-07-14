@@ -5,12 +5,14 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.aienterprise.backend.tracker.domain.EventRow;
 import com.aienterprise.backend.tracker.domain.NodeRow;
 import com.aienterprise.backend.tracker.domain.ReviewRow;
 import com.aienterprise.backend.tracker.domain.TrackerRepository;
 import com.aienterprise.backend.tracker.event.VerificationLevel;
+import com.aienterprise.backend.tracker.ops.StateFreezeService;
 
 import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 
@@ -23,12 +25,19 @@ public class StateUpdater {
     private static final double HIGH_IMPACT_THRESHOLD = 8.0;
 
     private final TrackerRepository repository;
+    private final StateFreezeService freezeService;
 
-    public StateUpdater(TrackerRepository repository) {
+    public StateUpdater(
+            TrackerRepository repository,
+            StateFreezeService freezeService) {
         this.repository = repository;
+        this.freezeService = freezeService;
     }
 
     public void processEvent(EventRow event) {
+        if (holdIfFrozen(event)) {
+            return;
+        }
         NodeRow node = repository.findNodeById(event.nodeId());
         ScoreResult score = ImpactScorer.score(
                 event.eventType(),
@@ -48,11 +57,23 @@ public class StateUpdater {
         advance(event);
     }
 
-    public void approve(ReviewRow review, String note) {
-        if (!repository.resolveReview(review.id(), "APPROVED", note)) {
-            return;
+    @Transactional
+    public DecisionOutcome approve(ReviewRow review, String note) {
+        EventRow event = repository.findEventById(review.eventId());
+        if (holdIfFrozen(event)) {
+            return DecisionOutcome.FROZEN;
         }
-        advance(repository.findEventById(review.eventId()));
+        if (!repository.resolveReview(review.id(), "APPROVED", note)) {
+            return DecisionOutcome.ALREADY_RESOLVED;
+        }
+        if (!advance(event)) {
+            if (!repository.reopenApprovedReview(review.id())) {
+                throw new IllegalStateException(
+                        "could not restore frozen review " + review.id());
+            }
+            return DecisionOutcome.FROZEN;
+        }
+        return DecisionOutcome.APPLIED;
     }
 
     public void reject(ReviewRow review, String note) {
@@ -78,10 +99,28 @@ public class StateUpdater {
         }
     }
 
-    private void advance(EventRow event) {
+    private boolean advance(EventRow event) {
+        if (holdIfFrozen(event)) {
+            return false;
+        }
         repository.advanceNode(
                 event.nodeId(), event.claimedLevel(), event.verificationLevel(),
                 event.id(), event.rubricVersionId());
         repository.markEventConfirmed(event.id());
+        return true;
+    }
+
+    private boolean holdIfFrozen(EventRow event) {
+        if (!freezeService.isFrozen()) {
+            return false;
+        }
+        repository.insertReviewIfAbsent(event.id(), "CIRCUIT_BREAKER");
+        return true;
+    }
+
+    public enum DecisionOutcome {
+        APPLIED,
+        ALREADY_RESOLVED,
+        FROZEN
     }
 }

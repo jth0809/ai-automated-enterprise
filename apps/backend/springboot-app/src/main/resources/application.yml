@@ -69,6 +69,15 @@ anthropic:
 tracker:
   enabled: ${TRACKER_ENABLED:false}
   feeds: ${TRACKER_FEEDS:}
+  # Weekly live golden evaluation remains dark until both this explicit
+  # GitOps flag and the Vault-injected Anthropic key are present.
+  golden-live-enabled: ${TRACKER_GOLDEN_LIVE_ENABLED:false}
+  golden-cron: ${TRACKER_GOLDEN_CRON:0 0 2 * * SUN}
+  golden-dataset-version: ${TRACKER_GOLDEN_DATASET_VERSION:golden-v1}
+  golden-prompt-version: ${TRACKER_GOLDEN_PROMPT_VERSION:classify-prompt-v1}
+  golden-model-version: ${TRACKER_GOLDEN_MODEL_VERSION:${TRACKER_CLASSIFY_MODEL:claude-opus-4-8}}
+  golden-rubric-version: ${TRACKER_GOLDEN_RUBRIC_VERSION:r2.0}
+  golden-schema-version: ${TRACKER_GOLDEN_SCHEMA_VERSION:golden-output-v1}
   cost-per-mtok:
     # Conservative Opus-class defaults. Externalized because provider prices change.
     input: ${TRACKER_COST_INPUT_PER_MTOK:15}

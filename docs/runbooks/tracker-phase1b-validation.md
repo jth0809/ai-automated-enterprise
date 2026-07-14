@@ -43,7 +43,7 @@ ESO는 원자적으로 동기화하므로 **키 생성이 매니페스트 머지
 
 1. PR 머지: CNP 16호스트 + externalsecret(TRACKER_*) + deployment env(`TRACKER_ENABLED=false`, `TRACKER_FLUKE_ENABLED=false`, `SPRING_FLYWAY_ENABLED=true`, 추출 한도).
 2. Flux reconcile 확인: ESO Secret 렌더 성공, CiliumNetworkPolicy 적용.
-3. 이미지 릴리스(CI) → 기동 로그에서 Flyway V1~V5 적용과 "tracker disabled" 확인.
+3. 이미지 릴리스(CI) → 기동 로그에서 Flyway V1~V8 적용과 "tracker disabled" 확인. 참조형 역사 백필의 별도 게이트와 쿼리는 `tracker-reference-backfill-validation.md`를 따른다.
 
 ### 2단계 — 수집 활성화, 이후 플루크 활성화
 
