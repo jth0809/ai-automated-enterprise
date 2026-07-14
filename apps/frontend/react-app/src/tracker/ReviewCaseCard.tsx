@@ -56,6 +56,7 @@ export function ReviewCaseCard({ item, busy, error, onDecide }: ReviewCaseCardPr
   const [noteError, setNoteError] = useState(false);
 
   const trimmedNote = note.trim();
+  const pendingReview = item.status === "PENDING";
 
   function request(decision: "APPROVE" | "REJECT") {
     if (decision === "REJECT" && trimmedNote.length === 0) {
@@ -90,7 +91,14 @@ export function ReviewCaseCard({ item, busy, error, onDecide }: ReviewCaseCardPr
       {item.evidence.map((evidence, i) => (
         <EvidenceDetails key={`${evidence.kind}-${evidence.url}-${i}`} evidence={evidence} />
       ))}
-      <div className="review-actions">
+      {!pendingReview && (
+        <div className="review-resolution" aria-label="Review resolution">
+          <strong>{item.status}</strong>
+          {item.reviewerNote && <span>{item.reviewerNote}</span>}
+          {item.resolvedAt && <time dateTime={item.resolvedAt}>{item.resolvedAt}</time>}
+        </div>
+      )}
+      {pendingReview && <div className="review-actions">
         <label className="review-note">
           Rejection note
           <textarea
@@ -128,7 +136,7 @@ export function ReviewCaseCard({ item, busy, error, onDecide }: ReviewCaseCardPr
             </button>
           </p>
         )}
-      </div>
+      </div>}
     </article>
   );
 }

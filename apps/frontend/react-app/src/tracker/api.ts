@@ -102,11 +102,39 @@ export interface ReviewCase {
   evidence: ReviewEvidence[];
   status: string;
   reviewerNote: string | null;
+  resolvedAt: string | null;
+}
+
+export type ReviewStatus = "PENDING" | "APPROVED" | "REJECTED";
+export type ReviewReason =
+  | "HIGH_IMPACT"
+  | "LEVEL_JUMP"
+  | "FLUKE_MISMATCH"
+  | "ARRIVAL_CANDIDATE"
+  | "CIRCUIT_BREAKER";
+
+export interface ReviewPage {
+  items: ReviewCase[];
+  page: number;
+  size: number;
+  total: number;
+  totalPages: number;
+  sort: string;
+}
+
+export interface ReviewPageQuery {
+  status: ReviewStatus;
+  reason: ReviewReason | "";
+  page: number;
+  size: number;
 }
 
 /** HTTP failure from the admin review API, keeping the status for the UI. */
 export class ReviewApiError extends Error {
-  constructor(public readonly status: number) {
+  constructor(
+    public readonly status: number,
+    public readonly code: string | null = null,
+  ) {
     super(`review request failed: HTTP ${status}`);
   }
 }
@@ -115,14 +143,41 @@ export async function getReviews(token: string): Promise<ReviewCase[]> {
   const res = await fetch("/api/tracker/admin/review", {
     headers: { "X-Tracker-Admin-Token": token },
   });
-  if (!res.ok) throw new ReviewApiError(res.status);
+  if (!res.ok) throw await reviewApiError(res);
   const cases = (await res.json()) as Array<
     Omit<ReviewCase, "evidence"> & { evidence: ReviewEvidenceWire[] }
   >;
-  return cases.map(item => ({
+  return cases.map(normalizeReviewCase);
+}
+
+export async function getReviewPage(
+  token: string,
+  query: ReviewPageQuery,
+): Promise<ReviewPage> {
+  const params = new URLSearchParams({
+    status: query.status,
+    page: String(query.page),
+    size: String(query.size),
+  });
+  if (query.reason !== "") params.set("reason", query.reason);
+  const res = await fetch(`/api/tracker/admin/reviews?${params.toString()}`, {
+    headers: { "X-Tracker-Admin-Token": token },
+  });
+  if (!res.ok) throw await reviewApiError(res);
+  const page = (await res.json()) as Omit<ReviewPage, "items"> & {
+    items: Array<Omit<ReviewCase, "evidence"> & { evidence: ReviewEvidenceWire[] }>;
+  };
+  return { ...page, items: page.items.map(normalizeReviewCase) };
+}
+
+function normalizeReviewCase(
+  item: Omit<ReviewCase, "evidence"> & { evidence: ReviewEvidenceWire[] },
+): ReviewCase {
+  return {
     ...item,
+    resolvedAt: item.resolvedAt ?? null,
     evidence: item.evidence.map(normalizeReviewEvidence),
-  }));
+  };
 }
 
 function normalizeReviewEvidence(evidence: ReviewEvidenceWire): ReviewEvidence {
@@ -144,7 +199,7 @@ export async function decideReview(
   decision: "APPROVE" | "REJECT",
   note: string | null,
 ): Promise<void> {
-  const res = await fetch(`/api/tracker/admin/review/${reviewId}`, {
+  const res = await fetch(`/api/tracker/admin/reviews/${reviewId}/decision`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -152,5 +207,16 @@ export async function decideReview(
     },
     body: JSON.stringify({ decision, note }),
   });
-  if (!res.ok) throw new ReviewApiError(res.status);
+  if (!res.ok) throw await reviewApiError(res);
+}
+
+async function reviewApiError(response: Response): Promise<ReviewApiError> {
+  let code: string | null = null;
+  try {
+    const body = (await response.json()) as { error?: unknown };
+    if (typeof body.error === "string" && body.error.length <= 80) code = body.error;
+  } catch {
+    // The UI reports only the HTTP class when no small safe error code exists.
+  }
+  return new ReviewApiError(response.status, code);
 }

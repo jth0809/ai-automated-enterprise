@@ -760,6 +760,40 @@ body {
   color: #475467;
 }
 
+.review-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin: 0 0 0.75rem;
+}
+
+.review-filters label {
+  display: grid;
+  gap: 0.25rem;
+  min-width: min(15rem, 100%);
+  font-size: 0.85rem;
+  color: #475467;
+}
+
+.review-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.review-tabs button[aria-pressed="true"] {
+  background: #344054;
+  color: #fff;
+}
+
+.review-page-summary {
+  margin: 0.25rem 0 0.75rem;
+  color: #667085;
+  font-size: 0.85rem;
+}
+
 .review-card {
   border: 1px solid #d4d9e2;
   border-radius: 0.6rem;
@@ -833,6 +867,26 @@ body {
   gap: 0.6rem;
   align-items: center;
   margin: 0.6rem 0 0;
+}
+
+.review-resolution {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem 0.75rem;
+  margin-top: 0.75rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: 0.45rem;
+  background: #f2f4f7;
+  color: #475467;
+  font-size: 0.85rem;
+}
+
+.review-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
 }
 
 .review-confirm-label {
