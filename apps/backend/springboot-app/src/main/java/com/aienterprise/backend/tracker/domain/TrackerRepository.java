@@ -412,6 +412,20 @@ public class TrackerRepository {
                 .list();
     }
 
+    public Optional<String> findLayerBImportSha(String datasetVersion) {
+        return jdbc.sql("SELECT dataset_sha256 FROM layer_b_metric_import WHERE dataset_version = :v")
+                .param("v", datasetVersion).query(String.class).optional();
+    }
+
+    public void recordLayerBImport(String datasetVersion, String datasetSha256, int recordCount) {
+        jdbc.sql("""
+                INSERT INTO layer_b_metric_import (dataset_version, dataset_sha256, record_count)
+                VALUES (:v, :h, :n)
+                """)
+                .param("v", datasetVersion).param("h", datasetSha256).param("n", recordCount)
+                .update();
+    }
+
     public long insertClassification(ClassificationRow draft) {
         GeneratedKeyHolder keys = new GeneratedKeyHolder();
         jdbc.sql("""
