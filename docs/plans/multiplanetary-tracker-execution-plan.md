@@ -111,8 +111,16 @@
 - [x] **WP2.3 골든셋 + 회귀 하네스** — 저작권 안전 50건 골든셋과 OFFLINE/LIVE/DRILL 회귀 평가, 주간 실행·0.90 기준선·8일 stale 동결을 구현했다.
 - [x] **WP2.4 관제 + 서킷 브레이커** — 28일 관리도, 피드 데드맨, 상태 갱신 자동 동결과 인간 전용 해제를 구현하고 44/50 모의 drift 훈련을 통과했다.
   - **완료(2026-07-14):** 집중 68/68·백엔드 전체 351/351·egress 정책 검증 통과. 별도 workload와 신규 egress는 없다. 상세 수치와 실행 증적은 아래 상세 계획·검증 문서에 둔다.
-- [ ] **WP2.5 검수 큐 정식 UI + 운영 런북** — 승인/반려/사유, 잠정 사건 조회. 런북: 주간 1~2h·월간 1h·분기 2~4h 루틴 절차화(13.2)
-- [ ] **WP2.6 임베딩 사건 병합** — Phase 1에서 이월한 자연 키 + 로컬 벡터 유사도 병합. 외부 모델·벡터 DB·신규 egress 없이 bounded 후보만 비교한다.
+- [x] **WP2.5 검수 큐 정식 UI + 운영 런북** — 승인/반려/사유, 잠정 사건 조회. 런북: 주간 1~2h·월간 1h·분기 2~4h 루틴 절차화(13.2)
+  - **완료(2026-07-14):** 페이지네이션 검수 API·상태 탭·사유 필터·이력
+    (`e486e0f`, `31f216f`)과 Ops 콘솔·인간 동결 해제(`ab554de`, `bd71479`),
+    [운영 런북](../runbooks/tracker-phase2-operations.md)(`0f776b2`)을 구현했다.
+    토큰은 fetch 헤더·메모리에만 둔다. 프런트 65/65·백엔드 379/379 통과.
+- [x] **WP2.6 임베딩 사건 병합** — Phase 1에서 이월한 자연 키 + 로컬 벡터 유사도 병합. 외부 모델·벡터 DB·신규 egress 없이 bounded 후보만 비교한다.
+  - **완료(2026-07-14):** 256차원 로컬 임베딩(`43180af`)·안전 매처
+    (`5f2542f`)·exact-first EventMerger 병합(`7e4bc2a`)을 TDD로 구현했다.
+    exact natural key 우선, 안전 semantic match 후순위, 모호성/얇은 인용은
+    미병합. 외부 API·vector DB·신규 egress·평문 secret 없음.
 
 **게이트 G2:** 대시보드 ETA가 백필 기반 시계열로 산출. 골든셋 일치율 기준선 확립. 서킷 브레이커 훈련 통과. 임시 시드(WP1.1) 완전 대체.
 
@@ -128,7 +136,11 @@
 - 완료: [WP2.3/2.4 골든셋·관제](../superpowers/plans/2026-07-14-tracker-phase2-wp23-wp24-plan.md)
   — 상세 검증은 [WP2.3/2.4 증적](../research/tracker-phase2-wp23-wp24-evidence.md), 운영 훈련은
   [서킷 브레이커 런북](../runbooks/tracker-circuit-breaker-drill.md)에 기록.
-- 실행 대기: [WP2.5/2.6 정식 UI·임베딩·G2](../superpowers/plans/2026-07-14-tracker-phase2-wp25-wp26-g2-plan.md)
+- 완료(구현): [WP2.5/2.6 정식 UI·임베딩·G2](../superpowers/plans/2026-07-14-tracker-phase2-wp25-wp26-g2-plan.md)
+  — 검수 UI·Ops 콘솔·운영 런북과 로컬 임베딩 병합 구현 완료. G2 증거는
+  [G2 증거 행렬](../research/tracker-phase2-g2-evidence.md), 재현 절차는
+  [G2 검증 런북](../runbooks/tracker-phase2-g2-validation.md)에 기록.
+  G2 잔여: PR CI 보안 스캔 + LIVE_MODEL 활성화 결정 + 인간 승인.
 
 ---
 
