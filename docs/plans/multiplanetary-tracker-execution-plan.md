@@ -125,8 +125,9 @@
   — WP2.2-B/C, WP2.3~2.6, G2 경계와 저작권·저장·굿하트 방지 계약.
 - 완료: [WP2.1 구조 폐쇄 + WP2.2-A P1 현재상태 감사 상세 계획](../superpowers/plans/2026-07-14-tracker-phase2-wp21-wp22a-plan.md)
   (`305734b`, `8d3c91b`, `af43164`).
-- WP2.2-B 이후의 상세 절차도 `docs/superpowers/plans/`에 분리하고, 이 마스터에는
-  진행 요약·게이트·상세 계획 링크만 유지한다.
+- 실행 대기: [WP2.2-B/C 전수 감사·주간 백필](../superpowers/plans/2026-07-14-tracker-phase2-wp22b-wp22c-plan.md)
+- 실행 대기: [WP2.3/2.4 골든셋·관제](../superpowers/plans/2026-07-14-tracker-phase2-wp23-wp24-plan.md)
+- 실행 대기: [WP2.5/2.6 정식 UI·임베딩·G2](../superpowers/plans/2026-07-14-tracker-phase2-wp25-wp26-g2-plan.md)
 
 ---
 
