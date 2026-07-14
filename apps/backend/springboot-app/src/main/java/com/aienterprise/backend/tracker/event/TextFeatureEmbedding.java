@@ -12,7 +12,7 @@ import java.util.Locale;
  * every vector is computed in request memory. Identical input always yields a
  * bit-for-bit identical vector so that merge decisions are reproducible.
  */
-public final class TextFeatureEmbedding {
+public final class TextFeatureEmbedding implements TextEmbedder {
 
     /** Fixed embedding width. */
     public static final int DIMENSIONS = 256;
