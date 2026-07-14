@@ -66,6 +66,25 @@ export async function getEvents(limit = 50): Promise<TimelineEvent[]> {
   return (await res.json()) as TimelineEvent[];
 }
 
+export interface LayerBMetric {
+  metricCode: string;
+  pillar: number;
+  pillarName: string;
+  observedOn: string;
+  value: number;
+  unit: string;
+  basis: string;
+  sourceLabel: string;
+  sourceUrl: string;
+  factSummary: string;
+}
+
+export async function getLayerB(): Promise<LayerBMetric[]> {
+  const res = await fetch("/api/tracker/layer-b");
+  if (!res.ok) throw new Error(`tracker layer-b failed: HTTP ${res.status}`);
+  return (await res.json()) as LayerBMetric[];
+}
+
 export type ReviewEvidence = TrackerEvidence;
 
 interface ReviewEvidenceWire {

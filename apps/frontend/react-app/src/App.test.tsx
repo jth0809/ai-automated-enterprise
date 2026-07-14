@@ -30,7 +30,9 @@ function stubAllRoutes() {
                 bottleneckPillar: null,
                 frozen: false,
               }
-            : url.includes("/api/tracker/pillars") || url.includes("/api/tracker/events")
+            : url.includes("/api/tracker/pillars")
+                || url.includes("/api/tracker/events")
+                || url.includes("/api/tracker/layer-b")
               ? []
               : { error: "invalid" };
       return { ok: true, status: 200, json: async () => body } as Response;

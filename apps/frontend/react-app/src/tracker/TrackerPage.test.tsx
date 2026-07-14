@@ -46,7 +46,9 @@ function stubTrackerRoutes() {
                   primaryEvidence: null,
                 },
               ]
-            : { error: "unexpected" };
+            : url.includes("/api/tracker/layer-b")
+              ? []
+              : { error: "unexpected" };
       return { ok: true, status: 200, json: async () => body } as Response;
     }),
   );

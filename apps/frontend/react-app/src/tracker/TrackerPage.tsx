@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { getEvents, getPillars, getSummary } from "./api";
-import type { PillarSummary, Summary, TimelineEvent } from "./api";
+import { getEvents, getLayerB, getPillars, getSummary } from "./api";
+import type { LayerBMetric, PillarSummary, Summary, TimelineEvent } from "./api";
 import { Countdown } from "./Countdown";
 import { EventTimeline } from "./EventTimeline";
+import { LayerBPanel } from "./LayerBPanel";
 import { PillarEtaList } from "./PillarEtaList";
 import { OpsPanel } from "./OpsPanel";
 import { PillarRadar } from "./PillarRadar";
@@ -12,6 +13,7 @@ interface TrackerData {
   summary: Summary;
   pillars: PillarSummary[];
   events: TimelineEvent[];
+  layerB: LayerBMetric[];
 }
 
 /** Multiplanetary tracker dashboard: countdown, pillar radar, event timeline. */
@@ -21,9 +23,9 @@ export function TrackerPage() {
 
   useEffect(() => {
     let cancelled = false;
-    Promise.all([getSummary(), getPillars(), getEvents(50)])
-      .then(([summary, pillars, events]) => {
-        if (!cancelled) setData({ summary, pillars, events });
+    Promise.all([getSummary(), getPillars(), getEvents(50), getLayerB()])
+      .then(([summary, pillars, events, layerB]) => {
+        if (!cancelled) setData({ summary, pillars, events, layerB });
       })
       .catch(() => {
         if (!cancelled) setFailed(true);
@@ -54,6 +56,7 @@ export function TrackerPage() {
       <PillarRadar pillars={data.pillars} bottleneck={data.summary.bottleneckPillar} />
       <PillarEtaList pillars={data.pillars} bottleneck={data.summary.bottleneckPillar} />
       <EventTimeline events={data.events} />
+      <LayerBPanel metrics={data.layerB} />
       <details className="review-section">
         <summary>검수 큐 (admin)</summary>
         <ReviewQueue />
