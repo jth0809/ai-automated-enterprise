@@ -4,6 +4,7 @@ import java.sql.Date;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.sql.Types;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
@@ -1057,6 +1058,106 @@ public class TrackerRepository {
             } catch (DuplicateKeyException concurrentInsert) {
                 putOpsState(key, value);
             }
+        }
+    }
+
+    public List<GoldenSetItemRow> findActiveGoldenSetItems(
+            String datasetVersion, int limit) {
+        if (limit <= 0) {
+            return List.of();
+        }
+        int safeLimit = Math.min(limit, 60);
+        return jdbc.sql("""
+                SELECT id, case_code, fixture_kind, title, body, expected_output,
+                       expected_schema_version, dataset_version, input_sha256
+                  FROM golden_set_item
+                 WHERE dataset_version = :datasetVersion
+                   AND active = 'Y'
+                 ORDER BY case_code
+                 FETCH FIRST %d ROWS ONLY
+                """.formatted(safeLimit))
+                .param("datasetVersion", datasetVersion)
+                .query((rs, rowNum) -> new GoldenSetItemRow(
+                        rs.getLong("id"),
+                        rs.getString("case_code"),
+                        rs.getString("fixture_kind"),
+                        rs.getString("title"),
+                        rs.getString("body"),
+                        rs.getString("expected_output"),
+                        rs.getString("expected_schema_version"),
+                        rs.getString("dataset_version"),
+                        rs.getString("input_sha256").trim()))
+                .list();
+    }
+
+    public long insertGoldenRun(GoldenRunDraft draft) {
+        GeneratedKeyHolder keys = new GeneratedKeyHolder();
+        jdbc.sql("""
+                INSERT INTO golden_set_run
+                  (mode, dataset_version, prompt_version, model_version,
+                   rubric_version_id, expected_schema_version, run_status,
+                   total_count, matched_count, failed_count)
+                VALUES
+                  (:mode, :datasetVersion, :promptVersion, :modelVersion,
+                   :rubricVersionId, :expectedSchemaVersion, 'RUNNING',
+                   :totalCount, 0, 0)
+                """)
+                .param("mode", draft.mode())
+                .param("datasetVersion", draft.datasetVersion())
+                .param("promptVersion", draft.promptVersion())
+                .param("modelVersion", draft.modelVersion())
+                .param("rubricVersionId", draft.rubricVersionId())
+                .param("expectedSchemaVersion", draft.expectedSchemaVersion())
+                .param("totalCount", draft.totalCount())
+                .update(keys, "id");
+        Number key = keys.getKey();
+        if (key == null) {
+            throw new IllegalStateException("Golden run insert produced no generated key");
+        }
+        return key.longValue();
+    }
+
+    public void insertGoldenResult(GoldenResultRow result) {
+        jdbc.sql("""
+                INSERT INTO golden_set_result
+                  (run_id, item_id, actual_output_sha256, matched,
+                   mismatch_fields, error_code)
+                VALUES
+                  (:runId, :itemId, :actualOutputSha256, :matched,
+                   :mismatchFields, :errorCode)
+                """)
+                .param("runId", result.runId())
+                .param("itemId", result.itemId())
+                .param("actualOutputSha256", result.actualOutputSha256(), Types.CHAR)
+                .param("matched", result.matched() ? "Y" : "N")
+                .param("mismatchFields", result.mismatchFields(), Types.VARCHAR)
+                .param("errorCode", result.errorCode(), Types.VARCHAR)
+                .update();
+    }
+
+    public void completeGoldenRun(
+            long runId,
+            String status,
+            int matchedCount,
+            int failedCount,
+            double agreement) {
+        int changed = jdbc.sql("""
+                UPDATE golden_set_run
+                   SET run_status = :status,
+                       matched_count = :matchedCount,
+                       failed_count = :failedCount,
+                       agreement = :agreement,
+                       completed_at = CURRENT_TIMESTAMP
+                 WHERE id = :runId AND run_status = 'RUNNING'
+                """)
+                .param("status", status)
+                .param("matchedCount", matchedCount)
+                .param("failedCount", failedCount)
+                .param("agreement", agreement)
+                .param("runId", runId)
+                .update();
+        if (changed != 1) {
+            throw new IllegalStateException("Golden run is not RUNNING: " + runId);
         }
     }
 
