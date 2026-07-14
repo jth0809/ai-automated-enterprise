@@ -19,6 +19,7 @@ import com.aienterprise.backend.tracker.domain.NodeRow;
 import com.aienterprise.backend.tracker.domain.OpsState;
 import com.aienterprise.backend.tracker.domain.SnapshotRow;
 import com.aienterprise.backend.tracker.domain.TrackerRepository;
+import com.aienterprise.backend.tracker.ops.StateFreezeService;
 
 import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 
@@ -36,9 +37,13 @@ public class SnapshotJob {
     }
 
     private final TrackerRepository repository;
+    private final StateFreezeService freezeService;
 
-    public SnapshotJob(TrackerRepository repository) {
+    public SnapshotJob(
+            TrackerRepository repository,
+            StateFreezeService freezeService) {
         this.repository = repository;
+        this.freezeService = freezeService;
     }
 
     @Scheduled(cron = "${tracker.snapshot-cron:0 30 0 * * MON}")
@@ -143,10 +148,13 @@ public class SnapshotJob {
     }
 
     private Double dampAgainstOpsState(Double computedEta) {
+        OpsState previous = repository.findOpsState(DISPLAYED_ETA_KEY).orElse(null);
+        if (freezeService.isFrozen()) {
+            return previous == null ? null : Double.parseDouble(previous.value());
+        }
         if (computedEta == null) {
             return null;
         }
-        OpsState previous = repository.findOpsState(DISPLAYED_ETA_KEY).orElse(null);
         double displayed = computedEta;
         if (previous != null) {
             double elapsedDays = Duration.between(previous.updatedAt(), Instant.now()).toMillis()

@@ -22,6 +22,7 @@ import com.aienterprise.backend.tracker.domain.ReviewCase;
 import com.aienterprise.backend.tracker.domain.ReviewRow;
 import com.aienterprise.backend.tracker.domain.TrackerRepository;
 import com.aienterprise.backend.tracker.scoring.StateUpdater;
+import com.aienterprise.backend.tracker.scoring.StateUpdater.DecisionOutcome;
 
 @RestController
 @ConditionalOnProperty(prefix = "tracker", name = "enabled", havingValue = "true")
@@ -84,7 +85,15 @@ public class TrackerAdminController {
                     .body(Map.of("error", "review already resolved", "status", review.get().status()));
         }
         if ("APPROVE".equals(decision)) {
-            stateUpdater.approve(review.get(), note);
+            DecisionOutcome outcome = stateUpdater.approve(review.get(), note);
+            if (outcome == DecisionOutcome.FROZEN) {
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                        .body(Map.of("error", "FROZEN"));
+            }
+            if (outcome == DecisionOutcome.ALREADY_RESOLVED) {
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                        .body(Map.of("error", "review already resolved"));
+            }
         } else {
             stateUpdater.reject(review.get(), note);
         }

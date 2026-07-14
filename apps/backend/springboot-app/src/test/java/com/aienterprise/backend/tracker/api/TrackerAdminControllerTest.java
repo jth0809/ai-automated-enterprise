@@ -17,6 +17,8 @@ import com.aienterprise.backend.tracker.domain.EvidenceKind;
 import com.aienterprise.backend.tracker.domain.EventRow;
 import com.aienterprise.backend.tracker.domain.HistoricalEvidenceRow;
 import com.aienterprise.backend.tracker.domain.TrackerRepository;
+import com.aienterprise.backend.tracker.ops.StateFreezeService;
+import com.aienterprise.backend.tracker.ops.StateFreezeService.Trigger;
 
 @SpringBootTest(
         webEnvironment = SpringBootTest.WebEnvironment.NONE,
@@ -33,6 +35,9 @@ class TrackerAdminControllerTest {
 
     @Autowired
     private TrackerAdminController controller;
+
+    @Autowired
+    private StateFreezeService freezeService;
 
     @Test
     void mismatchedTokenIsUnauthorized() {
@@ -80,6 +85,23 @@ class TrackerAdminControllerTest {
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(7, repository.findNodeByCode("P1-REUSE-LV").currentLevel());
         assertEquals("REJECTED", eventField(eventId, "event_status"));
+    }
+
+    @Test
+    void frozenApprovalReturnsConflictAndKeepsReviewPending() {
+        setLevel("P1-REUSE-LV", 7);
+        long eventId = event("frozen-approval");
+        long reviewId = repository.insertReview(eventId, "HIGH_IMPACT");
+        freezeService.freeze("drift drill", Trigger.DRILL);
+
+        var response = controller.decide(
+                reviewId, "test-secret", new Decision("APPROVE", "verified"));
+
+        assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
+        assertEquals("FROZEN", response.getBody().get("error"));
+        assertEquals("PENDING", jdbc.sql("SELECT status FROM review_queue WHERE id = :id")
+                .param("id", reviewId).query(String.class).single());
+        assertEquals(7, repository.findNodeByCode("P1-REUSE-LV").currentLevel());
     }
 
     @Test

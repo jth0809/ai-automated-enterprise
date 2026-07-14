@@ -796,6 +796,29 @@ public class TrackerRepository {
                 .update() == 1;
     }
 
+    public boolean reopenApprovedReview(long reviewId) {
+        return jdbc.sql("""
+                UPDATE review_queue
+                   SET status = 'PENDING', reviewer_note = NULL, resolved_at = NULL
+                 WHERE id = :id
+                   AND status = 'APPROVED'
+                """)
+                .param("id", reviewId)
+                .update() == 1;
+    }
+
+    public int resolvePendingCircuitBreakerReviews(String note) {
+        return jdbc.sql("""
+                UPDATE review_queue
+                   SET status = 'APPROVED', reviewer_note = :note,
+                       resolved_at = CURRENT_TIMESTAMP
+                 WHERE reason = 'CIRCUIT_BREAKER'
+                   AND status = 'PENDING'
+                """)
+                .param("note", note)
+                .update();
+    }
+
     public long countEvents() {
         return jdbc.sql("SELECT COUNT(*) FROM event").query(Long.class).single();
     }
@@ -1059,6 +1082,70 @@ public class TrackerRepository {
                 putOpsState(key, value);
             }
         }
+    }
+
+    public boolean markStateFrozenIfActive(String key) {
+        int changed = jdbc.sql("""
+                UPDATE ops_state
+                   SET state_value = 'true', updated_at = CURRENT_TIMESTAMP
+                 WHERE state_key = :key
+                   AND LOWER(TRIM(state_value)) = 'false'
+                """)
+                .param("key", key)
+                .update();
+        if (changed == 1) {
+            return true;
+        }
+        if (findOpsState(key).isPresent()) {
+            return false;
+        }
+        try {
+            jdbc.sql("INSERT INTO ops_state (state_key, state_value) VALUES (:key, 'true')")
+                    .param("key", key)
+                    .update();
+            return true;
+        } catch (DuplicateKeyException concurrentInsert) {
+            return jdbc.sql("""
+                    UPDATE ops_state
+                       SET state_value = 'true', updated_at = CURRENT_TIMESTAMP
+                     WHERE state_key = :key
+                       AND LOWER(TRIM(state_value)) = 'false'
+                    """)
+                    .param("key", key)
+                    .update() == 1;
+        }
+    }
+
+    public boolean markStateReleasedIfFrozen(String key) {
+        return jdbc.sql("""
+                UPDATE ops_state
+                   SET state_value = 'false', updated_at = CURRENT_TIMESTAMP
+                 WHERE state_key = :key
+                   AND LOWER(TRIM(state_value)) = 'true'
+                """)
+                .param("key", key)
+                .update() == 1;
+    }
+
+    public void deleteOpsState(String key) {
+        jdbc.sql("DELETE FROM ops_state WHERE state_key = :key")
+                .param("key", key)
+                .update();
+    }
+
+    public void insertOpsAction(OpsActionDraft action) {
+        jdbc.sql("""
+                INSERT INTO ops_action_log
+                  (action_type, reason, trigger_type, previous_state, new_state)
+                VALUES
+                  (:actionType, :reason, :triggerType, :previousState, :newState)
+                """)
+                .param("actionType", action.actionType())
+                .param("reason", action.reason())
+                .param("triggerType", action.triggerType())
+                .param("previousState", action.previousState())
+                .param("newState", action.newState())
+                .update();
     }
 
     public List<GoldenSetItemRow> findActiveGoldenSetItems(
