@@ -210,6 +210,81 @@ export async function decideReview(
   if (!res.ok) throw await reviewApiError(res);
 }
 
+export interface GoldenRun {
+  id: number;
+  mode: string;
+  status: string;
+  datasetVersion: string;
+  promptVersion: string;
+  modelVersion: string;
+  totalCount: number;
+  matchedCount: number;
+  failedCount: number;
+  agreement: number | null;
+  startedAt: string;
+  completedAt: string | null;
+}
+
+export interface ControlMetric {
+  metricDate: string;
+  metricCode: string;
+  value: number;
+  baselineMean: number | null;
+  lowerBound: number | null;
+  upperBound: number | null;
+  status: string;
+  violation: boolean;
+  consecutiveViolations: number;
+  sampleDays: number;
+}
+
+export interface DeadmanFeed {
+  source: string;
+  status: string;
+  intervalSamples: number;
+  medianIntervalHours: number | null;
+  silenceHours: number | null;
+}
+
+export interface DeadmanSummary {
+  status: string;
+  observedAt: string | null;
+  feedCount: number;
+  alertCount: number;
+  insufficientCount: number;
+  feeds: DeadmanFeed[];
+}
+
+export interface OpsOverview {
+  frozen: boolean;
+  freezeReason: string | null;
+  freezeTrigger: string | null;
+  freezeAt: string | null;
+  latestGolden: GoldenRun | null;
+  controlMetrics: ControlMetric[];
+  deadman: DeadmanSummary | null;
+}
+
+export async function getOpsOverview(token: string): Promise<OpsOverview> {
+  const res = await fetch("/api/tracker/admin/ops", {
+    headers: { "X-Tracker-Admin-Token": token },
+  });
+  if (!res.ok) throw await reviewApiError(res);
+  return (await res.json()) as OpsOverview;
+}
+
+export async function releaseOps(token: string, reason: string): Promise<void> {
+  const res = await fetch("/api/tracker/admin/ops/release", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Tracker-Admin-Token": token,
+    },
+    body: JSON.stringify({ reason }),
+  });
+  if (!res.ok) throw await reviewApiError(res);
+}
+
 async function reviewApiError(response: Response): Promise<ReviewApiError> {
   let code: string | null = null;
   try {

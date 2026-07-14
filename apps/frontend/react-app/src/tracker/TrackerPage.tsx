@@ -4,6 +4,7 @@ import type { PillarSummary, Summary, TimelineEvent } from "./api";
 import { Countdown } from "./Countdown";
 import { EventTimeline } from "./EventTimeline";
 import { PillarEtaList } from "./PillarEtaList";
+import { OpsPanel } from "./OpsPanel";
 import { PillarRadar } from "./PillarRadar";
 import { ReviewQueue } from "./ReviewQueue";
 
@@ -56,6 +57,10 @@ export function TrackerPage() {
       <details className="review-section">
         <summary>검수 큐 (admin)</summary>
         <ReviewQueue />
+      </details>
+      <details className="ops-section">
+        <summary>운영 상태 (admin)</summary>
+        <OpsPanel />
       </details>
     </div>
   );

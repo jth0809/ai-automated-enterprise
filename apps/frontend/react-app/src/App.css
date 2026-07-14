@@ -956,3 +956,152 @@ body {
 .pillar-eta-bottleneck .pillar-eta-name {
   color: #b42318;
 }
+
+/* Operations (circuit-breaker) console */
+
+.ops-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.ops-token {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.5rem;
+}
+
+.ops-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.ops-badge {
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+}
+
+.ops-badge-frozen {
+  background: rgba(220, 38, 38, 0.14);
+  color: var(--danger);
+}
+
+.ops-badge-active {
+  background: rgba(22, 163, 74, 0.14);
+  color: var(--success);
+}
+
+.ops-freeze-reason {
+  font-size: 0.9rem;
+}
+
+.ops-freeze-trigger,
+.ops-freeze-at {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.ops-notice {
+  color: var(--success);
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+.ops-golden {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.ops-golden-label {
+  font-weight: 600;
+}
+
+.ops-mode {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.1rem 0.5rem;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+}
+
+.ops-mode-live {
+  background: rgba(22, 163, 74, 0.16);
+  color: var(--success);
+}
+
+.ops-mode-drill {
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+}
+
+.ops-metrics {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.25rem;
+}
+
+.ops-metric {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 0.75rem;
+  align-items: baseline;
+  font-size: 0.85rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.4rem;
+  background: var(--surface-2);
+}
+
+.ops-metric-value {
+  font-variant-numeric: tabular-nums;
+}
+
+.ops-metric-violation {
+  outline: 1px solid #fda29b;
+}
+
+.ops-metric-violation .ops-metric-status {
+  color: var(--danger);
+  font-weight: 600;
+}
+
+.ops-deadman {
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+.ops-deadman-alert {
+  color: var(--danger);
+  font-weight: 600;
+}
+
+.ops-release {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.5rem;
+}
+
+.ops-release label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1 1 16rem;
+  font-size: 0.85rem;
+}
+
+.ops-error {
+  color: var(--danger);
+  font-size: 0.85rem;
+  margin: 0.4rem 0 0;
+}
