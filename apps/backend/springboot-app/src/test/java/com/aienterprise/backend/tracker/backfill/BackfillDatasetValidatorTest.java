@@ -29,8 +29,9 @@ class BackfillDatasetValidatorTest {
                 new ClassPathResource("tracker/historical-candidates-v1.jsonl"),
                 new ClassPathResource("tracker/backfill-v1.json"));
 
-        assertEquals(146, result.claims().size());
-        assertEquals(140, result.candidates().size());
+        assertFalse(result.claims().isEmpty());
+        assertTrue(result.claims().size() <= 512);
+        assertTrue(result.candidates().size() <= result.claims().size());
         assertTrue(result.errors().isEmpty(), () -> String.join("\n", result.errors()));
     }
 

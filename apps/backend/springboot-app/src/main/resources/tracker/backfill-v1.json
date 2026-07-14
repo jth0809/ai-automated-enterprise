@@ -197,6 +197,8 @@
     "expectedVerificationLevel": "OFFICIAL",
     "eventTitle": "NERVA ended before a flight test",
     "rubricJustification": "The source supports only year precision; cancellation cannot advance capability state.",
+    "programEndEffect": "CAPABILITY_PROGRAM_END",
+    "programEndScope": "The official history closes the NERVA development lineage that supplied this node's demonstrated nuclear-thermal state; no later claim in this lineage restores it.",
     "evidenceRefs": [
       "HC-1973-NERVA-CANCELLATION#NASA"
     ],
@@ -879,21 +881,21 @@
     "nodeSetVersion": "nodes-v1.0",
     "rubricVersion": "r2.0",
     "nodeCode": "P2-HEALTH-AUTONOMY",
-    "eventType": "RETROSPECTIVE",
-    "claimedLevel": null,
+    "eventType": "FLIGHT_TEST",
+    "claimedLevel": 3,
     "actor": "NASA and ISS crew",
     "occurredOn": "2020-04-09",
     "occurredOnPrecision": "DAY",
     "expectedVerificationLevel": "OFFICIAL",
     "eventTitle": "ISS crew completed autonomous kidney and bladder ultrasound with AMOS",
-    "rubricJustification": "Autonomous image-acquisition evidence only; the session did not establish autonomous interpretation, diagnosis, treatment selection, or treatment delivery.",
+    "rubricJustification": "Partial credit at L3: crew used just-in-time software without customary real-time ground guidance to complete autonomous medical imaging in an operational spaceflight setting. Held below L4 because autonomous interpretation, diagnosis, treatment selection, and treatment delivery were not demonstrated.",
     "evidenceRefs": [
       "HC-2020-ISS-AMOS-FIRST-AUTONOMOUS-SCANS#NASA"
     ],
     "review": {
       "fact": "APPROVED",
       "rubric": "APPROVED",
-      "reviewerNote": "Fact metadata checked; non-progress classification and rubric boundary checked separately in this mapping pass."
+      "reviewerNote": "Re-audited 2026-07-14 against NASA AMOS operational proof-of-concept language; partial in-flight subsystem credit restored without claiming autonomous diagnosis or treatment."
     }
   },
   {
@@ -3325,6 +3327,8 @@
     "expectedVerificationLevel": "OFFICIAL",
     "eventTitle": "Apollo 17 completed the final Apollo lunar landing mission",
     "rubricJustification": "The final Apollo lunar landing mission is the supported program-end transition for the demonstrated lunar surface-ascent line; it preserves L8 and starts dormancy.",
+    "programEndEffect": "CAPABILITY_PROGRAM_END",
+    "programEndScope": "Apollo 17 was the final mission in the demonstrated Apollo lunar landing and surface-ascent operating lineage.",
     "evidenceRefs": [
       "HC-1972-APOLLO17-FINAL-LUNAR-MISSION#NASA"
     ],
@@ -3355,6 +3359,29 @@
       "fact": "APPROVED",
       "rubric": "APPROVED",
       "reviewerNote": "Mapped 2026-07-13: integration node graded partial credit; 26-month L8 finish line unchanged."
+    }
+  },
+  {
+    "backfillId": "BF-P3-025",
+    "candidateId": "HC-1995-LSSIF-INTEGRATED-THERMAL-TEST",
+    "nodeSetVersion": "nodes-v1.0",
+    "rubricVersion": "r2.0",
+    "nodeCode": "P3-THERMAL",
+    "eventType": "PROTOTYPE_DEMO",
+    "claimedLevel": 3,
+    "actor": "NASA Johnson Space Center",
+    "occurredOn": "1995-01-01",
+    "occurredOnPrecision": "YEAR",
+    "expectedVerificationLevel": "OFFICIAL",
+    "eventTitle": "NASA tested an integrated crew-habitat thermal-control prototype",
+    "rubricJustification": "Partial credit at L3: an integrated thermal-control prototype supplied coolant to life-support subsystems in a crew-occupiable chamber and rejected heat to a lunar-emulating sink. Held below L4 because this was a ground facility, not a surface habitat operating through destination cycles and faults.",
+    "evidenceRefs": [
+      "HC-1995-LSSIF-INTEGRATED-THERMAL-TEST#NASA"
+    ],
+    "review": {
+      "fact": "APPROVED",
+      "rubric": "APPROVED",
+      "reviewerNote": "Official NTRS metadata and abstract checked 2026-07-14; integrated ground-prototype credit granted while the surface-cycle boundary remains unmet."
     }
   }
 ]

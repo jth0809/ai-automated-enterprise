@@ -6,6 +6,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.time.Clock;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.util.List;
@@ -20,6 +22,10 @@ import org.springframework.core.io.Resource;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.test.context.ActiveProfiles;
 
+import com.aienterprise.backend.tracker.backfill.BackfillAuditValidator;
+import com.aienterprise.backend.tracker.backfill.BackfillDatasetValidator;
+import com.aienterprise.backend.tracker.backfill.ValidatedBackfill;
+import com.aienterprise.backend.tracker.backfill.ValidatedNodeAudit;
 import com.aienterprise.backend.tracker.domain.TrackerRepository;
 import com.aienterprise.backend.tracker.math.Params;
 import com.aienterprise.backend.tracker.math.Readiness;
@@ -115,7 +121,7 @@ class BackfillLoaderTest {
     }
 
     @Test
-    void productionP1AuditReplaysApprovedLevelsDormancyAndReadiness() {
+    void productionAuditReplaysApprovedLevelsDormancyAndReadiness() {
         BackfillLoader production = loader(
                 new ClassPathResource("tracker/historical-candidates-v1.jsonl"),
                 new ClassPathResource("tracker/backfill-v1.json"),
@@ -131,6 +137,27 @@ class BackfillLoaderTest {
         assertNodeState("P1-CREW-SAFE", 8, "ACTIVE");
         assertNodeState("P1-ORBIT-LOGISTICS", 8, "ACTIVE");
         assertNodeState("P1-TRANSPORT-INTEGRATION", 3, "ACTIVE");
+        assertNodeState("P2-HEALTH-AUTONOMY", 3, "ACTIVE");
+        assertNodeState("P3-THERMAL", 3, "ACTIVE");
+        assertNodeState("P4-RESOURCE-INTEGRATION", 0, "ACTIVE");
+        assertNodeState("P6-FUNDING", 3, "ACTIVE");
+        assertNodeState("P6-SETTLEMENT-INTEGRATION", 0, "ACTIVE");
+        assertEquals(null, repository.findNodeByCode("P6-FUNDING").programEndDate());
+
+        ValidatedBackfill validatedBackfill = new BackfillDatasetValidator(true).validate(
+                new ClassPathResource("tracker/historical-candidates-v1.jsonl"),
+                new ClassPathResource("tracker/backfill-v1.json"));
+        ValidatedNodeAudit audit = new BackfillAuditValidator(Clock.fixed(
+                Instant.parse("2026-07-14T00:00:00Z"), ZoneOffset.UTC)).validate(
+                        new ClassPathResource("tracker/backfill-audit-v1.json"),
+                        validatedBackfill);
+        assertTrue(audit.errors().isEmpty(), () -> String.join("\n", audit.errors()));
+        assertEquals(35, audit.entries().size());
+        audit.entries().forEach(entry -> {
+            var actual = repository.findNodeByCode(entry.nodeCode());
+            assertEquals(entry.auditedLevel(), actual.currentLevel(), entry.nodeCode());
+            assertEquals(entry.status(), actual.nodeStatus(), entry.nodeCode());
+        });
 
         var surfaceAscent = repository.findNodeByCode("P1-SURFACE-ASCENT");
         assertEquals(LocalDate.of(1972, 12, 19), surfaceAscent.programEndDate());
@@ -141,16 +168,18 @@ class BackfillLoaderTest {
                 .toList();
         assertEquals(0.4624,
                 Readiness.pillarReadiness(p1Nodes, Params.defaults()), 1e-9);
-        assertEquals(146, jdbc.sql("SELECT COUNT(*) FROM historical_evidence")
-                .query(Integer.class).single());
-        assertEquals(146, jdbc.sql("""
+        int importedEvidence = jdbc.sql("SELECT COUNT(*) FROM historical_evidence")
+                .query(Integer.class).single();
+        int recordedClaims = jdbc.sql("""
                 SELECT record_count FROM backfill_import
                  WHERE dataset_version = 'backfill-v1'
-                """).query(Integer.class).single());
+                """).query(Integer.class).single();
+        assertEquals(recordedClaims, importedEvidence);
+        assertTrue(recordedClaims > 0);
 
         production.loadDatasetIfNeeded();
 
-        assertEquals(146, jdbc.sql("SELECT COUNT(*) FROM historical_evidence")
+        assertEquals(importedEvidence, jdbc.sql("SELECT COUNT(*) FROM historical_evidence")
                 .query(Integer.class).single());
         assertEquals(1, jdbc.sql("""
                 SELECT COUNT(*) FROM backfill_import
@@ -396,6 +425,11 @@ class BackfillLoaderTest {
             mapping.put("expectedVerificationLevel", "OFFICIAL");
             mapping.put("eventTitle", "Transition fixture " + (i + 1));
             mapping.put("rubricJustification", "Synthetic chronological boundary.");
+            if ("PROGRAM_CANCELLATION".equals(eventTypes[i])) {
+                mapping.put("programEndEffect", "CAPABILITY_PROGRAM_END");
+                mapping.put("programEndScope",
+                        "Synthetic fixture closes the representative program lineage.");
+            }
             mapping.putArray("evidenceRefs").add(candidateId + "#NASA");
             ObjectNode review = mapping.putObject("review");
             review.put("fact", "APPROVED");

@@ -31,6 +31,7 @@ import com.aienterprise.backend.tracker.backfill.BackfillClaim;
 import com.aienterprise.backend.tracker.backfill.BackfillDatasetValidator;
 import com.aienterprise.backend.tracker.backfill.HistoricalCandidate;
 import com.aienterprise.backend.tracker.backfill.HistoricalEvidenceReference;
+import com.aienterprise.backend.tracker.backfill.ProgramEndEffect;
 import com.aienterprise.backend.tracker.backfill.ValidatedBackfill;
 import com.aienterprise.backend.tracker.domain.BackfillImportRow;
 import com.aienterprise.backend.tracker.domain.EventRow;
@@ -229,7 +230,9 @@ public class BackfillLoader {
             return false;
         }
         if ("PROGRAM_CANCELLATION".equals(claim.eventType())) {
-            repository.recordProgramEndDate(node.id(), claim.occurredOn());
+            if (claim.programEndEffect() == ProgramEndEffect.CAPABILITY_PROGRAM_END) {
+                repository.recordProgramEndDate(node.id(), claim.occurredOn());
+            }
             return false;
         }
         if (claim.claimedLevel() == null || NON_STATE_EVENTS.contains(claim.eventType())) {
@@ -299,8 +302,10 @@ public class BackfillLoader {
             Map<String, ReplayState> states, BackfillClaim claim) {
         ReplayState previous = states.getOrDefault(claim.nodeCode(), new ReplayState(0, null));
         if ("PROGRAM_CANCELLATION".equals(claim.eventType())) {
-            states.put(claim.nodeCode(), new ReplayState(
-                    previous.level(), claim.occurredOn()));
+            if (claim.programEndEffect() == ProgramEndEffect.CAPABILITY_PROGRAM_END) {
+                states.put(claim.nodeCode(), new ReplayState(
+                        previous.level(), claim.occurredOn()));
+            }
             return;
         }
         if (claim.claimedLevel() == null || NON_STATE_EVENTS.contains(claim.eventType())) {
