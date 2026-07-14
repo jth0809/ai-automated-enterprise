@@ -1,0 +1,41 @@
+[
+  {
+    "metricCode": "LAUNCH_PRICE_LEO",
+    "pillar": 1,
+    "observedOn": "2024-01-01",
+    "value": 2720,
+    "unit": "USD_PER_KG",
+    "basis": "PUBLISHED_PRICE",
+    "sourceLabel": "Provider published capabilities and services price sheet",
+    "sourceUrl": "https://www.spacex.com/media/Capabilities-Services.pdf",
+    "accessedOn": "2026-07-14",
+    "contentSha256": "b918d9b28d2b5061a48e84dbbec564e22aa0f1fb153632877afb27cd37d980ee",
+    "factSummary": "Published list price per kilogram to low Earth orbit for a reusable medium-lift vehicle; a declared price, not an audited internal cost."
+  },
+  {
+    "metricCode": "ANNUAL_LAUNCH_COUNT",
+    "pillar": 1,
+    "observedOn": "2024-12-31",
+    "value": 259,
+    "unit": "LAUNCHES",
+    "basis": "MEASURED",
+    "sourceLabel": "Regulator annual launch and reentry record",
+    "sourceUrl": "https://www.faa.gov/space/additional_information/launches_reentries",
+    "accessedOn": "2026-07-14",
+    "contentSha256": "d312471ed53ca061bf6b0ba0e2a0ac0506199a763d6cc87487d5f9b93e0e5cee",
+    "factSummary": "Count of orbital launch attempts recorded worldwide for the 2024 calendar year."
+  },
+  {
+    "metricCode": "ANNUAL_UPMASS_TONNES",
+    "pillar": 1,
+    "observedOn": "2024-12-31",
+    "value": 1900,
+    "unit": "TONNES",
+    "basis": "MEASURED",
+    "sourceLabel": "Industry annual upmass assessment",
+    "sourceUrl": "https://brycetech.com/reports",
+    "accessedOn": "2026-07-14",
+    "contentSha256": "fb0e693fa494b7184b8fbcedbba15c85dd9b1154b96fbba660d6a749c1d0cbf6",
+    "factSummary": "Estimated total mass delivered to orbit during the 2024 calendar year, dominated by large constellation deployment."
+  }
+]
