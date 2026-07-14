@@ -7,6 +7,7 @@ import java.sql.Timestamp;
 import java.sql.Types;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -1246,6 +1247,166 @@ public class TrackerRepository {
         if (changed != 1) {
             throw new IllegalStateException("Golden run is not RUNNING: " + runId);
         }
+    }
+
+    public PipelineDailyAggregate aggregatePipelineMetrics(LocalDate metricDate) {
+        if (metricDate == null) {
+            throw new IllegalArgumentException("metric date is required");
+        }
+        Timestamp start = Timestamp.from(metricDate.atStartOfDay().toInstant(ZoneOffset.UTC));
+        Timestamp end = Timestamp.from(metricDate.plusDays(1).atStartOfDay().toInstant(ZoneOffset.UTC));
+
+        record GateCounts(long passed, long total) {
+        }
+        GateCounts gate = jdbc.sql("""
+                SELECT SUM(CASE
+                           WHEN pipeline_status IN ('GATE_PASSED','CLASSIFIED')
+                           THEN 1 ELSE 0 END) AS passed_count,
+                       COUNT(*) AS total_count
+                  FROM article
+                 WHERE fetched_at >= :startAt AND fetched_at < :endAt
+                   AND pipeline_status IN
+                       ('GATE_PASSED','CLASSIFIED','GATE_REJECTED')
+                """)
+                .param("startAt", start)
+                .param("endAt", end)
+                .query((rs, rowNum) -> new GateCounts(
+                        rs.getLong("passed_count"), rs.getLong("total_count")))
+                .single();
+        double gateRate = gate.total() == 0
+                ? 0.0 : (double) gate.passed() / gate.total();
+
+        long confirmed = jdbc.sql("""
+                SELECT COUNT(*) FROM event
+                 WHERE event_status = 'CONFIRMED'
+                   AND updated_at >= :startAt AND updated_at < :endAt
+                """)
+                .param("startAt", start)
+                .param("endAt", end)
+                .query(Long.class)
+                .single();
+
+        List<Double> impactScores = jdbc.sql("""
+                SELECT impact_score FROM event
+                 WHERE impact_score IS NOT NULL
+                   AND updated_at >= :startAt AND updated_at < :endAt
+                 ORDER BY impact_score
+                 FETCH FIRST 10001 ROWS ONLY
+                """)
+                .param("startAt", start)
+                .param("endAt", end)
+                .query(Double.class)
+                .list();
+        if (impactScores.size() > 10_000) {
+            throw new IllegalStateException("daily impact metric exceeds 10000 rows");
+        }
+        double median = percentile(impactScores, 0.50);
+        double p95 = percentile(impactScores, 0.95);
+        return new PipelineDailyAggregate(gateRate, confirmed, median, p95);
+    }
+
+    public List<PipelineMetricRow> findRecentPipelineMetrics(
+            String metricCode,
+            LocalDate beforeExclusive,
+            int limit) {
+        if (limit <= 0) {
+            return List.of();
+        }
+        int safeLimit = Math.min(limit, 28);
+        return jdbc.sql("""
+                SELECT metric_date, metric_code, metric_value, baseline_mean,
+                       lower_bound, upper_bound, monitor_status, violation,
+                       consecutive_violations, sample_days
+                  FROM pipeline_metric_daily
+                 WHERE metric_code = :metricCode
+                   AND metric_date < :beforeExclusive
+                 ORDER BY metric_date DESC
+                 FETCH FIRST %d ROWS ONLY
+                """.formatted(safeLimit))
+                .param("metricCode", metricCode)
+                .param("beforeExclusive", date(beforeExclusive))
+                .query((rs, rowNum) -> new PipelineMetricRow(
+                        rs.getDate("metric_date").toLocalDate(),
+                        rs.getString("metric_code"),
+                        rs.getDouble("metric_value"),
+                        nullableDouble(rs, "baseline_mean"),
+                        nullableDouble(rs, "lower_bound"),
+                        nullableDouble(rs, "upper_bound"),
+                        rs.getString("monitor_status"),
+                        "Y".equals(rs.getString("violation")),
+                        rs.getInt("consecutive_violations"),
+                        rs.getInt("sample_days")))
+                .list();
+    }
+
+    public void upsertPipelineMetric(PipelineMetricRow row) {
+        int changed = jdbc.sql("""
+                UPDATE pipeline_metric_daily
+                   SET metric_value = :metricValue,
+                       baseline_mean = :baselineMean,
+                       lower_bound = :lowerBound,
+                       upper_bound = :upperBound,
+                       monitor_status = :monitorStatus,
+                       violation = :violation,
+                       consecutive_violations = :consecutiveViolations,
+                       sample_days = :sampleDays,
+                       updated_at = CURRENT_TIMESTAMP
+                 WHERE metric_date = :metricDate AND metric_code = :metricCode
+                """)
+                .param("metricValue", row.metricValue())
+                .param("baselineMean", row.baselineMean(), Types.NUMERIC)
+                .param("lowerBound", row.lowerBound(), Types.NUMERIC)
+                .param("upperBound", row.upperBound(), Types.NUMERIC)
+                .param("monitorStatus", row.monitorStatus())
+                .param("violation", row.violation() ? "Y" : "N")
+                .param("consecutiveViolations", row.consecutiveViolations())
+                .param("sampleDays", row.sampleDays())
+                .param("metricDate", date(row.metricDate()))
+                .param("metricCode", row.metricCode())
+                .update();
+        if (changed == 1) {
+            return;
+        }
+        try {
+            jdbc.sql("""
+                    INSERT INTO pipeline_metric_daily
+                      (metric_date, metric_code, metric_value, baseline_mean,
+                       lower_bound, upper_bound, monitor_status, violation,
+                       consecutive_violations, sample_days)
+                    VALUES
+                      (:metricDate, :metricCode, :metricValue, :baselineMean,
+                       :lowerBound, :upperBound, :monitorStatus, :violation,
+                       :consecutiveViolations, :sampleDays)
+                    """)
+                    .param("metricDate", date(row.metricDate()))
+                    .param("metricCode", row.metricCode())
+                    .param("metricValue", row.metricValue())
+                    .param("baselineMean", row.baselineMean(), Types.NUMERIC)
+                    .param("lowerBound", row.lowerBound(), Types.NUMERIC)
+                    .param("upperBound", row.upperBound(), Types.NUMERIC)
+                    .param("monitorStatus", row.monitorStatus())
+                    .param("violation", row.violation() ? "Y" : "N")
+                    .param("consecutiveViolations", row.consecutiveViolations())
+                    .param("sampleDays", row.sampleDays())
+                    .update();
+        } catch (DuplicateKeyException concurrentInsert) {
+            upsertPipelineMetric(row);
+        }
+    }
+
+    private static double percentile(List<Double> sortedValues, double percentile) {
+        if (sortedValues.isEmpty()) {
+            return 0.0;
+        }
+        double position = percentile * (sortedValues.size() - 1);
+        int lower = (int) Math.floor(position);
+        int upper = (int) Math.ceil(position);
+        if (lower == upper) {
+            return sortedValues.get(lower);
+        }
+        double fraction = position - lower;
+        return sortedValues.get(lower)
+                + fraction * (sortedValues.get(upper) - sortedValues.get(lower));
     }
 
     public List<TimelineRow> findEventTimeline(int limit) {
