@@ -5,6 +5,8 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.HexFormat;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +32,7 @@ public class GoldenSetJob {
 
     private static final int MAX_BATCH_SIZE = 60;
     private static final double MIN_LIVE_AGREEMENT = 0.90;
+    private static final Duration LIVE_STALE_AFTER = Duration.ofDays(8);
 
     private final GoldenSetEvaluator evaluator;
     private final TrackerRepository repository;
@@ -80,6 +83,7 @@ public class GoldenSetJob {
     @Scheduled(cron = "${tracker.golden-cron:0 0 2 * * SUN}", zone = "UTC")
     @SchedulerLock(name = "tracker-golden-set", lockAtLeastFor = "PT1M")
     public void runWeekly() {
+        freezeIfLiveBaselineIsStale();
         if (!liveEnabled) {
             repository.putOpsState(LAST_RUN_STATUS_KEY, "SKIPPED_DISABLED");
             return;
@@ -89,6 +93,35 @@ public class GoldenSetJob {
             return;
         }
         runForMode(GoldenSetEvaluator.RunMode.LIVE_MODEL);
+    }
+
+    private void freezeIfLiveBaselineIsStale() {
+        if (repository.findOpsState(LIVE_ACTIVATED_KEY).isEmpty()) {
+            return;
+        }
+        String stored = repository.findOpsState(LAST_LIVE_SUCCESS_KEY)
+                .map(state -> state.value())
+                .orElse(null);
+        if (stored == null || stored.isBlank()) {
+            freezeService.freeze(
+                    "activated live golden baseline has no success timestamp",
+                    Trigger.AUTOMATIC);
+            return;
+        }
+        Instant lastSuccess;
+        try {
+            lastSuccess = Instant.parse(stored.trim());
+        } catch (RuntimeException invalidTimestamp) {
+            freezeService.freeze(
+                    "activated live golden baseline has invalid success timestamp",
+                    Trigger.AUTOMATIC);
+            return;
+        }
+        if (lastSuccess.isBefore(clock.instant().minus(LIVE_STALE_AFTER))) {
+            freezeService.freeze(
+                    "live golden baseline is older than 8 days",
+                    Trigger.AUTOMATIC);
+        }
     }
 
     public GoldenSetEvaluator.Report runForMode(GoldenSetEvaluator.RunMode mode) {

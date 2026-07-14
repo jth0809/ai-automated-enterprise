@@ -15,6 +15,7 @@ import static org.mockito.Mockito.when;
 
 import java.lang.reflect.Method;
 import java.time.Clock;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.Optional;
@@ -105,6 +106,56 @@ class GoldenSetJobTest {
         verify(evaluator, never()).evaluate(any(), any());
         verify(repository).putOpsState(
                 GoldenSetJob.LAST_RUN_STATUS_KEY, "SKIPPED_API_UNAVAILABLE");
+    }
+
+    @Test
+    void activatedLiveBaselineFreezesOnlyAfterEightFullDaysWithoutSuccess() {
+        when(repository.findOpsState(GoldenSetJob.LIVE_ACTIVATED_KEY))
+                .thenReturn(Optional.of(new OpsState("active-fingerprint", NOW)));
+        when(repository.findOpsState(GoldenSetJob.LAST_LIVE_SUCCESS_KEY))
+                .thenReturn(Optional.of(new OpsState(
+                        NOW.minus(Duration.ofDays(8)).toString(), NOW)));
+        GoldenSetJob disabled = new GoldenSetJob(
+                evaluator, repository, freezeService,
+                false, false, VERSIONS, CLOCK);
+
+        disabled.runWeekly();
+
+        verify(freezeService, never()).freeze(any(), any());
+    }
+
+    @Test
+    void staleActivatedLiveBaselineFreezesEvenWhenLiveCallsAreDisabled() {
+        when(repository.findOpsState(GoldenSetJob.LIVE_ACTIVATED_KEY))
+                .thenReturn(Optional.of(new OpsState("active-fingerprint", NOW)));
+        when(repository.findOpsState(GoldenSetJob.LAST_LIVE_SUCCESS_KEY))
+                .thenReturn(Optional.of(new OpsState(
+                        NOW.minus(Duration.ofDays(8)).minusSeconds(1).toString(), NOW)));
+        GoldenSetJob disabled = new GoldenSetJob(
+                evaluator, repository, freezeService,
+                false, false, VERSIONS, CLOCK);
+
+        disabled.runWeekly();
+
+        verify(freezeService).freeze(
+                contains("older than 8 days"), eq(Trigger.AUTOMATIC));
+        verify(evaluator, never()).evaluate(any(), any());
+    }
+
+    @Test
+    void malformedSuccessTimeOnAnActivatedBaselineFailsClosed() {
+        when(repository.findOpsState(GoldenSetJob.LIVE_ACTIVATED_KEY))
+                .thenReturn(Optional.of(new OpsState("active-fingerprint", NOW)));
+        when(repository.findOpsState(GoldenSetJob.LAST_LIVE_SUCCESS_KEY))
+                .thenReturn(Optional.of(new OpsState("not-an-instant", NOW)));
+        GoldenSetJob disabled = new GoldenSetJob(
+                evaluator, repository, freezeService,
+                false, false, VERSIONS, CLOCK);
+
+        disabled.runWeekly();
+
+        verify(freezeService).freeze(
+                contains("invalid success timestamp"), eq(Trigger.AUTOMATIC));
     }
 
     @Test
