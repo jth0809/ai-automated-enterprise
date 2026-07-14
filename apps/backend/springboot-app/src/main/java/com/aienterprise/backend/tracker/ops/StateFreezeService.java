@@ -21,7 +21,9 @@ public class StateFreezeService {
     public static final String FREEZE_TRIGGER_KEY = "FREEZE_TRIGGER";
     public static final String FREEZE_AT_KEY = "FREEZE_AT";
 
-    private static final int MAX_REASON_LENGTH = 1_000;
+    private static final int MAX_REASON_LENGTH = 2_000;
+    private static final int MAX_REVIEW_NOTE_LENGTH = 2_000;
+    private static final String RELEASE_NOTE_PREFIX = "Freeze released after human review: ";
 
     private final TrackerRepository repository;
     private final Clock clock;
@@ -82,8 +84,7 @@ public class StateFreezeService {
         if (!repository.markStateReleasedIfFrozen(STATE_FROZEN_KEY)) {
             return false;
         }
-        repository.resolvePendingCircuitBreakerReviews(
-                "Freeze released after human review: " + normalizedReason);
+        repository.resolvePendingCircuitBreakerReviews(releaseReviewNote(normalizedReason));
         repository.deleteOpsState(FREEZE_REASON_KEY);
         repository.deleteOpsState(FREEZE_TRIGGER_KEY);
         repository.deleteOpsState(FREEZE_AT_KEY);
@@ -96,9 +97,20 @@ public class StateFreezeService {
         String normalized = reason == null ? "" : reason.trim();
         if (normalized.isEmpty() || normalized.length() > MAX_REASON_LENGTH) {
             throw new IllegalArgumentException(
-                    "state transition reason must contain 1..1000 characters");
+                    "state transition reason must contain 1..2000 characters");
         }
         return normalized;
+    }
+
+    private static String releaseReviewNote(String reason) {
+        int available = MAX_REVIEW_NOTE_LENGTH - RELEASE_NOTE_PREFIX.length();
+        int end = Math.min(reason.length(), available);
+        if (end > 0 && end < reason.length()
+                && Character.isHighSurrogate(reason.charAt(end - 1))
+                && Character.isLowSurrogate(reason.charAt(end))) {
+            end--;
+        }
+        return RELEASE_NOTE_PREFIX + reason.substring(0, end);
     }
 
     public enum Trigger {

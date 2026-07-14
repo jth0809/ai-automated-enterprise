@@ -60,9 +60,11 @@ class StateFreezeServiceTest {
                 () -> service.release("   ", Trigger.HUMAN));
         assertThrows(IllegalArgumentException.class,
                 () -> service.release("automatic release", Trigger.AUTOMATIC));
+        assertThrows(IllegalArgumentException.class,
+                () -> service.release("x".repeat(2_001), Trigger.HUMAN));
         assertTrue(service.isFrozen());
 
-        assertTrue(service.release("root cause reviewed", Trigger.HUMAN));
+        assertTrue(service.release("r".repeat(1_500), Trigger.HUMAN));
         assertFalse(service.release("duplicate release", Trigger.HUMAN));
 
         assertFalse(service.isFrozen());
@@ -71,6 +73,10 @@ class StateFreezeServiceTest {
         assertTrue(repository.findOpsState(StateFreezeService.FREEZE_AT_KEY).isEmpty());
         assertEquals(2, jdbc.sql("SELECT COUNT(*) FROM ops_action_log")
                 .query(Integer.class).single());
+        assertEquals(1_500, jdbc.sql("""
+                SELECT LENGTH(reason) FROM ops_action_log
+                 WHERE action_type = 'RELEASE'
+                """).query(Integer.class).single());
         assertEquals("FROZEN|ACTIVE|HUMAN", jdbc.sql("""
                 SELECT previous_state || '|' || new_state || '|' || trigger_type
                   FROM ops_action_log

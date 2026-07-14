@@ -20,11 +20,14 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.aienterprise.backend.tracker.event.SourceEvidence;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class TrackerRepository {
 
     private static final int MAX_DEADMAN_SOURCES = 16;
     private static final int MAX_DEADMAN_TIMESTAMPS_PER_SOURCE = 64;
+    private static final ObjectMapper OPS_JSON = new ObjectMapper();
 
     private final JdbcClient jdbc;
     private final JdbcTemplate jdbcTemplate;
@@ -1182,6 +1185,179 @@ public class TrackerRepository {
                 .param("previousState", action.previousState())
                 .param("newState", action.newState())
                 .update();
+    }
+
+    public OpsOverview findOpsOverview(boolean frozen) {
+        record StateEntry(String key, OpsState state) {
+        }
+        List<String> stateKeys = List.of(
+                "FREEZE_REASON", "FREEZE_TRIGGER", "FREEZE_AT", "FEED_DEADMAN_STATUS");
+        java.util.Map<String, OpsState> states = jdbc.sql("""
+                SELECT state_key, state_value, updated_at
+                  FROM ops_state
+                 WHERE state_key IN (:stateKeys)
+                """)
+                .param("stateKeys", stateKeys)
+                .query((rs, rowNum) -> new StateEntry(
+                        rs.getString("state_key"),
+                        new OpsState(
+                                rs.getString("state_value"),
+                                rs.getTimestamp("updated_at").toInstant())))
+                .list()
+                .stream()
+                .collect(java.util.stream.Collectors.toUnmodifiableMap(
+                        StateEntry::key, StateEntry::state));
+
+        OpsOverview.GoldenRun latestGolden = jdbc.sql("""
+                SELECT id, mode, run_status, dataset_version, prompt_version,
+                       model_version, total_count, matched_count, failed_count,
+                       agreement, started_at, completed_at
+                  FROM golden_set_run
+                 ORDER BY started_at DESC, id DESC
+                 FETCH FIRST 1 ROWS ONLY
+                """)
+                .query((rs, rowNum) -> new OpsOverview.GoldenRun(
+                        rs.getLong("id"),
+                        rs.getString("mode"),
+                        rs.getString("run_status"),
+                        rs.getString("dataset_version"),
+                        rs.getString("prompt_version"),
+                        rs.getString("model_version"),
+                        rs.getInt("total_count"),
+                        rs.getInt("matched_count"),
+                        rs.getInt("failed_count"),
+                        nullableDouble(rs, "agreement"),
+                        rs.getTimestamp("started_at").toInstant(),
+                        nullableInstant(rs.getTimestamp("completed_at"))))
+                .optional()
+                .orElse(null);
+
+        List<OpsOverview.ControlMetric> metrics = jdbc.sql("""
+                SELECT metric_date, metric_code, metric_value, baseline_mean,
+                       lower_bound, upper_bound, monitor_status, violation,
+                       consecutive_violations, sample_days
+                  FROM (
+                    SELECT p.*,
+                           ROW_NUMBER() OVER (
+                             PARTITION BY metric_code
+                             ORDER BY metric_date DESC, id DESC) AS row_rank
+                      FROM pipeline_metric_daily p
+                 ) ranked
+                 WHERE row_rank = 1
+                 ORDER BY metric_code
+                 FETCH FIRST 4 ROWS ONLY
+                """)
+                .query((rs, rowNum) -> new OpsOverview.ControlMetric(
+                        rs.getDate("metric_date").toLocalDate(),
+                        rs.getString("metric_code"),
+                        rs.getDouble("metric_value"),
+                        nullableDouble(rs, "baseline_mean"),
+                        nullableDouble(rs, "lower_bound"),
+                        nullableDouble(rs, "upper_bound"),
+                        rs.getString("monitor_status"),
+                        "Y".equals(rs.getString("violation")),
+                        rs.getInt("consecutive_violations"),
+                        rs.getInt("sample_days")))
+                .list();
+
+        return new OpsOverview(
+                frozen,
+                stateValue(states, "FREEZE_REASON"),
+                stateValue(states, "FREEZE_TRIGGER"),
+                parseInstant(stateValue(states, "FREEZE_AT")),
+                latestGolden,
+                metrics,
+                deadmanSummary(stateValue(states, "FEED_DEADMAN_STATUS")));
+    }
+
+    private static String stateValue(java.util.Map<String, OpsState> states, String key) {
+        OpsState state = states.get(key);
+        return state == null ? null : state.value();
+    }
+
+    private static Instant parseInstant(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        try {
+            return Instant.parse(value.trim());
+        } catch (RuntimeException invalid) {
+            return null;
+        }
+    }
+
+    private static OpsOverview.DeadmanSummary deadmanSummary(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return new OpsOverview.DeadmanSummary(
+                    "NOT_RECORDED", null, 0, 0, 0, List.of());
+        }
+        try {
+            JsonNode root = OPS_JSON.readTree(raw);
+            JsonNode feedNodes = root.get("feeds");
+            if (feedNodes == null || !feedNodes.isArray()
+                    || feedNodes.size() > MAX_DEADMAN_SOURCES) {
+                return invalidDeadman();
+            }
+            List<OpsOverview.DeadmanFeed> feeds = new java.util.ArrayList<>();
+            int alerts = 0;
+            int insufficient = 0;
+            for (JsonNode feed : feedNodes) {
+                String source = boundedJsonText(feed, "source", 80);
+                String status = boundedJsonText(feed, "status", 24);
+                if (source == null || status == null) {
+                    return invalidDeadman();
+                }
+                if ("ALERT".equals(status)) {
+                    alerts++;
+                } else if ("INSUFFICIENT_DATA".equals(status)) {
+                    insufficient++;
+                } else if (!"OK".equals(status)) {
+                    return invalidDeadman();
+                }
+                feeds.add(new OpsOverview.DeadmanFeed(
+                        source,
+                        status,
+                        Math.max(0, feed.path("intervalSamples").asInt(0)),
+                        nullableJsonDouble(feed.get("medianIntervalHours")),
+                        nullableJsonDouble(feed.get("silenceHours"))));
+            }
+            String status = alerts > 0
+                    ? "ALERT"
+                    : feeds.isEmpty()
+                            ? "NO_FEEDS"
+                            : insufficient == feeds.size() ? "INSUFFICIENT_DATA" : "OK";
+            String observedAt = boundedJsonText(root, "observedAt", 40);
+            if (observedAt != null && parseInstant(observedAt) == null) {
+                observedAt = null;
+            }
+            return new OpsOverview.DeadmanSummary(
+                    status, observedAt, feeds.size(), alerts, insufficient, feeds);
+        } catch (RuntimeException invalid) {
+            return invalidDeadman();
+        } catch (java.io.IOException invalid) {
+            return invalidDeadman();
+        }
+    }
+
+    private static OpsOverview.DeadmanSummary invalidDeadman() {
+        return new OpsOverview.DeadmanSummary("INVALID", null, 0, 0, 0, List.of());
+    }
+
+    private static String boundedJsonText(JsonNode node, String field, int maxLength) {
+        JsonNode value = node == null ? null : node.get(field);
+        if (value == null || !value.isTextual()) {
+            return null;
+        }
+        String text = value.asText();
+        return text.length() <= maxLength ? text : null;
+    }
+
+    private static Double nullableJsonDouble(JsonNode value) {
+        if (value == null || value.isNull() || !value.isNumber()) {
+            return null;
+        }
+        double number = value.asDouble();
+        return Double.isFinite(number) && number >= 0 ? number : null;
     }
 
     public List<GoldenSetItemRow> findActiveGoldenSetItems(

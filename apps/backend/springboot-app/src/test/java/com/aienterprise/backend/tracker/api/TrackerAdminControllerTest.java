@@ -1,6 +1,8 @@
 package com.aienterprise.backend.tracker.api;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.time.LocalDate;
 
@@ -13,11 +15,17 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.aienterprise.backend.tracker.api.TrackerAdminController.Decision;
+import com.aienterprise.backend.tracker.api.TrackerAdminController.ReleaseRequest;
 import com.aienterprise.backend.tracker.domain.EvidenceKind;
 import com.aienterprise.backend.tracker.domain.EventRow;
+import com.aienterprise.backend.tracker.domain.GoldenRunDraft;
 import com.aienterprise.backend.tracker.domain.HistoricalEvidenceRow;
+import com.aienterprise.backend.tracker.domain.OpsOverview;
+import com.aienterprise.backend.tracker.domain.PipelineMetricRow;
 import com.aienterprise.backend.tracker.domain.ReviewPage;
 import com.aienterprise.backend.tracker.domain.TrackerRepository;
+import com.aienterprise.backend.tracker.evaluate.GoldenSetLoader;
+import com.aienterprise.backend.tracker.ops.PipelineMonitorJob;
 import com.aienterprise.backend.tracker.ops.StateFreezeService;
 import com.aienterprise.backend.tracker.ops.StateFreezeService.Trigger;
 
@@ -39,6 +47,9 @@ class TrackerAdminControllerTest {
 
     @Autowired
     private StateFreezeService freezeService;
+
+    @Autowired
+    private GoldenSetLoader goldenSetLoader;
 
     @Test
     void mismatchedTokenIsUnauthorized() {
@@ -152,6 +163,90 @@ class TrackerAdminControllerTest {
         assertEquals(HttpStatus.OK, controller.decide(
                 legacyId, "test-secret", new Decision("REJECT", "legacy stays supported"))
                 .getStatusCode());
+    }
+
+    @Test
+    void operationsOverviewRequiresAuthAndExposesOnlyBoundedOperationalState() {
+        assertEquals(HttpStatus.UNAUTHORIZED, controller.opsOverview(null).getStatusCode());
+        assertEquals(HttpStatus.UNAUTHORIZED, controller.opsOverview("wrong-token").getStatusCode());
+
+        OpsOverview active = controller.opsOverview("test-secret").getBody();
+        assertFalse(active.frozen());
+        assertEquals(null, active.freezeReason());
+        assertEquals(null, active.latestGolden());
+        assertEquals("NOT_RECORDED", active.deadman().status());
+
+        goldenSetLoader.loadIfNeeded();
+        long runId = repository.insertGoldenRun(new GoldenRunDraft(
+                "DRILL", "golden-v1", "prompt-v1", "local-drill",
+                repository.activeRubricVersionId(), "golden-output-v1", 50));
+        repository.completeGoldenRun(runId, "SUCCEEDED", 44, 0, 0.88);
+        repository.upsertPipelineMetric(new PipelineMetricRow(
+                LocalDate.of(2026, 7, 13), PipelineMonitorJob.CONFIRMED_EVENT_COUNT,
+                7.0, 5.0, 2.0, 8.0, "WARNING", true, 1, 14));
+        repository.putOpsState(PipelineMonitorJob.FEED_DEADMAN_STATUS_KEY, """
+                {"observedAt":"2026-07-14T01:20:00Z","feeds":[
+                  {"source":"NASA","status":"ALERT","intervalSamples":3,
+                   "medianIntervalHours":1.0,"silenceHours":2.001},
+                  {"source":"ESA","status":"OK","intervalSamples":4,
+                   "medianIntervalHours":2.0,"silenceHours":1.0}]}
+                """);
+        freezeService.freeze("golden drift detected", Trigger.DRILL);
+
+        OpsOverview overview = controller.opsOverview("test-secret").getBody();
+
+        assertEquals(true, overview.frozen());
+        assertEquals("golden drift detected", overview.freezeReason());
+        assertEquals("DRILL", overview.freezeTrigger());
+        assertNotNull(overview.freezeAt());
+        assertEquals("DRILL", overview.latestGolden().mode());
+        assertEquals("SUCCEEDED", overview.latestGolden().status());
+        assertEquals(0.88, overview.latestGolden().agreement());
+        assertEquals(1, overview.controlMetrics().size());
+        assertEquals("WARNING", overview.controlMetrics().getFirst().status());
+        assertEquals("ALERT", overview.deadman().status());
+        assertEquals(2, overview.deadman().feedCount());
+        assertEquals(1, overview.deadman().alertCount());
+        assertEquals(2, overview.deadman().feeds().size());
+    }
+
+    @Test
+    void humanReleaseValidatesStateAndReasonWithoutPersistingTheToken() {
+        assertEquals(HttpStatus.UNAUTHORIZED,
+                controller.releaseOps("wrong-token", new ReleaseRequest("reviewed"))
+                        .getStatusCode());
+        assertEquals(HttpStatus.BAD_REQUEST,
+                controller.releaseOps("test-secret", new ReleaseRequest("   "))
+                        .getStatusCode());
+        assertEquals(HttpStatus.BAD_REQUEST,
+                controller.releaseOps("test-secret", new ReleaseRequest("x".repeat(2_001)))
+                        .getStatusCode());
+        assertEquals(HttpStatus.CONFLICT,
+                controller.releaseOps("test-secret", new ReleaseRequest("not frozen"))
+                        .getStatusCode());
+
+        long circuitReview = repository.insertReview(
+                event("release-circuit-review"), "CIRCUIT_BREAKER");
+        freezeService.freeze("automatic guard", Trigger.AUTOMATIC);
+        String longReviewedReason = "r".repeat(2_000);
+        var released = controller.releaseOps(
+                "test-secret", new ReleaseRequest(longReviewedReason));
+
+        assertEquals(HttpStatus.OK, released.getStatusCode());
+        assertEquals("ACTIVE", released.getBody().get("status"));
+        assertFalse(freezeService.isFrozen());
+        String auditReason = jdbc.sql("""
+                SELECT reason FROM ops_action_log
+                 WHERE action_type = 'RELEASE'
+                 ORDER BY created_at DESC, id DESC
+                 FETCH FIRST 1 ROWS ONLY
+                """).query(String.class).single();
+        assertEquals(2_000, auditReason.length());
+        assertFalse(auditReason.contains("test-secret"));
+        assertEquals("APPROVED", jdbc.sql("SELECT status FROM review_queue WHERE id = :id")
+                .param("id", circuitReview).query(String.class).single());
+        assertEquals(2_000, jdbc.sql("SELECT LENGTH(reviewer_note) FROM review_queue WHERE id = :id")
+                .param("id", circuitReview).query(Integer.class).single());
     }
 
     @Test

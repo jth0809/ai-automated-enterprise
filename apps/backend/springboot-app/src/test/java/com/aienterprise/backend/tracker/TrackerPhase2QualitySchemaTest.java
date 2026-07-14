@@ -153,6 +153,7 @@ class TrackerPhase2QualitySchemaTest {
         assertMaxLength("GOLDEN_SET_RUN", "PROMPT_VERSION", 80);
         assertMaxLength("GOLDEN_SET_RUN", "MODEL_VERSION", 120);
         assertMaxLength("PIPELINE_METRIC_DAILY", "METRIC_CODE", 40);
+        assertMaxLength("OPS_ACTION_LOG", "REASON", 2_000);
     }
 
     private void insertDataset(String version, String sha) {
