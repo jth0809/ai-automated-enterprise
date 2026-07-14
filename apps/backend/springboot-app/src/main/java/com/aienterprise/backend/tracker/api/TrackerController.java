@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.aienterprise.backend.tracker.domain.LayerBMetric;
 import com.aienterprise.backend.tracker.domain.SnapshotRow;
 import com.aienterprise.backend.tracker.domain.TimelineRow;
 import com.aienterprise.backend.tracker.domain.TrackerRepository;
@@ -87,6 +88,26 @@ public class TrackerController {
             entry.put("sourceCount", row.sourceCount());
             entry.put("evidenceQuote", row.evidenceQuote());
             entry.put("primaryEvidence", row.primaryEvidence());
+            body.add(entry);
+        }
+        return ResponseEntity.ok(body);
+    }
+
+    @GetMapping("/layer-b")
+    public ResponseEntity<List<Map<String, Object>>> layerB() {
+        List<Map<String, Object>> body = new ArrayList<>();
+        for (LayerBMetric metric : repository.findLatestLayerBByPillar()) {
+            Map<String, Object> entry = new LinkedHashMap<>();
+            entry.put("metricCode", metric.metricCode());
+            entry.put("pillar", metric.pillar());
+            entry.put("pillarName", PILLAR_NAMES.get(metric.pillar()));
+            entry.put("observedOn", metric.observedOn().toString());
+            entry.put("value", metric.value());
+            entry.put("unit", metric.unit());
+            entry.put("basis", metric.basis());
+            entry.put("sourceLabel", metric.sourceLabel());
+            entry.put("sourceUrl", metric.sourceUrl());
+            entry.put("factSummary", metric.factSummary());
             body.add(entry);
         }
         return ResponseEntity.ok(body);

@@ -23,6 +23,7 @@ import com.aienterprise.backend.tracker.domain.TrackerRepository;
 import com.aienterprise.backend.tracker.ingest.ArticleBodyExtractor;
 import com.aienterprise.backend.tracker.ingest.ArticlePageFetcher;
 import com.aienterprise.backend.tracker.ingest.BackfillLoader;
+import com.aienterprise.backend.tracker.ingest.LayerBLoader;
 import com.aienterprise.backend.tracker.ingest.JdkPageTransport;
 import com.aienterprise.backend.tracker.ingest.JsoupReadabilityExtractor;
 
@@ -105,5 +106,12 @@ public class TrackerConfig {
     @Profile("!test | demo")
     ApplicationRunner trackerBackfillRunner(ObjectProvider<BackfillLoader> backfillLoader) {
         return args -> backfillLoader.ifAvailable(BackfillLoader::loadDatasetIfNeeded);
+    }
+
+    @Bean
+    @ConditionalOnProperty(prefix = "tracker", name = "layer-b-on-boot", havingValue = "true", matchIfMissing = true)
+    @Profile("!test | demo")
+    ApplicationRunner trackerLayerBRunner(ObjectProvider<LayerBLoader> layerBLoader) {
+        return args -> layerBLoader.ifAvailable(LayerBLoader::loadIfNeeded);
     }
 }
