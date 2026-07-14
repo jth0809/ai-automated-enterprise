@@ -363,6 +363,55 @@ public class TrackerRepository {
                 .list();
     }
 
+    public long upsertLayerBMetric(LayerBMetric draft) {
+        Optional<Long> existing = jdbc.sql(
+                "SELECT id FROM layer_b_metric WHERE metric_code = :code AND observed_on = :on")
+                .param("code", draft.metricCode()).param("on", date(draft.observedOn()))
+                .query(Long.class).optional();
+        if (existing.isPresent()) {
+            return existing.get();
+        }
+        jdbc.sql("""
+                INSERT INTO layer_b_metric
+                  (metric_code, pillar, observed_on, metric_value, unit, basis,
+                   source_label, source_url, accessed_on, content_sha256, fact_summary)
+                VALUES
+                  (:code, :pillar, :on, :value, :unit, :basis,
+                   :label, :url, :accessed, :hash, :summary)
+                """)
+                .param("code", draft.metricCode()).param("pillar", draft.pillar())
+                .param("on", date(draft.observedOn())).param("value", draft.value())
+                .param("unit", draft.unit()).param("basis", draft.basis())
+                .param("label", draft.sourceLabel()).param("url", draft.sourceUrl())
+                .param("accessed", date(draft.accessedOn())).param("hash", draft.contentSha256())
+                .param("summary", draft.factSummary()).update();
+        return jdbc.sql("SELECT id FROM layer_b_metric WHERE metric_code = :code AND observed_on = :on")
+                .param("code", draft.metricCode()).param("on", date(draft.observedOn()))
+                .query(Long.class).single();
+    }
+
+    public int countLayerBMetrics() {
+        return jdbc.sql("SELECT COUNT(*) FROM layer_b_metric").query(Integer.class).single();
+    }
+
+    public List<LayerBMetric> findLatestLayerBByPillar() {
+        return jdbc.sql("""
+                SELECT m.id, m.metric_code, m.pillar, m.observed_on, m.metric_value, m.unit, m.basis,
+                       m.source_label, m.source_url, m.accessed_on, m.content_sha256, m.fact_summary
+                  FROM layer_b_metric m
+                 WHERE m.observed_on = (SELECT MAX(m2.observed_on) FROM layer_b_metric m2
+                                         WHERE m2.metric_code = m.metric_code)
+                 ORDER BY m.pillar, m.metric_code
+                """)
+                .query((rs, rowNum) -> new LayerBMetric(
+                        rs.getLong("id"), rs.getString("metric_code"), rs.getInt("pillar"),
+                        localDate(rs.getDate("observed_on")), rs.getBigDecimal("metric_value"),
+                        rs.getString("unit"), rs.getString("basis"), rs.getString("source_label"),
+                        rs.getString("source_url"), localDate(rs.getDate("accessed_on")),
+                        rs.getString("content_sha256"), rs.getString("fact_summary")))
+                .list();
+    }
+
     public long insertClassification(ClassificationRow draft) {
         GeneratedKeyHolder keys = new GeneratedKeyHolder();
         jdbc.sql("""
