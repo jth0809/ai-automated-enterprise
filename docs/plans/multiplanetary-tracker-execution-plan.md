@@ -122,7 +122,7 @@
     exact natural key 우선, 안전 semantic match 후순위, 모호성/얇은 인용은
     미병합. 외부 API·vector DB·신규 egress·평문 secret 없음.
 
-**게이트 G2:** 대시보드 ETA가 백필 기반 시계열로 산출. 골든셋 일치율 기준선 확립. 서킷 브레이커 훈련 통과. 임시 시드(WP1.1) 완전 대체.
+**게이트 G2 (2026-07-14 승인):** 대시보드 ETA가 백필 기반 시계열로 산출. 골든셋 일치율 기준선 확립. 서킷 브레이커 훈련 통과. 임시 시드(WP1.1) 완전 대체. **인간(사용자) G2 승인 완료** — 증거는 [G2 증거 행렬](../research/tracker-phase2-g2-evidence.md). LIVE_MODEL은 사용자 결정으로 미활성 유지, CI 보안 스캔은 PR에서 확인. Phase 3 착수 가능.
 
 ### Phase 2 상세 실행 계획
 
