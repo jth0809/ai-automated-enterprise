@@ -319,6 +319,50 @@ public class TrackerRepository {
                 .orElseThrow(() -> new IllegalStateException("Event upsert produced no row: " + naturalKey));
     }
 
+    public Optional<Long> findEventIdByNaturalKey(String naturalKey) {
+        return eventIdByNaturalKey(naturalKey);
+    }
+
+    /**
+     * Bounded candidate events for semantic merge: same node and event type,
+     * occurred-on within {@code intervalDays}, excluding the exact natural key,
+     * capped at {@code limit} (never more than 50). Each row carries one verified
+     * evidence quote for embedding.
+     */
+    public List<MergeCandidate> findMergeCandidates(
+            long nodeId, String eventType, LocalDate occurredOn,
+            int intervalDays, String excludeNaturalKey, int limit) {
+        int safeLimit = Math.max(0, Math.min(limit, 50));
+        if (safeLimit == 0) {
+            return List.of();
+        }
+        return jdbc.sql("""
+                SELECT e.id, e.actor, e.occurred_on,
+                       (SELECT c.evidence_quote FROM article_classification c
+                         WHERE c.event_id = e.id AND c.quote_verified = 'Y'
+                           AND c.evidence_quote IS NOT NULL
+                         ORDER BY c.id FETCH FIRST 1 ROW ONLY) AS quote
+                  FROM event e
+                 WHERE e.node_id = :nodeId
+                   AND e.event_type = :eventType
+                   AND e.occurred_on BETWEEN :fromDate AND :toDate
+                   AND e.natural_key <> :excludeKey
+                 ORDER BY e.id
+                 FETCH FIRST %d ROWS ONLY
+                """.formatted(safeLimit))
+                .param("nodeId", nodeId)
+                .param("eventType", eventType)
+                .param("fromDate", date(occurredOn.minusDays(intervalDays)))
+                .param("toDate", date(occurredOn.plusDays(intervalDays)))
+                .param("excludeKey", excludeNaturalKey)
+                .query((rs, rowNum) -> new MergeCandidate(
+                        rs.getLong("id"),
+                        rs.getString("actor"),
+                        localDate(rs.getDate("occurred_on")),
+                        rs.getString("quote")))
+                .list();
+    }
+
     public long insertClassification(ClassificationRow draft) {
         GeneratedKeyHolder keys = new GeneratedKeyHolder();
         jdbc.sql("""
