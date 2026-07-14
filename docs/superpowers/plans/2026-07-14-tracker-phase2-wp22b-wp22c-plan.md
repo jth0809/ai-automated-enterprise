@@ -4,7 +4,7 @@
 >
 > 승인 설계: [2026-07-14-tracker-phase2-design.md](../specs/2026-07-14-tracker-phase2-design.md)
 >
-> 상태: 실행 중 — Task 1~5 완료, Task 6 진행 대기
+> 상태: 2026-07-14 완료 — Task 1~7 및 WP2.2 종료 검증 완료
 
 > **For agentic workers:** REQUIRED SUB-SKILL: superpowers:executing-plans로 아래 작업을 순서대로 실행한다. 사용자가 서브에이전트 사용을 금지했으므로 subagent-driven-development는 사용하지 않는다. 버그나 예상 밖 실패가 나오면 systematic-debugging을 먼저 적용한다.
 
@@ -185,7 +185,7 @@
 - Modify TrackerRepository.java
 - Modify BackfillLoaderTest.java
 
-- [ ] Clock이 2026-07-14로 고정된 실패 테스트를 작성한다.
+- [x] Clock이 2026-07-14로 고정된 실패 테스트를 작성한다.
   - 첫 snapshot date는 1957-01-07이다.
   - 모든 역사 snapshot date는 월요일이다.
   - 직전 완료 주까지 주 수 × 6개의 연속 행이 있다.
@@ -195,16 +195,16 @@
   - 같은 dataset/projector version을 두 번 실행하면 행 수와 사건 수가 같다.
   - projector hash/version 변경은 주간 행을 원자적으로 재생성한다.
   - 기존 연말 비월요일 snapshot이 남지 않는다.
-- [ ] RED가 연말 snapshot 구현 때문에 발생함을 확인한다.
-- [ ] WeeklyBackfillProjector를 BackfillLoader의 연말 계산에서 분리한다.
-- [ ] 주입 Clock, first Monday, previous completed Monday 계산을 구현한다.
-- [ ] TrackerRepository에 bounded range delete, insert/compare, marker read/write 메서드를 추가한다.
-- [ ] 같은 월요일의 운영 snapshot이 있으면 readiness/logit이 같을 때 보존하고 다르면 전체 실패시킨다.
-- [ ] marker에는 dataset SHA-256, node set, rubric, projector version을 포함한다.
-- [ ] importer가 이미 기록된 dataset에서도 projector marker가 없거나 오래되면 projection만 수행하게 한다.
-- [ ] transaction 실패 시 기존 역사 snapshot이 유지되는지 검증한다.
-- [ ] focused tests를 GREEN으로 만든다.
-- [ ] 커밋: feat(tracker): project weekly history since 1957
+- [x] RED가 연말 snapshot 구현 때문에 발생함을 확인한다.
+- [x] WeeklyBackfillProjector를 BackfillLoader의 연말 계산에서 분리한다.
+- [x] 주입 Clock, first Monday, previous completed Monday 계산을 구현한다.
+- [x] TrackerRepository에 bounded range delete, insert/compare, marker read/write 메서드를 추가한다.
+- [x] 같은 월요일의 운영 snapshot이 있으면 readiness/logit이 같을 때 보존하고 다르면 전체 실패시킨다.
+- [x] marker에는 dataset SHA-256, node set, rubric, projector version을 포함한다.
+- [x] importer가 이미 기록된 dataset에서도 projector marker가 없거나 오래되면 projection만 수행하게 한다.
+- [x] transaction 실패 시 기존 역사 snapshot이 유지되는지 검증한다.
+- [x] focused tests를 GREEN으로 만든다.
+- [x] 커밋: feat(tracker): project weekly history since 1957 (`716c2c3`)
 
 ## Task 7: WP2.2 증거·문서·전체 검증
 
@@ -216,21 +216,21 @@
 - Append .superpowers/sdd/progress.md (Git 제외)
 
 - [x] research 문서에 35/35 node matrix, 근거 ref, next-level gap, 실제 상태와 readiness를 기록한다.
-- [ ] runbook에 fresh H2/ATP-safe 검증 SQL, 예상 주 수 공식, 월요일 cadence, idempotency, hash를 기록한다.
-- [ ] 저장 파일 크기와 DB 예상 행 수를 기록해 위험이 낮음을 증명한다.
-- [ ] 마스터 WP2.2에는 완료 요약과 이 상세 계획 링크만 기록한다.
-- [ ] focused backfill tests를 fresh 실행한다.
-- [ ] backend 전체 테스트를 fresh 실행한다.
-- [ ] GitOps egress 테스트를 실행해 새 domain/egress가 없음을 확인한다.
-- [ ] git diff --check와 staged file allowlist를 확인한다.
-- [ ] 커밋: docs(tracker): close historical backfill
+- [x] runbook에 fresh H2/ATP-safe 검증 SQL, 예상 주 수 공식, 월요일 cadence, idempotency, hash를 기록한다.
+- [x] 저장 파일 크기와 DB 예상 행 수를 기록해 위험이 낮음을 증명한다.
+- [x] 마스터 WP2.2에는 완료 요약과 이 상세 계획 링크만 기록한다.
+- [x] focused backfill tests를 fresh 실행한다(45/45).
+- [x] backend 전체 테스트를 fresh 실행한다(295/295).
+- [x] GitOps egress 테스트를 실행해 새 domain/egress가 없음을 확인한다.
+- [x] git diff --check와 staged file allowlist를 확인한다.
+- [x] 커밋: docs(tracker): close historical backfill (본 문서 커밋)
 
 ## WP2.2 완료 체크
 
 - [x] P2~P6 27개와 전체 35개 노드 감사 완료
 - [x] 부분 근거를 실제 level로 인정하고 목표 ETA 최적화 없음
 - [x] node-wide 프로그램 종료 오판 제거
-- [ ] 1957-01-07부터 직전 완료 주까지 6개 필라 연속
-- [ ] 마지막 replay와 현재 상태 일치
-- [ ] 원문 저장 0, 파일 안전 상한 통과
-- [ ] 전체 backend와 egress 회귀 green
+- [x] 1957-01-07부터 직전 완료 주까지 6개 필라 연속
+- [x] 마지막 replay와 현재 상태 일치
+- [x] 원문 저장 0, 파일 안전 상한 통과
+- [x] 전체 backend와 egress 회귀 green

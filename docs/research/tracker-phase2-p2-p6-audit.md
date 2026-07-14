@@ -125,5 +125,22 @@ NASA의 공식 발표는 VIPER를 중단하면서도 CLPS, 대체 자원 탐사 
 - 두 승인 레인의 서로 다른 ID와 FACT/RUBRIC 역할 분리
 - 감사 파일 256 KiB 이하, 후보 2 MiB 이하, 매핑 1 MiB 이하
 
-현재 파일 크기는 후보 약 209 KiB, 매핑 약 135 KiB, 감사 행렬 약 26 KiB다.
-어떤 파일에도 출처 본문, HTML, PDF, 이미지 또는 WARC를 저장하지 않는다.
+현재 파일 크기는 후보 214,159 bytes, 매핑 138,038 bytes, 감사 행렬
+26,099 bytes로 합계 378,296 bytes다. 어떤 파일에도 출처 본문, HTML, PDF,
+이미지 또는 WARC를 저장하지 않는다.
+
+## 주간 역사 투영 결과
+
+`weekly-projector-v1`은 1957-01-07부터 직전 완료 월요일인 2026-07-13까지
+3,628주를 UTC 월요일 cadence로 재생했다. 필라별 한 행씩 총 21,768개 sparse
+스냅샷이며, 마지막 주의 readiness는 위 현재 준비도 표와 일치한다. 감사 행렬의
+35개 level/status도 같은 projector replay 및 fresh DB import와 35/35 일치한다.
+
+동일 fingerprint 재실행은 no-op이고 다음 완료 주에는 6행만 추가된다. projector,
+데이터셋, 노드셋, 루브릭 또는 파라미터 버전 변경 시에는 역사 전용 sparse 행만
+트랜잭션 안에서 재생성한다. 같은 월요일의 운영 스냅샷은 계산값이 같을 때
+보존하며 다르면 전체 작업을 실패시킨다.
+
+저장량은 행당 1 KiB라는 과대 계획값으로 계산해도 초기 약 21.3 MiB, 이후
+약 0.31 MiB/년이다. 상세 검증 SQL과 GitOps 롤아웃 절차는
+`docs/runbooks/tracker-weekly-backfill-validation.md`에 기록했다.
