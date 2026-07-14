@@ -54,6 +54,10 @@ spec:
               value: claude-haiku-4-5-20251001
             - name: TRACKER_CLASSIFY_MODEL
               value: claude-opus-4-8
+            # Phase 2 live golden runs stay dark until an explicit reviewed
+            # GitOps activation; offline replay and drills never set baseline.
+            - name: TRACKER_GOLDEN_LIVE_ENABLED
+              value: "false"
             # Phase 1b collection bounds (non-secret). The fluke filter stays
             # dark until its Anthropic contract check passes post-deploy.
             - name: TRACKER_EXTRACT_CRON

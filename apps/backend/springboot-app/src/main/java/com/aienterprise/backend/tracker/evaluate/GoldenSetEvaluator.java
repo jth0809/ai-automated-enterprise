@@ -4,11 +4,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.stereotype.Component;
+
 import com.aienterprise.backend.tracker.domain.GoldenResultRow;
 import com.aienterprise.backend.tracker.domain.GoldenRunDraft;
 import com.aienterprise.backend.tracker.domain.GoldenSetItemRow;
 import com.aienterprise.backend.tracker.domain.TrackerRepository;
 
+@Component
+@ConditionalOnProperty(prefix = "tracker", name = "enabled", havingValue = "true")
 public class GoldenSetEvaluator {
 
     private static final int MAX_CASES = 60;
