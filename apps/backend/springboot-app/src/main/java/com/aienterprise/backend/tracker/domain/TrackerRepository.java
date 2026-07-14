@@ -23,6 +23,9 @@ import com.aienterprise.backend.tracker.event.SourceEvidence;
 
 public class TrackerRepository {
 
+    private static final int MAX_DEADMAN_SOURCES = 16;
+    private static final int MAX_DEADMAN_TIMESTAMPS_PER_SOURCE = 64;
+
     private final JdbcClient jdbc;
     private final JdbcTemplate jdbcTemplate;
 
@@ -1303,6 +1306,47 @@ public class TrackerRepository {
         double median = percentile(impactScores, 0.50);
         double p95 = percentile(impactScores, 0.95);
         return new PipelineDailyAggregate(gateRate, confirmed, median, p95);
+    }
+
+    public List<FeedPublicationWindow> findActiveFeedPublicationWindows(int timestampLimit) {
+        if (timestampLimit <= 0) {
+            return List.of();
+        }
+        int safeTimestampLimit = Math.min(
+                timestampLimit, MAX_DEADMAN_TIMESTAMPS_PER_SOURCE);
+        record FeedSource(long id, String code) {
+        }
+        List<FeedSource> sources = jdbc.sql("""
+                SELECT id, code
+                  FROM source_registry
+                 WHERE feed_active = 'Y'
+                   AND rss_url IS NOT NULL
+                 ORDER BY code
+                 FETCH FIRST %d ROWS ONLY
+                """.formatted(MAX_DEADMAN_SOURCES + 1))
+                .query((rs, rowNum) -> new FeedSource(
+                        rs.getLong("id"), rs.getString("code")))
+                .list();
+        if (sources.size() > MAX_DEADMAN_SOURCES) {
+            throw new IllegalStateException("active feed count exceeds deadman limit of 16");
+        }
+
+        return sources.stream()
+                .map(source -> new FeedPublicationWindow(
+                        source.id(),
+                        source.code(),
+                        jdbc.sql("""
+                                SELECT published_at
+                                  FROM article
+                                 WHERE source_id = :sourceId
+                                   AND published_at IS NOT NULL
+                                 ORDER BY published_at DESC
+                                 FETCH FIRST %d ROWS ONLY
+                                """.formatted(safeTimestampLimit))
+                                .param("sourceId", source.id())
+                                .query((rs, rowNum) -> rs.getTimestamp("published_at").toInstant())
+                                .list()))
+                .toList();
     }
 
     public List<PipelineMetricRow> findRecentPipelineMetrics(

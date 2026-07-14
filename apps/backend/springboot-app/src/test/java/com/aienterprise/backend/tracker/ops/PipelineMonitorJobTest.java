@@ -1,8 +1,11 @@
 package com.aienterprise.backend.tracker.ops;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -21,6 +24,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.scheduling.annotation.Scheduled;
 
+import com.aienterprise.backend.tracker.domain.FeedPublicationWindow;
 import com.aienterprise.backend.tracker.domain.PipelineDailyAggregate;
 import com.aienterprise.backend.tracker.domain.PipelineMetricRow;
 import com.aienterprise.backend.tracker.domain.TrackerRepository;
@@ -87,6 +91,33 @@ class PipelineMonitorJobTest {
         assertEquals(2, count.consecutiveViolations());
         verify(freezeService).freeze(
                 contains(PipelineMonitorJob.CONFIRMED_EVENT_COUNT), eq(Trigger.AUTOMATIC));
+    }
+
+    @Test
+    void deadmanAlertIsExposedInBoundedOpsStateWithoutFreezingScoring() {
+        Instant now = Instant.parse("2026-07-14T01:20:00Z");
+        when(repository.findActiveFeedPublicationWindows(64)).thenReturn(List.of(
+                new FeedPublicationWindow(1L, "ALERT_FEED", List.of(
+                        now.minusSeconds(5 * 3_600L),
+                        now.minusSeconds(4 * 3_600L),
+                        now.minusSeconds(3 * 3_600L),
+                        now.minusSeconds(2 * 3_600L + 1))),
+                new FeedPublicationWindow(2L, "OK_FEED", List.of(
+                        now.minusSeconds(5 * 3_600L),
+                        now.minusSeconds(4 * 3_600L),
+                        now.minusSeconds(3 * 3_600L),
+                        now.minusSeconds(2 * 3_600L)))));
+
+        job.monitorDeadman(now);
+
+        ArgumentCaptor<String> value = ArgumentCaptor.forClass(String.class);
+        verify(repository).putOpsState(eq(PipelineMonitorJob.FEED_DEADMAN_STATUS_KEY), value.capture());
+        assertTrue(value.getValue().length() <= 4_000);
+        assertTrue(value.getValue().contains("\"source\":\"ALERT_FEED\""));
+        assertTrue(value.getValue().contains("\"status\":\"ALERT\""));
+        assertTrue(value.getValue().contains("\"source\":\"OK_FEED\""));
+        assertTrue(value.getValue().contains("\"status\":\"OK\""));
+        verify(freezeService, never()).freeze(any(), any());
     }
 
     private static List<PipelineMetricRow> history(
