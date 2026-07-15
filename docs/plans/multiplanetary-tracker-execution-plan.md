@@ -157,7 +157,15 @@
   - **잔여:** 체류 인일 수동 ETL과 Layer C 승격. 승격은 과도한 자동 추정을
     피하기 위해 LIVE_MODEL 활성화 이후로 명시 보류하며, WP3.3은 현재 B쌍
     데이터(공표 $/kg·연간 발사 수)로 먼저 진행한다.
-- [ ] **WP3.2 K-지수** — 연 1회 CSV 인제스트(대체법 기준 명시), 게이지 UI(소수점 4자리·Type I 거리)
+- [x] **WP3.2 K-지수** — 연 1회 CSV 인제스트(대체법 기준 명시), 게이지 UI(소수점 4자리·Type I 거리)
+  - **완료(2026-07-15):** 검수된 OWID World 연례 1차 에너지 CSV를 V13
+    출처·가져오기 원장에 멱등 적재하고, 대체법 K 계산·`CURRENT/STALE/INSUFFICIENT_DATA`
+    API와 소수점 4자리 게이지를 구현했다. 행 수는 현재 1965–2024 관측치에
+    고정하지 않고 10–200행 계약으로 검증한다. 준비도·ETA에는 자동 효과가 없으며,
+    backend 510/510, frontend 74/74, build·browser 검증을 통과했다. 상세:
+    [WP3.2 설계](../superpowers/specs/2026-07-15-tracker-wp32-k-index-design.md) ·
+    [WP3.2 TDD 계획](../superpowers/plans/2026-07-15-tracker-wp32-k-index-plan.md) ·
+    [검증 증거](../research/tracker-wp32-validation-evidence.md).
 - [x] **WP3.3 수송 경제성 ETA + B쌍 정합 검사** — Wright's law($/kg **공표 가격** vs 누적 발사량) 외삽 — 가격 기반 추정치임과 목표 경제성 임계값이 선언된 가정임을 데이터·UI에 명시(컨셉 v2.10), 분기 정합 잡(B쌍만 경보·구간 확대, A쌍은 연 1회 관측 각주 — v2.8/2.9 규칙)
   - **완료(2026-07-15):** 중앙 `$200/kg`, 민감도 `$100-$500/kg`, 운용
     Falcon 공표가 기반 잠정 허용형 Wright 모델, 비파괴 B↔C 정합 overlay,
@@ -172,8 +180,9 @@
 **게이트 G3:** 대조 패널 4열(본 모델/수송 경제성/군중/기관) 표시, 첫 분기 정합 리포트 발행.
 
 > **진행 중(2026-07-15):** G2 승인으로 Phase 3에 착수했고 WP3.1 측정 기반,
-> LL2 Layer B 경로와 WP3.3 수송 경제성·B쌍 정합을 완료했다. 실행 순서·
+> LL2 Layer B 경로, WP3.3 수송 경제성·B쌍 정합과 WP3.2 K-지수를 완료했다. 실행 순서·
 > egress 사전작업·정직성 표기·사용자 결정 항목은 [Phase 3 실행준비 계획](../superpowers/plans/2026-07-14-tracker-phase3-kickoff-plan.md).
+> 다음은 WP3.5 수집 채널 확장, 이후 WP3.4 대조 패널과 G3 증거 확정 순서다.
 > 다음은 후보군과 egress 경계를 검토한 WP3.2·WP3.5이며, 이후 WP3.4로 G3를 마무리한다.
 
 ---

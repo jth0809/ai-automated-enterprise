@@ -6,7 +6,7 @@
 > 정식 검수 UI·로컬 임베딩 병합. 증거: [G2 증거 행렬](../../research/tracker-phase2-g2-evidence.md).
 >
 > 상태: **실행 중(2026-07-15).** WP3.1-A 측정 기반, WP3.1-B LL2 Layer B
-> 경로와 WP3.3 수송 경제성·B쌍 정합 구현 완료. 각 후속 WP는 `superpowers:writing-plans`로 TDD 상세 계획을
+> 경로, WP3.3 수송 경제성·B쌍 정합과 WP3.2 K-지수 구현 완료. 각 후속 WP는 `superpowers:writing-plans`로 TDD 상세 계획을
 > 별도 작성한 뒤 `superpowers:executing-plans`로 실행한다.
 
 **목표:** 비-AI 실측 레이어를 붙여 "1측정 + 1앵커 + 1관측" 구조를 완성한다.
@@ -96,11 +96,24 @@
   `INSUFFICIENT_DATA`로 정직하게 보존했다. 상세:
   [WP3.3 검증 증거](../../research/tracker-wp33-validation-evidence.md).
 
+## WP3.2 실행 결과 (2026-07-15)
+
+- V13 `k_index`·`k_index_import` 원장, 대체법 계산기, 검수 CSV의 엄격하지만
+  행 수 비고정(10–200행) 검증과 같은 버전 해시 잠금을 구현했다.
+- 검수 데이터는 OWID World 연례 1차 에너지 1965–2024 관측이며, 최신 2024년
+  `176737.1 TWh`를 `20175468036530 W`, `K=0.7305`로 환산한다.
+- 공개 API는 `CURRENT/STALE/INSUFFICIENT_DATA`를 구분하고 최대 80개 연례
+  시계열만 반환한다. UI는 구성 게이지·연례 관측·자동 효과 없음, Type I까지의
+  거리와 필요 에너지 배수를 표시하고 Type I ETA는 만들지 않는다.
+- 신규 런타임 egress·secret·pod·CronJob은 없고, 준비도·ETA·스냅샷·정합 경보에
+  자동 효과를 주지 않는다. 최종 검증은 backend 510/510, frontend 74/74,
+  production build와 브라우저 console error 0이다. 상세:
+  [WP3.2 검증 증거](../../research/tracker-wp32-validation-evidence.md).
+
 ## 다음 행동
 
-- WP3.3은 [승인 설계](../specs/2026-07-15-tracker-wp33-transport-economics-design.md)와
-  [TDD 상세 계획](2026-07-15-tracker-wp33-transport-economics-plan.md)에 따라 완료했다.
-- 다음 실행 순서는 독립 가능한 WP3.2·WP3.5를 후보군·egress 경계 검토 후 진행하고,
+- WP3.2와 WP3.3은 각각 승인 설계와 TDD 상세 계획에 따라 완료했다.
+- 다음 실행 순서는 WP3.5의 후보군·egress 경계를 확정해 수집 채널을 확장하고,
   마지막으로 WP3.4 4열 대조 패널을 구현해 G3 증거를 만든다.
 - WP3.1 잔여 체류 인일 ETL은 WP3.3에 필요한 B쌍을 방해하지 않으므로 별도
   후속으로 유지한다. LL2→Layer C 승격은 LIVE_MODEL 활성화 전에는 실행하지 않는다.
