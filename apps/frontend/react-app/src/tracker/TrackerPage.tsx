@@ -2,12 +2,14 @@ import { useEffect, useState } from "react";
 import {
   getEvents,
   getLayerB,
+  getKIndex,
   getPillars,
   getSummary,
   getTransportEconomics,
 } from "./api";
 import type {
   LayerBMetric,
+  KIndexSummary,
   PillarSummary,
   Summary,
   TimelineEvent,
@@ -16,6 +18,7 @@ import type {
 import { Countdown } from "./Countdown";
 import { EventTimeline } from "./EventTimeline";
 import { LayerBPanel } from "./LayerBPanel";
+import { KIndexCard } from "./KIndexCard";
 import { PillarEtaList } from "./PillarEtaList";
 import { OpsPanel } from "./OpsPanel";
 import { PillarRadar } from "./PillarRadar";
@@ -28,6 +31,7 @@ interface TrackerData {
   events: TimelineEvent[];
   layerB: LayerBMetric[];
   transportEconomics: TransportProjection;
+  kIndex: KIndexSummary;
 }
 
 /** Multiplanetary tracker dashboard: countdown, pillar radar, event timeline. */
@@ -43,10 +47,11 @@ export function TrackerPage() {
       getEvents(50),
       getLayerB(),
       getTransportEconomics(),
+      getKIndex(),
     ])
-      .then(([summary, pillars, events, layerB, transportEconomics]) => {
+      .then(([summary, pillars, events, layerB, transportEconomics, kIndex]) => {
         if (!cancelled) {
-          setData({ summary, pillars, events, layerB, transportEconomics });
+          setData({ summary, pillars, events, layerB, transportEconomics, kIndex });
         }
       })
       .catch(() => {
@@ -79,6 +84,7 @@ export function TrackerPage() {
       <PillarEtaList pillars={data.pillars} bottleneck={data.summary.bottleneckPillar} />
       <EventTimeline events={data.events} />
       <LayerBPanel metrics={data.layerB} />
+      <KIndexCard summary={data.kIndex} />
       <TransportEconomicsCard projection={data.transportEconomics} />
       <details className="review-section">
         <summary>검수 큐 (admin)</summary>

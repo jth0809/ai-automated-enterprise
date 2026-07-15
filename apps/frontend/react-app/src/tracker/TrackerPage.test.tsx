@@ -79,6 +79,25 @@ function stubTrackerRoutes() {
                     coherenceState: "COHERENT",
                     coherenceAlertActive: false,
                   }
+                : url.includes("/api/tracker/k-index")
+                  ? {
+                      status: "CURRENT",
+                      latestYear: 2024,
+                      primaryEnergyTwh: 176737.1,
+                      powerWatts: 20175468036530,
+                      kValue: 0.7305,
+                      annualDelta: 0.0011,
+                      typeOneGap: 0.2695,
+                      typeOneMultiplier: 495.7,
+                      accountingBasis: "SUBSTITUTION",
+                      sourceName: "Reviewed energy source",
+                      sourceUrl: "https://example.test/energy",
+                      accessedOn: "2026-07-15",
+                      series: [
+                        { year: 2023, kValue: 0.7294 },
+                        { year: 2024, kValue: 0.7305 },
+                      ],
+                    }
               : { error: "unexpected" };
       return { ok: true, status: 200, json: async () => body } as Response;
     }),
@@ -101,6 +120,7 @@ describe("TrackerPage", () => {
     expect(screen.getByText("FLIGHT_TEST")).toBeInTheDocument();
     expect(screen.getByText("수송 경제성 시나리오")).toBeInTheDocument();
     expect(screen.getByText(/중앙 가정 \$200\/kg/)).toBeInTheDocument();
+    expect(screen.getByText("인류 문명 지수 K = 0.7305")).toBeInTheDocument();
     // The admin review queue is collapsed below the public dashboard and
     // fetches nothing until a token is submitted.
     expect(screen.getByText(/검수 큐/)).toBeInTheDocument();

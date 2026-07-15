@@ -56,6 +56,27 @@ export interface TransportProjection {
   coherenceAlertActive: boolean;
 }
 
+export interface KIndexPoint {
+  year: number;
+  kValue: number;
+}
+
+export interface KIndexSummary {
+  status: "CURRENT" | "STALE" | "INSUFFICIENT_DATA";
+  latestYear: number | null;
+  primaryEnergyTwh: number | null;
+  powerWatts: number | null;
+  kValue: number | null;
+  annualDelta: number | null;
+  typeOneGap: number | null;
+  typeOneMultiplier: number | null;
+  accountingBasis: "SUBSTITUTION" | "USEFUL" | null;
+  sourceName: string | null;
+  sourceUrl: string | null;
+  accessedOn: string | null;
+  series: KIndexPoint[];
+}
+
 export type EvidenceKind = "VERBATIM" | "HISTORICAL_REFERENCE";
 export type OccurredOnPrecision = "DAY" | "MONTH" | "YEAR";
 
@@ -101,6 +122,12 @@ export async function getTransportEconomics(): Promise<TransportProjection> {
     throw new Error(`tracker transport economics failed: HTTP ${res.status}`);
   }
   return (await res.json()) as TransportProjection;
+}
+
+export async function getKIndex(): Promise<KIndexSummary> {
+  const res = await fetch("/api/tracker/k-index");
+  if (!res.ok) throw new Error(`tracker K-index failed: HTTP ${res.status}`);
+  return (await res.json()) as KIndexSummary;
 }
 
 export async function getEvents(limit = 50): Promise<TimelineEvent[]> {

@@ -59,6 +59,22 @@ function stubAllRoutes() {
                     coherenceState: "INSUFFICIENT_DATA",
                     coherenceAlertActive: false,
                   }
+                : url.includes("/api/tracker/k-index")
+                  ? {
+                      status: "INSUFFICIENT_DATA",
+                      latestYear: null,
+                      primaryEnergyTwh: null,
+                      powerWatts: null,
+                      kValue: null,
+                      annualDelta: null,
+                      typeOneGap: null,
+                      typeOneMultiplier: null,
+                      accountingBasis: null,
+                      sourceName: null,
+                      sourceUrl: null,
+                      accessedOn: null,
+                      series: [],
+                    }
               : { error: "invalid" };
       return { ok: true, status: 200, json: async () => body } as Response;
     }),
