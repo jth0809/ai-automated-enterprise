@@ -26,6 +26,7 @@ import com.aienterprise.backend.tracker.ingest.BackfillLoader;
 import com.aienterprise.backend.tracker.ingest.LayerBLoader;
 import com.aienterprise.backend.tracker.ingest.JdkPageTransport;
 import com.aienterprise.backend.tracker.ingest.JsoupReadabilityExtractor;
+import com.aienterprise.backend.tracker.ingest.TransportEconomicsLoader;
 
 import net.javacrumbs.shedlock.core.LockProvider;
 import net.javacrumbs.shedlock.provider.jdbctemplate.JdbcTemplateLockProvider;
@@ -113,5 +114,15 @@ public class TrackerConfig {
     @Profile("!test | demo")
     ApplicationRunner trackerLayerBRunner(ObjectProvider<LayerBLoader> layerBLoader) {
         return args -> layerBLoader.ifAvailable(LayerBLoader::loadIfNeeded);
+    }
+
+    @Bean
+    @ConditionalOnProperty(prefix = "tracker", name = "transport-economics-on-boot",
+            havingValue = "true", matchIfMissing = true)
+    @Profile("!test | demo")
+    ApplicationRunner trackerTransportEconomicsRunner(
+            ObjectProvider<TransportEconomicsLoader> transportEconomicsLoader) {
+        return args -> transportEconomicsLoader.ifAvailable(
+                TransportEconomicsLoader::loadIfNeeded);
     }
 }

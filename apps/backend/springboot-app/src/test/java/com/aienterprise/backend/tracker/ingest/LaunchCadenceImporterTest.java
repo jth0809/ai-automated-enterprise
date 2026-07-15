@@ -54,6 +54,7 @@ class LaunchCadenceImporterTest {
 
     private static LaunchRecord launch(
             String id, String net, String status, boolean successful) {
-        return new LaunchRecord(id, id, Instant.parse(net), "Provider", status, successful);
+        return new LaunchRecord(
+                id, id, Instant.parse(net), "Provider", status, successful, "");
     }
 }

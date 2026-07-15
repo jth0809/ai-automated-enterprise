@@ -75,4 +75,23 @@ class TrackerConfigTest {
                 .run(context -> assertThat(context)
                         .hasBean("trackerBackfillRunner"));
     }
+
+    @Test
+    void transportEconomicsRunnerStaysOffInTestsButIsAvailableAtRuntime() {
+        runner.withUserConfiguration(TrackerConfig.class)
+                .withPropertyValues(
+                        "tracker.enabled=true",
+                        "tracker.transport-economics-on-boot=true",
+                        "spring.profiles.active=test")
+                .run(context -> assertThat(context)
+                        .doesNotHaveBean("trackerTransportEconomicsRunner"));
+
+        runner.withUserConfiguration(TrackerConfig.class)
+                .withPropertyValues(
+                        "tracker.enabled=true",
+                        "tracker.transport-economics-on-boot=true",
+                        "spring.profiles.active=test,demo")
+                .run(context -> assertThat(context)
+                        .hasBean("trackerTransportEconomicsRunner"));
+    }
 }

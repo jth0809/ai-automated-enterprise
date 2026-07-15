@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import java.lang.reflect.Method;
+import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
@@ -48,12 +49,15 @@ class LaunchLibraryJobTest {
                     {"next":null,"results":[
                       {"id":"a","name":"Success","net":"2025-01-02T00:00:00Z",
                        "status":{"id":3,"abbrev":"Success"},
+                       "rocket":{"configuration":{"full_name":"Falcon 9 Block 5"}},
                        "launch_service_provider":{"name":"Provider"}},
                       {"id":"b","name":"Failure","net":"2025-06-02T00:00:00Z",
                        "status":{"id":4,"abbrev":"Failure"},
+                       "rocket":{"configuration":{"full_name":"Falcon Heavy"}},
                        "launch_service_provider":{"name":"Provider"}},
                       {"id":"future","name":"Future","net":"2026-01-02T00:00:00Z",
                        "status":{"id":3,"abbrev":"Success"},
+                       "rocket":{"configuration":{"full_name":"Starship"}},
                        "launch_service_provider":{"name":"Provider"}}
                     ]}
                     """;
@@ -66,10 +70,15 @@ class LaunchLibraryJobTest {
         assertEquals(List.of(
                 LaunchLibraryClient.yearUri(2025).toString(),
                 LaunchLibraryClient.yearUri(2025).toString()), requested);
-        assertEquals(2, repository.countLayerBMetrics());
-        assertEquals(2, repository.findLatestLayerBByPillar().stream()
+        assertEquals(3, repository.countLayerBMetrics());
+        assertEquals(3, repository.findLatestLayerBByPillar().stream()
                 .filter(metric -> metric.observedOn().toString().equals("2025-12-31"))
                 .count());
+        assertEquals(0, new BigDecimal("2").compareTo(
+                repository.findLatestLayerBByPillar().stream()
+                        .filter(metric -> "ANNUAL_FALCON_FAMILY_LAUNCH_COUNT"
+                                .equals(metric.metricCode()))
+                        .findFirst().orElseThrow().value()));
     }
 
     @Test

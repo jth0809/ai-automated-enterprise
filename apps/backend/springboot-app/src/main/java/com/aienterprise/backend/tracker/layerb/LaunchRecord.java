@@ -8,5 +8,6 @@ import java.time.Instant;
  * measurements (counts, success rate), not to fabricate capability events.
  */
 public record LaunchRecord(
-        String id, String name, Instant net, String provider, String status, boolean successful) {
+        String id, String name, Instant net, String provider, String status,
+        boolean successful, String vehicleConfiguration) {
 }

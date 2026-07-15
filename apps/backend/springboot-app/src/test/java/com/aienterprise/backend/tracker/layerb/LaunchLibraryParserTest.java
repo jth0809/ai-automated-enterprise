@@ -21,6 +21,7 @@ class LaunchLibraryParserTest {
                 {"id":"abc-1","name":"Falcon 9 | Starlink Group 6-1",
                  "net":"2024-01-03T23:44:20Z",
                  "status":{"id":3,"name":"Launch Successful","abbrev":"Success"},
+                 "rocket":{"configuration":{"full_name":"Falcon 9 Block 5"}},
                  "launch_service_provider":{"id":121,"name":"SpaceX"}},
                 {"id":"abc-2","name":"Vulcan | Peregrine",
                  "net":"2024-01-08T07:18:00Z",
@@ -41,6 +42,7 @@ class LaunchLibraryParserTest {
         assertEquals("SpaceX", first.provider());
         assertEquals("Success", first.status());
         assertTrue(first.successful());
+        assertEquals("Falcon 9 Block 5", first.vehicleConfiguration());
         assertEquals(Instant.parse("2024-01-03T23:44:20Z"), first.net());
         assertFalse(launches.get(1).successful());
     }

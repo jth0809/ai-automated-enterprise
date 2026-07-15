@@ -19,12 +19,18 @@ class LaunchCadenceAggregatorTest {
 
     private static LaunchRecord launch(String net, boolean successful) {
         return new LaunchRecord("id", "name", Instant.parse(net), "SpaceX",
-                successful ? "Success" : "Failure", successful);
+                successful ? "Success" : "Failure", successful, "");
     }
 
     private static LaunchRecord launchWithStatus(String id, String status) {
         return new LaunchRecord(id, "name", Instant.parse("2024-06-01T00:00:00Z"),
-                "Provider", status, "Success".equals(status));
+                "Provider", status, "Success".equals(status), "");
+    }
+
+    private static LaunchRecord configuredAttempt(
+            String id, String status, String configuration) {
+        return new LaunchRecord(id, "name", Instant.parse("2025-06-01T00:00:00Z"),
+                "Provider", status, "Success".equals(status), configuration);
     }
 
     private static LayerBMetric find(List<LayerBMetric> metrics, String code) {
@@ -72,5 +78,20 @@ class LaunchCadenceAggregatorTest {
                 find(metrics, "ANNUAL_LAUNCH_COUNT").value()));
         assertEquals(0, new BigDecimal("33.33").compareTo(
                 find(metrics, "ANNUAL_LAUNCH_SUCCESS_RATE").value()));
+    }
+
+    @Test
+    void falconMetricCountsCompletedFalconNineAndHeavyOnly() {
+        List<LayerBMetric> metrics = aggregator.aggregate(2025, List.of(
+                configuredAttempt("f9", "Success", "Falcon 9 Block 5"),
+                configuredAttempt("fh", "Failure", "falcon heavy"),
+                configuredAttempt("starship", "Success", "Starship"),
+                configuredAttempt("scheduled", "Go", "Falcon 9 Block 5"),
+                configuredAttempt("f1", "Success", "Falcon 1")), ACCESSED);
+
+        assertEquals(0, new BigDecimal("2").compareTo(find(
+                metrics, "ANNUAL_FALCON_FAMILY_LAUNCH_COUNT").value()));
+        assertEquals(0, new BigDecimal("4").compareTo(
+                find(metrics, "ANNUAL_LAUNCH_COUNT").value()));
     }
 }

@@ -52,7 +52,9 @@ public class LaunchLibraryParser {
                     net,
                     item.path("launch_service_provider").path("name").asText(""),
                     status,
-                    successful));
+                    successful,
+                    item.path("rocket").path("configuration")
+                            .path("full_name").asText("")));
         }
         URI next = null;
         if (root.hasNonNull("next") && !root.get("next").asText().isBlank()) {

@@ -44,6 +44,15 @@ public class LaunchCadenceAggregator {
                 .divide(BigDecimal.valueOf(inYear.size()), 2, RoundingMode.HALF_UP);
         metrics.add(metric("ANNUAL_LAUNCH_SUCCESS_RATE", observedOn, rate, "PERCENT", accessedOn,
                 "Share of counted launches marked successful in the Launch Library 2 feed for the year."));
+        if (inYear.stream().allMatch(LaunchCadenceAggregator::hasVehicleConfiguration)) {
+            long falconFamilyLaunches = inYear.stream()
+                    .filter(LaunchCadenceAggregator::isFalconFamily)
+                    .count();
+            metrics.add(metric("ANNUAL_FALCON_FAMILY_LAUNCH_COUNT", observedOn,
+                    BigDecimal.valueOf(falconFamilyLaunches), "LAUNCHES", accessedOn,
+                    "Completed Falcon 9 and Falcon Heavy orbital launch attempts counted from "
+                            + "the Launch Library 2 feed for the year."));
+        }
         return metrics;
     }
 
@@ -55,6 +64,21 @@ public class LaunchCadenceAggregator {
                 ? ""
                 : launch.status().trim().toUpperCase(Locale.ROOT);
         return "FAILURE".equals(status) || "PARTIAL FAILURE".equals(status);
+    }
+
+    private static boolean isFalconFamily(LaunchRecord launch) {
+        String configuration = launch.vehicleConfiguration() == null
+                ? ""
+                : launch.vehicleConfiguration().trim().toUpperCase(Locale.ROOT);
+        return "FALCON 9".equals(configuration)
+                || configuration.startsWith("FALCON 9 ")
+                || "FALCON HEAVY".equals(configuration)
+                || configuration.startsWith("FALCON HEAVY ");
+    }
+
+    private static boolean hasVehicleConfiguration(LaunchRecord launch) {
+        return launch.vehicleConfiguration() != null
+                && !launch.vehicleConfiguration().isBlank();
     }
 
     private static LayerBMetric metric(
