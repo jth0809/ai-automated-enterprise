@@ -94,6 +94,31 @@ if ($deploy -notmatch '(?s)name:\s*TRACKER_LL2_CRON\s*\r?\n\s*value:\s*"0 17 3 8
     $failures += 'deployment: TRACKER_LL2_CRON must remain the monthly UTC schedule'
 }
 
+# WP3.3 reuses the immutable local reference resource and the already-approved
+# LL2 path. Its jobs must ship dark, with versioned scenario values explicit in
+# GitOps and no transport-specific egress or secret.
+$transportDefaults = @{
+    TRACKER_TRANSPORT_ECONOMICS_ENABLED = 'false'
+    TRACKER_TRANSPORT_PROJECTION_CRON = '0 47 3 8 * *'
+    TRACKER_COHERENCE_CRON = '0 0 3 1 */3 *'
+    TRACKER_TRANSPORT_TARGET_USD_PER_KG = '200'
+    TRACKER_TRANSPORT_TARGET_EASY_USD_PER_KG = '500'
+    TRACKER_TRANSPORT_TARGET_HARD_USD_PER_KG = '100'
+}
+foreach ($entry in $transportDefaults.GetEnumerator()) {
+    $namePattern = '(?m)^\s*-\s*name:\s*' + [regex]::Escape($entry.Key) + '\s*$'
+    $count = [regex]::Matches($deploy, $namePattern).Count
+    if ($count -ne 1) {
+        $failures += "deployment: expected exactly one '$($entry.Key)', found $count"
+        continue
+    }
+    $pairPattern = '(?s)-\s*name:\s*' + [regex]::Escape($entry.Key)
+    $pairPattern += '\s*\r?\n\s*value:\s*"' + [regex]::Escape($entry.Value) + '"'
+    if ($deploy -notmatch $pairPattern) {
+        $failures += "deployment: '$($entry.Key)' must equal '$($entry.Value)'"
+    }
+}
+
 foreach ($file in @($NetworkPolicy, $Deployment)) {
     $text = Get-Content -Raw $file
     if ($text -match 'sk-ant-|x-api-key\s*:\s*\S|(?i)token\s*:\s*[A-Za-z0-9+/]{16,}') {

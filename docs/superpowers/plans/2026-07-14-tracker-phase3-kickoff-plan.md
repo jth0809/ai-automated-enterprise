@@ -5,8 +5,8 @@
 > 선행 조건: **G2 승인 완료(2026-07-14)** — 35/35 감사·주간 백필·골든셋·관제·
 > 정식 검수 UI·로컬 임베딩 병합. 증거: [G2 증거 행렬](../../research/tracker-phase2-g2-evidence.md).
 >
-> 상태: **실행 중(2026-07-15).** WP3.1-A 측정 기반과 WP3.1-B LL2 Layer B
-> 경로 완료. 각 후속 WP는 `superpowers:writing-plans`로 TDD 상세 계획을
+> 상태: **실행 중(2026-07-15).** WP3.1-A 측정 기반, WP3.1-B LL2 Layer B
+> 경로와 WP3.3 수송 경제성·B쌍 정합 구현 완료. 각 후속 WP는 `superpowers:writing-plans`로 TDD 상세 계획을
 > 별도 작성한 뒤 `superpowers:executing-plans`로 실행한다.
 
 **목표:** 비-AI 실측 레이어를 붙여 "1측정 + 1앵커 + 1관측" 구조를 완성한다.
@@ -64,8 +64,8 @@
 1. **WP3.5 피드:** ISRO, CNSA 영문, JAXA 영문(ESA는 기존 소스 유지).
 2. **WP3.4 질문셋:** 화성 유인 착륙·귀환·정착 Metaculus 질문과 NASA/SpaceX
    기관 목표 연도를 대조한다.
-3. **WP3.3 공표가:** Falcon 9·Falcon Heavy·Starship 공개 가격과 BryceTech
-   자료를 사용하며 항상 `PUBLISHED_PRICE`로 표시한다.
+3. **WP3.3 공표가:** 운용 Falcon 9·Falcon Heavy 공개 가격만 사용하고 Starship은
+   운용 전 추정에서 제외하며, 항상 `PUBLISHED_PRICE`로 표시한다.
 4. **API 키:** 초기에는 공개 rate로 충분하다고 보고 새 secret을 만들지 않는다.
    상향 rate가 필요해질 때만 OCI Vault + ESO로 추가한다.
 
@@ -80,11 +80,27 @@
 - 검증: backend 403/403, frontend 67/67, production build, GitOps verifier,
   416-line kustomize render, 로컬 브라우저 Tracker/Layer B 렌더·console error 0.
 
+## WP3.3 실행 결과 (2026-07-15)
+
+- V12 immutable corpus, Wright log-log OLS, `$200/kg` 중앙·`$100-$500/kg`
+  민감도, 독립 150년 horizon과 잠정/약한 적합도 표기를 구현했다.
+- 분기 B↔C 정합은 두 번 연속 같은 극성일 때만 경보하며, 최대 10개 read-only
+  감사 표본과 P1 API 구간 1.5배 overlay만 허용한다. node·event·snapshot 원본은
+  변경하지 않는다.
+- 공개/admin API와 compact UI 카드를 추가했고, GitOps에는 in-process job의
+  정확한 schedule·목표값을 넣되 `TRACKER_TRANSPORT_ECONOMICS_ENABLED=false`로 유지했다.
+- 최종 검증: backend 481/481, frontend 71/71, production build, GitOps verifier,
+  428-line render, 신규 CronJob/secret/egress 0, browser console error 0.
+- 최초 로컬 결과: `PROVISIONAL`, 3개 관측, R² 0.5874, 중앙 2030.4,
+  민감도 2026.0–2049.4. 첫 완료 분기(`2026-06-30`) 정합 상태는 입력 순서에 따라
+  `INSUFFICIENT_DATA`로 정직하게 보존했다. 상세:
+  [WP3.3 검증 증거](../../research/tracker-wp33-validation-evidence.md).
+
 ## 다음 행동
 
-- [WP3.3 수송 경제성 ETA + B쌍 정합 설계](../specs/2026-07-15-tracker-wp33-transport-economics-design.md)는
-  중앙 `$200/kg`, 민감도 `$100-$500/kg`으로 승인되었다. 구현은
-  [WP3.3 TDD 상세 계획](2026-07-15-tracker-wp33-transport-economics-plan.md)에 따라
-  서브에이전트 없이 인라인으로 진행한다.
+- WP3.3은 [승인 설계](../specs/2026-07-15-tracker-wp33-transport-economics-design.md)와
+  [TDD 상세 계획](2026-07-15-tracker-wp33-transport-economics-plan.md)에 따라 완료했다.
+- 다음 실행 순서는 독립 가능한 WP3.2·WP3.5를 후보군·egress 경계 검토 후 진행하고,
+  마지막으로 WP3.4 4열 대조 패널을 구현해 G3 증거를 만든다.
 - WP3.1 잔여 체류 인일 ETL은 WP3.3에 필요한 B쌍을 방해하지 않으므로 별도
   후속으로 유지한다. LL2→Layer C 승격은 LIVE_MODEL 활성화 전에는 실행하지 않는다.
