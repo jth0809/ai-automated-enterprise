@@ -444,7 +444,7 @@ git commit -m "feat(tracker): add transport economics persistence"
 
 - [ ] **Step 1: Write failing strict-validation tests**
 
-Use a valid in-memory dataset builder and mutate one invariant per test. Required cases are exact-key allowlists at every level, HTTPS, 64 lowercase hex, positive numerics, central/easy/hard ordering, 2025 basis CPI, unique `(observationYear, vehicleFamily, vehicleVariant)` keys, strictly positive annual counts, at least three complete years, Falcon-only operational rows, same configuration price/payload declaration, and prohibited content keys recursively. Multiple eligible variants in one year are retained for audit and reduced to the lowest real-price annual frontier for fitting.
+Use a valid in-memory dataset builder and mutate one invariant per test. Required cases are exact-key allowlists at every level, HTTPS, 64 lowercase hex, positive price/CPI numerics, central/easy/hard ordering, 2025 basis CPI, unique `(observationYear, vehicleFamily, vehicleVariant)` keys, nonnegative counts over contiguous annual records, at least three complete years, Falcon-only operational rows, same configuration price/payload declaration, and prohibited content keys recursively. A zero-launch year such as 2011 is valid; cumulative launches must still strictly increase between successive fitted frontier years. Multiple eligible variants in one year are retained for audit and reduced to the lowest real-price annual frontier for fitting.
 
 ```java
 @Test
@@ -535,21 +535,30 @@ Use only these primary-source facts for the first price frontier; each resource 
 
 | Observation year | Numeric fact | Official source and locator |
 |---|---|---|
-| 2016 | Falcon 9 FT expendable, `$61.2M`, `22,800 kg` | FAA 2017 Annual Compendium, Falcon 9 fact sheet |
-| 2017 | Falcon 9 expendable, `$62M`, `22,800 kg` | FAA 2018 Annual Compendium, Falcon 9 fact sheet |
-| 2018 | Falcon 9 advertised `$62M`, `22,800 kg` | NASA NTRS citation `20180007067`, abstract/data sentence |
-| 2024 | Falcon 9 standard price `$69.75M`, max LEO `22,000 kg` | SpaceX `Capabilities & Services`, Falcon 9 price/capability panel and expendable-performance footnote |
+| 2017 | Falcon 9 expendable, `$62M`, `22,800 kg` | NASA NTRS `20170010337`, p. 2 Table 1 and p. 15 conclusion |
+| 2018 | Falcon 9 advertised `$62M`, `22,800 kg` | NASA NTRS `20180007067`, p. 1 abstract |
+| 2019 | Falcon 9 `$62M`, `22,800 kg` | NASA NTRS `20190027610`, p. 8 section VII.A |
+| 2019 | Falcon Heavy `$90M`, `63,800 kg` | NASA NTRS `20190027610`, p. 8 section VII.A; selected as the lower 2019 frontier |
 
-CPI rows are `CUUR0000SA0` annual averages `2016=240.007`, `2017=245.120`, `2018=251.107`, `2024=313.689`, `2025=321.943` from the BLS annual table. Annual Falcon-family counts cover each complete year from 2010 through 2024 and are generated from LL2 completed `Falcon 9`/`Falcon Heavy` orbital records, counting Success, Failure, and Partial Failure only. Before committing, compare 2016–2018 totals against the FAA compendia and record any count-definition difference in `tracker-wp33-source-evidence.md`; the model uses the LL2 completed-orbital definition consistently.
+CPI rows are `CUUR0000SA0` arithmetic annual averages `2017=245.120`,
+`2018=251.107`, `2019=255.657`, and `2025=321.943` from the official BLS
+Public Data API. The 2025 basis uses the eleven published monthly values because
+BLS marks October unavailable due to the 2025 lapse in appropriations.
+
+Annual Falcon-family counts cover each complete year from 2010 through 2024 and
+are generated from LL2 `Falcon 9`/`Falcon Heavy` orbital records with Success,
+Failure, or Partial Failure status. Explicitly exclude LL2 record
+`3622669f-6e06-467a-86f3-47b56b1114c1`, which LL2 labels `Failure before launch`;
+it is the AMOS-6 pad loss, not a completed launch. Record the canonicalization,
+hashes, and FAA comparison in `tracker-wp33-source-evidence.md`.
 
 Fingerprint each official URL with the existing copyright-safe helper and copy its returned lowercase SHA-256 into the numeric resource:
 
 ```powershell
-& scripts/backfill/Get-SourceFingerprint.ps1 -Url 'https://www.faa.gov/about/office_org/headquarters_offices/ast/media/2017_ast_compendium.pdf'
-& scripts/backfill/Get-SourceFingerprint.ps1 -Url 'https://www.faa.gov/sites/faa.gov/files/space/additional_information/2018_AST_Compendium.pdf'
-& scripts/backfill/Get-SourceFingerprint.ps1 -Url 'https://ntrs.nasa.gov/citations/20180007067'
-& scripts/backfill/Get-SourceFingerprint.ps1 -Url 'https://www.spacex.com/media/Capabilities%26Services.pdf'
-& scripts/backfill/Get-SourceFingerprint.ps1 -Url 'https://www.bls.gov/regions/mid-atlantic/data/ConsumerPriceIndexAnnualandSemiAnnual_Table.htm'
+& scripts/backfill/Get-SourceFingerprint.ps1 -Uri 'https://ntrs.nasa.gov/api/citations/20170010337/downloads/20170010337.pdf?attachment=true'
+& scripts/backfill/Get-SourceFingerprint.ps1 -Uri 'https://ntrs.nasa.gov/api/citations/20180007067/downloads/20180007067.pdf?attachment=true'
+& scripts/backfill/Get-SourceFingerprint.ps1 -Uri 'https://ntrs.nasa.gov/api/citations/20190027610/downloads/20190027610.pdf?attachment=true'
+& scripts/backfill/Get-SourceFingerprint.ps1 -Uri 'https://api.bls.gov/publicAPI/v2/timeseries/data/CUUR0000SA0?startyear=2016&endyear=2025'
 ```
 
 If an official URL cannot be fingerprinted, omit that observation and let the model return `PROVISIONAL` or `INSUFFICIENT_DATA`; do not substitute a secondary mirror silently.
@@ -571,7 +580,9 @@ The loader transaction order is assumption → observations → annual Layer B r
 & 'C:\Users\jang\.m2\wrapper\dists\apache-maven-3.9.9\3477a4f1\bin\mvn.cmd' -o '-Dmaven.repo.local=C:\Users\jang\.m2\repository' '-Dtest=TransportEconomicsDatasetValidatorTest,TransportEconomicsLoaderTest,TransportEconomicsProductionCorpusTest,LayerBDatasetValidatorTest' test
 ```
 
-Expected: all selected tests pass; production corpus has 3–4 valid frontier years, at least 15 annual count rows, five CPI rows, no prohibited key, and exact targets 200/500/100.
+Expected: all selected tests pass; production corpus has three valid frontier
+years, four audited price rows, 15 annual count rows, four required CPI rows, no
+prohibited key, and exact targets 200/500/100.
 
 - [ ] **Step 7: Commit Task 2**
 

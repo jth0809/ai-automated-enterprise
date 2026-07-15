@@ -1,0 +1,274 @@
+{
+  "datasetVersion": "transport-economics-v1",
+  "assumption": {
+    "version": "transport-assumptions-v1",
+    "modelVersion": "wright-falcon-v1",
+    "centralTargetUsdPerKg": 200,
+    "easyTargetUsdPerKg": 500,
+    "hardTargetUsdPerKg": 100,
+    "priceBasisYear": 2025,
+    "horizonYears": 150,
+    "weakFitR2": 0.50,
+    "wideningFactor": 1.50
+  },
+  "cpi": [
+    {
+      "year": 2017,
+      "value": 245.120,
+      "seriesId": "CUUR0000SA0",
+      "sourceLabel": "U.S. Bureau of Labor Statistics Public Data API",
+      "sourceUrl": "https://api.bls.gov/publicAPI/v2/timeseries/data/CUUR0000SA0?startyear=2016&endyear=2025",
+      "sourceLocator": "CUUR0000SA0, 2017 M01-M12 arithmetic annual average",
+      "accessedOn": "2026-07-15",
+      "contentSha256": "8e249f33d0af05ffb4f556673001dee90a01d04c357752346cced9b8e43d9098",
+      "factSummary": "The arithmetic mean of the twelve published 2017 monthly CPI-U index values is 245.120."
+    },
+    {
+      "year": 2018,
+      "value": 251.107,
+      "seriesId": "CUUR0000SA0",
+      "sourceLabel": "U.S. Bureau of Labor Statistics Public Data API",
+      "sourceUrl": "https://api.bls.gov/publicAPI/v2/timeseries/data/CUUR0000SA0?startyear=2016&endyear=2025",
+      "sourceLocator": "CUUR0000SA0, 2018 M01-M12 arithmetic annual average",
+      "accessedOn": "2026-07-15",
+      "contentSha256": "8e249f33d0af05ffb4f556673001dee90a01d04c357752346cced9b8e43d9098",
+      "factSummary": "The arithmetic mean of the twelve published 2018 monthly CPI-U index values is 251.107."
+    },
+    {
+      "year": 2019,
+      "value": 255.657,
+      "seriesId": "CUUR0000SA0",
+      "sourceLabel": "U.S. Bureau of Labor Statistics Public Data API",
+      "sourceUrl": "https://api.bls.gov/publicAPI/v2/timeseries/data/CUUR0000SA0?startyear=2016&endyear=2025",
+      "sourceLocator": "CUUR0000SA0, 2019 M01-M12 arithmetic annual average",
+      "accessedOn": "2026-07-15",
+      "contentSha256": "8e249f33d0af05ffb4f556673001dee90a01d04c357752346cced9b8e43d9098",
+      "factSummary": "The arithmetic mean of the twelve published 2019 monthly CPI-U index values is 255.657."
+    },
+    {
+      "year": 2025,
+      "value": 321.943,
+      "seriesId": "CUUR0000SA0",
+      "sourceLabel": "U.S. Bureau of Labor Statistics Public Data API",
+      "sourceUrl": "https://api.bls.gov/publicAPI/v2/timeseries/data/CUUR0000SA0?startyear=2016&endyear=2025",
+      "sourceLocator": "CUUR0000SA0, 2025 M01-M09 and M11-M12 arithmetic annual average; M10 unavailable",
+      "accessedOn": "2026-07-15",
+      "contentSha256": "8e249f33d0af05ffb4f556673001dee90a01d04c357752346cced9b8e43d9098",
+      "factSummary": "The arithmetic mean of the eleven published 2025 monthly CPI-U values is 321.943; BLS marks October unavailable because of the 2025 lapse in appropriations."
+    }
+  ],
+  "annualLaunchCounts": [
+    {
+      "year": 2010,
+      "count": 2,
+      "sourceLabel": "Launch Library 2",
+      "sourceUrl": "https://ll.thespacedevs.com/2.3.0/launches/?format=json&include_suborbital=false&limit=100&ordering=net&net__gte=2010-01-01T00%3A00%3A00Z&net__lt=2011-01-01T00%3A00%3A00Z&rocket__configuration__full_name__icontains=Falcon",
+      "sourceLocator": "Two completed Falcon 9 or Falcon Heavy orbital records in UTC 2010",
+      "accessedOn": "2026-07-15",
+      "contentSha256": "ceccdcf5da1971c9d7f13f88546071e419ee0c54755af3f343a2fbbf037e634d",
+      "factSummary": "Two completed Falcon-family orbital launches are recorded for 2010."
+    },
+    {
+      "year": 2011,
+      "count": 0,
+      "sourceLabel": "Launch Library 2",
+      "sourceUrl": "https://ll.thespacedevs.com/2.3.0/launches/?format=json&include_suborbital=false&limit=100&ordering=net&net__gte=2011-01-01T00%3A00%3A00Z&net__lt=2012-01-01T00%3A00%3A00Z&rocket__configuration__full_name__icontains=Falcon",
+      "sourceLocator": "No completed Falcon 9 or Falcon Heavy orbital records in UTC 2011",
+      "accessedOn": "2026-07-15",
+      "contentSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "factSummary": "No completed Falcon-family orbital launch is recorded for 2011."
+    },
+    {
+      "year": 2012,
+      "count": 2,
+      "sourceLabel": "Launch Library 2",
+      "sourceUrl": "https://ll.thespacedevs.com/2.3.0/launches/?format=json&include_suborbital=false&limit=100&ordering=net&net__gte=2012-01-01T00%3A00%3A00Z&net__lt=2013-01-01T00%3A00%3A00Z&rocket__configuration__full_name__icontains=Falcon",
+      "sourceLocator": "Two completed Falcon 9 or Falcon Heavy orbital records in UTC 2012",
+      "accessedOn": "2026-07-15",
+      "contentSha256": "4ea463fa0df20b068af61e026e6ca5da5eb22332e0487c7ea078aaf79dffce3b",
+      "factSummary": "Two completed Falcon-family orbital launches are recorded for 2012."
+    },
+    {
+      "year": 2013,
+      "count": 3,
+      "sourceLabel": "Launch Library 2",
+      "sourceUrl": "https://ll.thespacedevs.com/2.3.0/launches/?format=json&include_suborbital=false&limit=100&ordering=net&net__gte=2013-01-01T00%3A00%3A00Z&net__lt=2014-01-01T00%3A00%3A00Z&rocket__configuration__full_name__icontains=Falcon",
+      "sourceLocator": "Three completed Falcon 9 or Falcon Heavy orbital records in UTC 2013",
+      "accessedOn": "2026-07-15",
+      "contentSha256": "289f84fb2a64dc4086b2ec3e76af351bf71ea3daffb66b32e4c72b9a45f7ff55",
+      "factSummary": "Three completed Falcon-family orbital launches are recorded for 2013."
+    },
+    {
+      "year": 2014,
+      "count": 6,
+      "sourceLabel": "Launch Library 2",
+      "sourceUrl": "https://ll.thespacedevs.com/2.3.0/launches/?format=json&include_suborbital=false&limit=100&ordering=net&net__gte=2014-01-01T00%3A00%3A00Z&net__lt=2015-01-01T00%3A00%3A00Z&rocket__configuration__full_name__icontains=Falcon",
+      "sourceLocator": "Six completed Falcon 9 or Falcon Heavy orbital records in UTC 2014",
+      "accessedOn": "2026-07-15",
+      "contentSha256": "117893ff6c94b689a3cf01278043ee4cfc9ab28b5166dc6b0d5a1d1ba153f718",
+      "factSummary": "Six completed Falcon-family orbital launches are recorded for 2014."
+    },
+    {
+      "year": 2015,
+      "count": 7,
+      "sourceLabel": "Launch Library 2",
+      "sourceUrl": "https://ll.thespacedevs.com/2.3.0/launches/?format=json&include_suborbital=false&limit=100&ordering=net&net__gte=2015-01-01T00%3A00%3A00Z&net__lt=2016-01-01T00%3A00%3A00Z&rocket__configuration__full_name__icontains=Falcon",
+      "sourceLocator": "Seven completed Falcon 9 or Falcon Heavy orbital records in UTC 2015",
+      "accessedOn": "2026-07-15",
+      "contentSha256": "08d865e0051109deb20b6bf9ec9b9ff27fe5c8b6c41e966961a2eec21a41decf",
+      "factSummary": "Seven completed Falcon-family orbital launches are recorded for 2015."
+    },
+    {
+      "year": 2016,
+      "count": 8,
+      "sourceLabel": "Launch Library 2",
+      "sourceUrl": "https://ll.thespacedevs.com/2.3.0/launches/?format=json&include_suborbital=false&limit=100&ordering=net&net__gte=2016-01-01T00%3A00%3A00Z&net__lt=2017-01-01T00%3A00%3A00Z&rocket__configuration__full_name__icontains=Falcon",
+      "sourceLocator": "Eight completed orbital launches; excludes AMOS-6 record 3622669f-6e06-467a-86f3-47b56b1114c1 because LL2 labels it Failure before launch",
+      "accessedOn": "2026-07-15",
+      "contentSha256": "07ed629092ddb0f58952606dca0e3822b4ac21fd808a0d8ede61a97e348efce7",
+      "factSummary": "Eight Falcon-family vehicles launched orbitally in 2016; the prelaunch AMOS-6 pad loss is not counted as a launch."
+    },
+    {
+      "year": 2017,
+      "count": 18,
+      "sourceLabel": "Launch Library 2",
+      "sourceUrl": "https://ll.thespacedevs.com/2.3.0/launches/?format=json&include_suborbital=false&limit=100&ordering=net&net__gte=2017-01-01T00%3A00%3A00Z&net__lt=2018-01-01T00%3A00%3A00Z&rocket__configuration__full_name__icontains=Falcon",
+      "sourceLocator": "Eighteen completed Falcon 9 or Falcon Heavy orbital records in UTC 2017",
+      "accessedOn": "2026-07-15",
+      "contentSha256": "33528a0fe6db0e2ac8119882dc5c54791c908bac11fec3b987a86e37a83f79c1",
+      "factSummary": "Eighteen completed Falcon-family orbital launches are recorded for 2017."
+    },
+    {
+      "year": 2018,
+      "count": 21,
+      "sourceLabel": "Launch Library 2",
+      "sourceUrl": "https://ll.thespacedevs.com/2.3.0/launches/?format=json&include_suborbital=false&limit=100&ordering=net&net__gte=2018-01-01T00%3A00%3A00Z&net__lt=2019-01-01T00%3A00%3A00Z&rocket__configuration__full_name__icontains=Falcon",
+      "sourceLocator": "Twenty-one completed Falcon 9 or Falcon Heavy orbital records in UTC 2018",
+      "accessedOn": "2026-07-15",
+      "contentSha256": "f1f9b0c04caf06481d0685ec8a94abece2aadaff8235afdabf159b30fc588a65",
+      "factSummary": "Twenty-one completed Falcon-family orbital launches are recorded for 2018."
+    },
+    {
+      "year": 2019,
+      "count": 13,
+      "sourceLabel": "Launch Library 2",
+      "sourceUrl": "https://ll.thespacedevs.com/2.3.0/launches/?format=json&include_suborbital=false&limit=100&ordering=net&net__gte=2019-01-01T00%3A00%3A00Z&net__lt=2020-01-01T00%3A00%3A00Z&rocket__configuration__full_name__icontains=Falcon",
+      "sourceLocator": "Thirteen completed Falcon 9 or Falcon Heavy orbital records in UTC 2019",
+      "accessedOn": "2026-07-15",
+      "contentSha256": "549471cf4f86d4dc545c9a718ad8465aab1f56f6707056f15d676da2439513fd",
+      "factSummary": "Thirteen completed Falcon-family orbital launches are recorded for 2019."
+    },
+    {
+      "year": 2020,
+      "count": 25,
+      "sourceLabel": "Launch Library 2",
+      "sourceUrl": "https://ll.thespacedevs.com/2.3.0/launches/?format=json&include_suborbital=false&limit=100&ordering=net&net__gte=2020-01-01T00%3A00%3A00Z&net__lt=2021-01-01T00%3A00%3A00Z&rocket__configuration__full_name__icontains=Falcon",
+      "sourceLocator": "Twenty-five completed Falcon 9 or Falcon Heavy orbital records in UTC 2020",
+      "accessedOn": "2026-07-15",
+      "contentSha256": "d92138333a9052df69e02f734828a18f6bef340381a9817d7d32813f82390653",
+      "factSummary": "Twenty-five completed Falcon-family orbital launches are recorded for 2020."
+    },
+    {
+      "year": 2021,
+      "count": 31,
+      "sourceLabel": "Launch Library 2",
+      "sourceUrl": "https://ll.thespacedevs.com/2.3.0/launches/?format=json&include_suborbital=false&limit=100&ordering=net&net__gte=2021-01-01T00%3A00%3A00Z&net__lt=2022-01-01T00%3A00%3A00Z&rocket__configuration__full_name__icontains=Falcon",
+      "sourceLocator": "Thirty-one completed Falcon 9 or Falcon Heavy orbital records in UTC 2021",
+      "accessedOn": "2026-07-15",
+      "contentSha256": "f709890f55c4ea021d55dc4792aa0aecda01fa60a92e3118f3feb574faa973dd",
+      "factSummary": "Thirty-one completed Falcon-family orbital launches are recorded for 2021."
+    },
+    {
+      "year": 2022,
+      "count": 61,
+      "sourceLabel": "Launch Library 2",
+      "sourceUrl": "https://ll.thespacedevs.com/2.3.0/launches/?format=json&include_suborbital=false&limit=100&ordering=net&net__gte=2022-01-01T00%3A00%3A00Z&net__lt=2023-01-01T00%3A00%3A00Z&rocket__configuration__full_name__icontains=Falcon",
+      "sourceLocator": "Sixty-one completed Falcon 9 or Falcon Heavy orbital records in UTC 2022",
+      "accessedOn": "2026-07-15",
+      "contentSha256": "f828dcb9195bbc7bcba93171649d3c6f0a6ccce9639a34da98d11a19ab9aa741",
+      "factSummary": "Sixty-one completed Falcon-family orbital launches are recorded for 2022."
+    },
+    {
+      "year": 2023,
+      "count": 96,
+      "sourceLabel": "Launch Library 2",
+      "sourceUrl": "https://ll.thespacedevs.com/2.3.0/launches/?format=json&include_suborbital=false&limit=100&ordering=net&net__gte=2023-01-01T00%3A00%3A00Z&net__lt=2024-01-01T00%3A00%3A00Z&rocket__configuration__full_name__icontains=Falcon",
+      "sourceLocator": "Ninety-six completed Falcon 9 or Falcon Heavy orbital records in UTC 2023",
+      "accessedOn": "2026-07-15",
+      "contentSha256": "f78111ee09500b41c6f4ed4823c6e601e23742aad04b18ae34bc8c8991ba059c",
+      "factSummary": "Ninety-six completed Falcon-family orbital launches are recorded for 2023."
+    },
+    {
+      "year": 2024,
+      "count": 134,
+      "sourceLabel": "Launch Library 2",
+      "sourceUrl": "https://ll.thespacedevs.com/2.3.0/launches/?format=json&include_suborbital=false&limit=100&ordering=net&net__gte=2024-01-01T00%3A00%3A00Z&net__lt=2025-01-01T00%3A00%3A00Z&rocket__configuration__full_name__icontains=Falcon",
+      "sourceLocator": "One hundred thirty-four completed Falcon 9 or Falcon Heavy orbital records in UTC 2024",
+      "accessedOn": "2026-07-15",
+      "contentSha256": "ea42a43880a2863acbfb62af3091f7f392fdaccbe585fb77b9ee91e32167eafd",
+      "factSummary": "One hundred thirty-four completed Falcon-family orbital launches are recorded for 2024."
+    }
+  ],
+  "priceObservations": [
+    {
+      "observationYear": 2017,
+      "vehicleFamily": "FALCON",
+      "vehicleVariant": "FALCON_9_EXPENDABLE",
+      "operational": true,
+      "configurationMatch": true,
+      "publishedPriceUsd": 62000000,
+      "maxLeoPayloadKg": 22800,
+      "sourceLabel": "NASA NTRS 20170010337",
+      "sourceUrl": "https://ntrs.nasa.gov/api/citations/20170010337/downloads/20170010337.pdf?attachment=true",
+      "sourceLocator": "p. 2 Table 1 and p. 15 conclusion",
+      "accessedOn": "2026-07-15",
+      "contentSha256": "32fa35b2ef38772ab7cb717ea344c7d26f1fad17659dd1f27ff4d512e2f0da8c",
+      "factSummary": "The report states a Falcon 9 launch price of 62 million dollars and matching maximum LEO payload of 22,800 kg."
+    },
+    {
+      "observationYear": 2018,
+      "vehicleFamily": "FALCON",
+      "vehicleVariant": "FALCON_9_EXPENDABLE",
+      "operational": true,
+      "configurationMatch": true,
+      "publishedPriceUsd": 62000000,
+      "maxLeoPayloadKg": 22800,
+      "sourceLabel": "NASA NTRS 20180007067",
+      "sourceUrl": "https://ntrs.nasa.gov/api/citations/20180007067/downloads/20180007067.pdf?attachment=true",
+      "sourceLocator": "p. 1 abstract",
+      "accessedOn": "2026-07-15",
+      "contentSha256": "702ac2731b28b3b7628d232ffa336f8fc2563ae5c80dab04d98206f3a5d0a521",
+      "factSummary": "The report states an advertised Falcon 9 launch price of 62 million dollars and matching maximum LEO payload of 22,800 kg."
+    },
+    {
+      "observationYear": 2019,
+      "vehicleFamily": "FALCON",
+      "vehicleVariant": "FALCON_9_EXPENDABLE",
+      "operational": true,
+      "configurationMatch": true,
+      "publishedPriceUsd": 62000000,
+      "maxLeoPayloadKg": 22800,
+      "sourceLabel": "NASA NTRS 20190027610",
+      "sourceUrl": "https://ntrs.nasa.gov/api/citations/20190027610/downloads/20190027610.pdf?attachment=true",
+      "sourceLocator": "p. 8 section VII.A",
+      "accessedOn": "2026-07-15",
+      "contentSha256": "97aae9c110e8cb7cbd8991d08a09a598b05c0143ac6753eddb17afa8ce0121c5",
+      "factSummary": "The report states a Falcon 9 launch price of 62 million dollars and matching maximum LEO payload of 22,800 kg."
+    },
+    {
+      "observationYear": 2019,
+      "vehicleFamily": "FALCON",
+      "vehicleVariant": "FALCON_HEAVY_EXPENDABLE",
+      "operational": true,
+      "configurationMatch": true,
+      "publishedPriceUsd": 90000000,
+      "maxLeoPayloadKg": 63800,
+      "sourceLabel": "NASA NTRS 20190027610",
+      "sourceUrl": "https://ntrs.nasa.gov/api/citations/20190027610/downloads/20190027610.pdf?attachment=true",
+      "sourceLocator": "p. 8 section VII.A",
+      "accessedOn": "2026-07-15",
+      "contentSha256": "97aae9c110e8cb7cbd8991d08a09a598b05c0143ac6753eddb17afa8ce0121c5",
+      "factSummary": "The report states a Falcon Heavy launch price of 90 million dollars and matching maximum LEO payload of 63,800 kg."
+    }
+  ]
+}

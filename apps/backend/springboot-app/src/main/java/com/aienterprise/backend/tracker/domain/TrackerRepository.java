@@ -390,6 +390,25 @@ public class TrackerRepository {
                 .query(Long.class).single();
     }
 
+    public Optional<LayerBMetric> findLayerBMetric(String metricCode, LocalDate observedOn) {
+        return jdbc.sql("""
+                SELECT id, metric_code, pillar, observed_on, metric_value, unit, basis,
+                       source_label, source_url, accessed_on, content_sha256, fact_summary
+                  FROM layer_b_metric
+                 WHERE metric_code = :code AND observed_on = :on
+                """)
+                .param("code", metricCode)
+                .param("on", date(observedOn))
+                .query((rs, rowNum) -> new LayerBMetric(
+                        rs.getLong("id"), rs.getString("metric_code"), rs.getInt("pillar"),
+                        localDate(rs.getDate("observed_on")), rs.getBigDecimal("metric_value"),
+                        rs.getString("unit"), rs.getString("basis"),
+                        rs.getString("source_label"), rs.getString("source_url"),
+                        localDate(rs.getDate("accessed_on")), rs.getString("content_sha256"),
+                        rs.getString("fact_summary")))
+                .optional();
+    }
+
     public int countLayerBMetrics() {
         return jdbc.sql("SELECT COUNT(*) FROM layer_b_metric").query(Integer.class).single();
     }

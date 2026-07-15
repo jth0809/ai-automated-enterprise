@@ -27,8 +27,12 @@ public class LayerBDatasetValidator {
 
     private static final ObjectMapper JSON = new ObjectMapper();
     private static final Pattern SHA256 = Pattern.compile("[0-9a-f]{64}");
-    private static final Set<String> CODES =
-            Set.of("LAUNCH_PRICE_LEO", "ANNUAL_LAUNCH_COUNT", "ANNUAL_UPMASS_TONNES");
+    private static final Set<String> CODES = Set.of(
+            "LAUNCH_PRICE_LEO",
+            "ANNUAL_LAUNCH_COUNT",
+            "ANNUAL_UPMASS_TONNES",
+            "LEO_PUBLISHED_PRICE_FRONTIER_REAL_2025",
+            "ANNUAL_FALCON_FAMILY_LAUNCH_COUNT");
     private static final Set<String> BASES = Set.of("MEASURED", "PUBLISHED_PRICE", "CONSTRUCTED");
     private static final Set<String> PROHIBITED = Set.of(
             "quote", "body", "bodyhtml", "bodytext", "html", "pdf", "image",
