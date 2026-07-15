@@ -41,9 +41,15 @@ describe("Countdown", () => {
         etaHigh={null}
         label="현 추세 지속 시나리오 기준 · 모델 내 80% 구간"
         pillars={[
-          { pillar: 1, name: "수송", readiness: 0.32, etaYear: null, momentum: -0.0015 },
-          { pillar: 2, name: "생명 유지", readiness: 0.13, etaYear: 2150.7, momentum: 0.029 },
-          { pillar: 4, name: "자원·에너지", readiness: 0.19, etaYear: 2087.1, momentum: 0.052 },
+          { pillar: 1, name: "수송", readiness: 0.32, etaYear: null, momentum: -0.0015,
+            baseEtaLow: null, baseEtaHigh: null, etaLow: null, etaHigh: null,
+            coherenceAdjusted: false, coherenceReportPeriod: null },
+          { pillar: 2, name: "생명 유지", readiness: 0.13, etaYear: 2150.7, momentum: 0.029,
+            baseEtaLow: 2140, baseEtaHigh: 2160, etaLow: 2140, etaHigh: 2160,
+            coherenceAdjusted: false, coherenceReportPeriod: null },
+          { pillar: 4, name: "자원·에너지", readiness: 0.19, etaYear: 2087.1, momentum: 0.052,
+            baseEtaLow: 2080, baseEtaHigh: 2094, etaLow: 2080, etaHigh: 2094,
+            coherenceAdjusted: false, coherenceReportPeriod: null },
         ]}
       />,
     );

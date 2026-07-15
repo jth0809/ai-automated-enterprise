@@ -34,6 +34,31 @@ function stubAllRoutes() {
                 || url.includes("/api/tracker/events")
                 || url.includes("/api/tracker/layer-b")
               ? []
+              : url.includes("/api/tracker/transport-economics")
+                ? {
+                    status: "INSUFFICIENT_DATA",
+                    sufficiencyTier: "INSUFFICIENT_DATA",
+                    qualificationFlags: [],
+                    observationCount: 0,
+                    centralTargetUsdPerKg: 200,
+                    easyTargetUsdPerKg: 500,
+                    hardTargetUsdPerKg: 100,
+                    centralEtaYear: null,
+                    earliestEtaYear: null,
+                    latestEtaYear: null,
+                    centralBeyondHorizon: false,
+                    earliestBeyondHorizon: false,
+                    latestBeyondHorizon: false,
+                    priceBasisYear: 2025,
+                    basis: "PUBLISHED_PRICE",
+                    priceMeaning:
+                      "PUBLISHED_PRICE_DIVIDED_BY_MATCHING_MAX_LEO_PAYLOAD",
+                    projectionLabel:
+                      "Declared-assumption scenario; not provider internal cost",
+                    intervalKind: "ASSUMPTION_SENSITIVITY",
+                    coherenceState: "INSUFFICIENT_DATA",
+                    coherenceAlertActive: false,
+                  }
               : { error: "invalid" };
       return { ok: true, status: 200, json: async () => body } as Response;
     }),
