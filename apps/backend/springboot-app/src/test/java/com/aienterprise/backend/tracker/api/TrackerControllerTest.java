@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.LocalDate;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -19,6 +20,10 @@ import com.aienterprise.backend.tracker.ingest.BackfillLoader;
 import com.aienterprise.backend.tracker.math.SnapshotJob;
 import com.aienterprise.backend.tracker.domain.EvidenceKind;
 import com.aienterprise.backend.tracker.domain.ReviewEvidence;
+import com.aienterprise.backend.tracker.domain.SnapshotRow;
+import com.aienterprise.backend.tracker.domain.TrackerRepository;
+import com.aienterprise.backend.tracker.transport.TransportCoherenceReport;
+import com.aienterprise.backend.tracker.transport.TransportEconomicsRepository;
 
 @SpringBootTest(
         webEnvironment = SpringBootTest.WebEnvironment.NONE,
@@ -40,6 +45,12 @@ class TrackerControllerTest {
 
     @Autowired
     private TrackerController controller;
+
+    @Autowired
+    private TrackerRepository repository;
+
+    @Autowired
+    private TransportEconomicsRepository transportRepository;
 
     @Test
     void summaryMatchesThePublicContract() {
@@ -68,9 +79,38 @@ class TrackerControllerTest {
 
         assertEquals(6, pillars.size());
         for (Map<String, Object> pillar : pillars) {
-            assertEquals(Set.of("pillar", "name", "readiness", "etaYear", "momentum"), pillar.keySet());
+            assertEquals(Set.of(
+                    "pillar", "name", "readiness", "etaYear", "momentum",
+                    "baseEtaLow", "baseEtaHigh", "etaLow", "etaHigh",
+                    "coherenceAdjusted", "coherenceReportPeriod"),
+                    pillar.keySet());
         }
         assertEquals(1, pillars.get(0).get("pillar"));
+    }
+
+    @Test
+    void pillarsApplyDivergenceBoundsAtReadTimeWithoutChangingSnapshot() {
+        LocalDate period = LocalDate.of(2026, 6, 30);
+        repository.replaceSnapshot(new SnapshotRow(
+                0, 1, period, 0.4, -0.4, 0.1, 0.1,
+                4, 10, 2098.4, 2074.2, 2122.6, 2098.4, "eta-v2.10"));
+        transportRepository.saveCoherenceReport(new TransportCoherenceReport(
+                0, period, period,
+                "ADVANCING", "ADVANCING", "ADVANCING", "FLAT",
+                "DIVERGENT", "B_AHEAD", 2, true,
+                new BigDecimal("1.50"), period));
+
+        Map<String, Object> pillarOne = controller.pillars().getBody().get(0);
+
+        assertEquals(2074.2, (Double) pillarOne.get("baseEtaLow"), 1e-9);
+        assertEquals(2122.6, (Double) pillarOne.get("baseEtaHigh"), 1e-9);
+        assertEquals(2062.1, (Double) pillarOne.get("etaLow"), 1e-9);
+        assertEquals(2134.7, (Double) pillarOne.get("etaHigh"), 1e-9);
+        assertEquals(true, pillarOne.get("coherenceAdjusted"));
+        assertEquals(period, pillarOne.get("coherenceReportPeriod"));
+        SnapshotRow persisted = repository.findLatestSnapshot(1).orElseThrow();
+        assertEquals(2074.2, persisted.etaLow(), 1e-9);
+        assertEquals(2122.6, persisted.etaHigh(), 1e-9);
     }
 
     @Test
