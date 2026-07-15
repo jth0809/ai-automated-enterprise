@@ -94,4 +94,23 @@ class TrackerConfigTest {
                 .run(context -> assertThat(context)
                         .hasBean("trackerTransportEconomicsRunner"));
     }
+
+    @Test
+    void kIndexRunnerStaysOffInTestsButIsAvailableAtRuntime() {
+        runner.withUserConfiguration(TrackerConfig.class)
+                .withPropertyValues(
+                        "tracker.enabled=true",
+                        "tracker.k-index-on-boot=true",
+                        "spring.profiles.active=test")
+                .run(context -> assertThat(context)
+                        .doesNotHaveBean("trackerKIndexRunner"));
+
+        runner.withUserConfiguration(TrackerConfig.class)
+                .withPropertyValues(
+                        "tracker.enabled=true",
+                        "tracker.k-index-on-boot=true",
+                        "spring.profiles.active=test,demo")
+                .run(context -> assertThat(context)
+                        .hasBean("trackerKIndexRunner"));
+    }
 }

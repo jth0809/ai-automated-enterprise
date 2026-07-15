@@ -26,6 +26,7 @@ import com.aienterprise.backend.tracker.ingest.BackfillLoader;
 import com.aienterprise.backend.tracker.ingest.LayerBLoader;
 import com.aienterprise.backend.tracker.ingest.JdkPageTransport;
 import com.aienterprise.backend.tracker.ingest.JsoupReadabilityExtractor;
+import com.aienterprise.backend.tracker.ingest.KIndexLoader;
 import com.aienterprise.backend.tracker.ingest.TransportEconomicsLoader;
 
 import net.javacrumbs.shedlock.core.LockProvider;
@@ -124,5 +125,14 @@ public class TrackerConfig {
             ObjectProvider<TransportEconomicsLoader> transportEconomicsLoader) {
         return args -> transportEconomicsLoader.ifAvailable(
                 TransportEconomicsLoader::loadIfNeeded);
+    }
+
+    @Bean
+    @ConditionalOnProperty(prefix = "tracker", name = "k-index-on-boot",
+            havingValue = "true", matchIfMissing = true)
+    @Profile("!test | demo")
+    ApplicationRunner trackerKIndexRunner(
+            ObjectProvider<KIndexLoader> kIndexLoader) {
+        return args -> kIndexLoader.ifAvailable(KIndexLoader::loadIfNeeded);
     }
 }

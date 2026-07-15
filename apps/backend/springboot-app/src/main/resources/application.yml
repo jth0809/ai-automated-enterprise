@@ -83,6 +83,11 @@ tracker:
   transport-target-usd-per-kg: ${TRACKER_TRANSPORT_TARGET_USD_PER_KG:200}
   transport-target-easy-usd-per-kg: ${TRACKER_TRANSPORT_TARGET_EASY_USD_PER_KG:500}
   transport-target-hard-usd-per-kg: ${TRACKER_TRANSPORT_TARGET_HARD_USD_PER_KG:100}
+  # Reviewed annual world-energy observations are bundled locally. Importing
+  # them performs no network call and has no automatic readiness/ETA effect.
+  k-index-on-boot: ${TRACKER_K_INDEX_ON_BOOT:true}
+  k-index-resource: ${TRACKER_K_INDEX_RESOURCE:tracker/k-index-energy-v1.csv}
+  k-index-dataset-version: ${TRACKER_K_INDEX_DATASET_VERSION:k-index-energy-v1}
   # Weekly live golden evaluation remains dark until both this explicit
   # GitOps flag and the Vault-injected Anthropic key are present.
   golden-live-enabled: ${TRACKER_GOLDEN_LIVE_ENABLED:false}
