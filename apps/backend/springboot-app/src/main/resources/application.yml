@@ -69,6 +69,12 @@ anthropic:
 tracker:
   enabled: ${TRACKER_ENABLED:false}
   feeds: ${TRACKER_FEEDS:}
+  # Launch Library 2 remains independently dark until GitOps egress review.
+  # It imports only the previous completed year's Layer B cadence metrics;
+  # it never promotes launches into Layer C capability events.
+  ll2-enabled: ${TRACKER_LL2_ENABLED:false}
+  ll2-cron: ${TRACKER_LL2_CRON:0 17 3 8 * *}
+  ll2-max-pages: ${TRACKER_LL2_MAX_PAGES:10}
   # Weekly live golden evaluation remains dark until both this explicit
   # GitOps flag and the Vault-injected Anthropic key are present.
   golden-live-enabled: ${TRACKER_GOLDEN_LIVE_ENABLED:false}
