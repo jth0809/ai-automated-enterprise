@@ -5,7 +5,8 @@
 > 선행 조건: **G2 승인 완료(2026-07-14)** — 35/35 감사·주간 백필·골든셋·관제·
 > 정식 검수 UI·로컬 임베딩 병합. 증거: [G2 증거 행렬](../../research/tracker-phase2-g2-evidence.md).
 >
-> 상태: 실행준비. 각 WP 착수 시 `superpowers:writing-plans`로 TDD 상세 계획을
+> 상태: **실행 중(2026-07-15).** WP3.1-A 측정 기반과 WP3.1-B LL2 Layer B
+> 경로 완료. 각 후속 WP는 `superpowers:writing-plans`로 TDD 상세 계획을
 > 별도 작성한 뒤 `superpowers:executing-plans`로 실행한다.
 
 **목표:** 비-AI 실측 레이어를 붙여 "1측정 + 1앵커 + 1관측" 구조를 완성한다.
@@ -35,9 +36,10 @@
 - **시크릿:** LL2·Metaculus는 공개 API지만 상향 rate가 필요하면 키를 OCI
   Vault + ESO로 주입(평문 커밋 금지). 신규 키 경로는 [인프라 사전작업
   문서](../../plans/wp/tracker-infra-prework.md)에 등록.
-- **리소스 예산(free tier CPU 포화 이력):** 신규 CronJob은 request 최소화 +
-  시간대 분산. LL2 수집(빈도 낮게), K-지수(연 1회), 수송 경제성 정합(분기),
-  Metaculus(주기적) — 기존 수집·스냅샷·소멸 잡과 겹치지 않게 배치.
+- **리소스 예산(free tier CPU 포화 이력):** 신규 pod/Kubernetes CronJob은
+  만들지 않는다. 기존 backend의 조건부 `@Scheduled` + ShedLock을 저빈도로
+  시간대 분산한다. LL2는 매월 8일 03:17 UTC, 수송 경제성 정합은 분기 단위로
+  기존 수집·스냅샷·소멸 잡과 겹치지 않게 배치한다.
 - **GitOps 전용:** 모든 인프라 변경은 `gitops/` 커밋 → Flux reconcile. CNP는
   별도 커밋으로 분리.
 
@@ -57,18 +59,29 @@
 3. **측정 지표 vs 구성 지수** 구분 표기(K-지수는 구성 게이지).
 4. **수송 경제성 임계값 = 선언된 가정**임을 명시.
 
-## 착수 전 사용자 결정 필요 항목
+## 확정 결정
 
-1. **WP3.5 피드 선정**: 어떤 비영어권 소스 3~5개를 넣을지(ISRO·CNSA 영문 등).
-2. **WP3.4 Metaculus 질문셋**: 어떤 예측 질문을 대조에 쓸지, 기관 목표 연도
-   테이블 초기값.
-3. **WP3.3 $/kg 공표가 소스 목록**: BryceTech 등 어떤 PDF/공표 자료를 월간
-   ETL 기준으로 쓸지.
-4. **API 키 필요 여부**: LL2/Metaculus 공개 rate로 충분한지, 아니면 Vault 키를
-   발급할지.
+1. **WP3.5 피드:** ISRO, CNSA 영문, JAXA 영문(ESA는 기존 소스 유지).
+2. **WP3.4 질문셋:** 화성 유인 착륙·귀환·정착 Metaculus 질문과 NASA/SpaceX
+   기관 목표 연도를 대조한다.
+3. **WP3.3 공표가:** Falcon 9·Falcon Heavy·Starship 공개 가격과 BryceTech
+   자료를 사용하며 항상 `PUBLISHED_PRICE`로 표시한다.
+4. **API 키:** 초기에는 공개 rate로 충분하다고 보고 새 secret을 만들지 않는다.
+   상향 rate가 필요해질 때만 OCI Vault + ESO로 추가한다.
+
+## WP3.1 실행 결과 (2026-07-15)
+
+- WP3.1-A: V11 Layer B 스키마, 3개 시드, 엄격 검증·멱등 로더, 공개 API와
+  UI 정직성 라벨 완료.
+- WP3.1-B: LL2 2.3 목록 페이지네이션(최대 10페이지), same-host HTTPS 검증,
+  완료된 성공/실패/부분실패만 집계, 직전 완료 연도 멱등 upsert 완료.
+- 배포 경계: `ll.thespacedevs.com:443` exact CNP, 월간 in-process 잡,
+  `TRACKER_LL2_ENABLED=false`. LIVE_MODEL 및 Layer C 승격은 미활성/보류.
+- 검증: backend 403/403, frontend 67/67, production build, GitOps verifier,
+  416-line kustomize render, 로컬 브라우저 Tracker/Layer B 렌더·console error 0.
 
 ## 다음 행동
 
-- 위 사용자 결정 4건을 확정한다.
-- WP3.1(Layer B + LL2 사건 승격)의 TDD 상세 계획을 `superpowers:writing-plans`로
-  작성하고, CNP egress 사전작업을 별도 GitOps 커밋으로 준비한다.
+- WP3.3 수송 경제성 ETA + B쌍 정합 검사의 TDD 상세 계획을 작성·실행한다.
+- WP3.1 잔여 체류 인일 ETL은 WP3.3에 필요한 B쌍을 방해하지 않으므로 별도
+  후속으로 유지한다. LL2→Layer C 승격은 LIVE_MODEL 활성화 전에는 실행하지 않는다.

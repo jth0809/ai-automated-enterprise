@@ -522,10 +522,16 @@ git commit -m "feat(tracker): load Layer B measurement seed idempotently"
 
 ---
 
-## 후속 (본 계획 범위 밖)
+## 후속 실행 상태
 
-- **WP3.1-A Task 5~6:** 공개 API `/api/tracker/layer-b` + 프런트 Layer B 패널(정직성 라벨 "공표 가격 기반 추정", "측정 vs 구성 지수"). 별도 세션에서 이어서.
-- **WP3.1-B (egress 필요):** Launch Library 2 라이브 클라이언트(모킹 TDD) + LL2 → tracker `event` 승격 + CronJob + CNP `toFQDNs`(gitops). WP3.1-A 완료 후 writing-plans로 상세화.
+- **WP3.1-A Task 5~6 완료:** 공개 API `/api/tracker/layer-b` + 프런트 Layer B
+  패널(정직성 라벨 "공표 가격 기반 추정", "측정 vs 구성 지수") — `e79773b`,
+  `c17b3bd`.
+- **WP3.1-B Layer B 경로 완료:** LL2 클라이언트·연간 집계·조건부 월간
+  in-process 잡 + exact-host CNP. 신규 Kubernetes CronJob은 만들지 않았다.
+  상세: [WP3.1-B 계획](2026-07-14-tracker-wp31b-launch-library.md).
+- **LL2 → tracker event 승격 보류:** LIVE_MODEL이 `NOT_ACTIVATED`인 동안에는
+  자동 역량 사건을 만들지 않는다.
 
 ## Self-Review
 
