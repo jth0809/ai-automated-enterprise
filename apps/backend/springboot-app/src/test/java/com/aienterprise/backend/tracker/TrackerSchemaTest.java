@@ -112,4 +112,22 @@ class TrackerSchemaTest {
                 .single();
         assertEquals(1, count);
     }
+
+    @Test
+    void kIndexHasAuditableProvenanceAndImportLedger() {
+        Set<String> columns = new HashSet<>(jdbcClient.sql("""
+                SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
+                 WHERE TABLE_NAME = 'K_INDEX'
+                """).query(String.class).list());
+
+        assertTrue(columns.containsAll(Set.of(
+                "PRIMARY_ENERGY_TWH", "SOURCE_URL", "ACCESSED_ON",
+                "DATASET_VERSION")));
+
+        Integer importTables = jdbcClient.sql("""
+                SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES
+                 WHERE TABLE_NAME = 'K_INDEX_IMPORT'
+                """).query(Integer.class).single();
+        assertEquals(1, importTables);
+    }
 }
