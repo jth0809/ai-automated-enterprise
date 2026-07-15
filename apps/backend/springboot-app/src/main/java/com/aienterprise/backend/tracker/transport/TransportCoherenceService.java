@@ -8,6 +8,7 @@ import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,6 +17,7 @@ import com.aienterprise.backend.tracker.domain.TrackerRepository;
 
 /** Persists quarterly coherence and bounded event references without domain writes. */
 @Service
+@ConditionalOnProperty(prefix = "tracker", name = "enabled", havingValue = "true")
 public class TransportCoherenceService {
 
     private static final Logger log = LoggerFactory.getLogger(
