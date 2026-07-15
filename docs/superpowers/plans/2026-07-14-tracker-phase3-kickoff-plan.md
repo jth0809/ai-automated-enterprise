@@ -82,8 +82,9 @@
 
 ## 다음 행동
 
-- [WP3.3 수송 경제성 ETA + B쌍 정합 설계](../specs/2026-07-15-tracker-wp33-transport-economics-design.md)를
-  사용자 검토한 뒤 TDD 상세 계획을 작성·실행한다. 승인 기준은 중앙
-  `$200/kg`, 민감도 `$100-$500/kg`이다.
+- [WP3.3 수송 경제성 ETA + B쌍 정합 설계](../specs/2026-07-15-tracker-wp33-transport-economics-design.md)는
+  중앙 `$200/kg`, 민감도 `$100-$500/kg`으로 승인되었다. 구현은
+  [WP3.3 TDD 상세 계획](2026-07-15-tracker-wp33-transport-economics-plan.md)에 따라
+  서브에이전트 없이 인라인으로 진행한다.
 - WP3.1 잔여 체류 인일 ETL은 WP3.3에 필요한 B쌍을 방해하지 않으므로 별도
   후속으로 유지한다. LL2→Layer C 승격은 LIVE_MODEL 활성화 전에는 실행하지 않는다.
