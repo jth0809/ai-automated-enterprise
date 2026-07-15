@@ -323,6 +323,26 @@ public class TrackerRepository {
         return eventIdByNaturalKey(naturalKey);
     }
 
+    public List<Long> findConfirmedPillarOneEventIds(
+            LocalDate startExclusive, LocalDate endInclusive) {
+        return jdbc.sql("""
+                SELECT e.id
+                  FROM event e
+                  JOIN capability_node n ON n.id = e.node_id
+                 WHERE n.pillar = 1
+                   AND e.event_status = 'CONFIRMED'
+                   AND e.occurred_on > :startExclusive
+                   AND e.occurred_on <= :endInclusive
+                 ORDER BY COALESCE(e.impact_score, 0) DESC,
+                          e.occurred_on DESC, e.id
+                 FETCH FIRST 10 ROWS ONLY
+                """)
+                .param("startExclusive", date(startExclusive))
+                .param("endInclusive", date(endInclusive))
+                .query(Long.class)
+                .list();
+    }
+
     /**
      * Bounded candidate events for semantic merge: same node and event type,
      * occurred-on within {@code intervalDays}, excluding the exact natural key,

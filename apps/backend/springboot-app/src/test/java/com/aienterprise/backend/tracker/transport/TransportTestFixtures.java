@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.jdbc.core.simple.JdbcClient;
 
@@ -66,6 +67,16 @@ final class TransportTestFixtures {
     }
 
     static long insertConfirmedPillarOneEvent(JdbcClient jdbc) {
+        return insertConfirmedPillarOneEvent(
+                jdbc, "default-" + Instant.now().toEpochMilli(),
+                LocalDate.of(2026, 4, 1), new BigDecimal("0.75"));
+    }
+
+    static long insertConfirmedPillarOneEvent(
+            JdbcClient jdbc,
+            String keySuffix,
+            LocalDate occurredOn,
+            BigDecimal impactScore) {
         Long nodeId = jdbc.sql("""
                 SELECT id FROM capability_node WHERE pillar = 1
                 ORDER BY id FETCH FIRST 1 ROWS ONLY
@@ -79,11 +90,13 @@ final class TransportTestFixtures {
                    occurred_on, verification_level, event_status, impact_score,
                    novelty, state_advanced, rubric_version_id)
                 VALUES (:key, :nodeId, 'FLIGHT_TEST', 5, 'Test operator',
-                        DATE '2026-04-01', 'OFFICIAL', 'CONFIRMED', 0.75,
+                        :occurredOn, 'OFFICIAL', 'CONFIRMED', :impactScore,
                         1, 'N', :rubricId)
                 """)
-                .param("key", "wp33-test-event-" + Instant.now().toEpochMilli())
+                .param("key", "wp33-test-event-" + keySuffix)
                 .param("nodeId", nodeId)
+                .param("occurredOn", java.sql.Date.valueOf(occurredOn))
+                .param("impactScore", impactScore)
                 .param("rubricId", rubricId)
                 .update();
         return jdbc.sql("SELECT MAX(id) FROM event")
@@ -100,5 +113,26 @@ final class TransportTestFixtures {
                 .param("id", eventId)
                 .query(String.class)
                 .single();
+    }
+
+    static String tableFingerprint(JdbcClient jdbc, String table, String orderBy) {
+        Set<String> allowed = Set.of(
+                "pillar_snapshot|pillar, snapshot_date, id",
+                "capability_node|id",
+                "event|id");
+        if (!allowed.contains(table + "|" + orderBy)) {
+            throw new IllegalArgumentException("unsupported fingerprint table");
+        }
+        return jdbc.sql("SELECT * FROM " + table + " ORDER BY " + orderBy)
+                .query((rs, rowNum) -> {
+                    StringBuilder row = new StringBuilder();
+                    for (int column = 1;
+                            column <= rs.getMetaData().getColumnCount(); column++) {
+                        row.append(column).append('=').append(rs.getObject(column)).append('|');
+                    }
+                    return row.toString();
+                })
+                .list()
+                .toString();
     }
 }
