@@ -1,8 +1,10 @@
 package com.aienterprise.backend.tracker.layerb;
 
+import java.net.URI;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -17,15 +19,19 @@ public class LaunchLibraryParser {
     private static final ObjectMapper JSON = new ObjectMapper();
 
     public List<LaunchRecord> parse(String json) {
+        return parsePage(json).map(LaunchPage::launches).orElseGet(List::of);
+    }
+
+    public Optional<LaunchPage> parsePage(String json) {
         List<LaunchRecord> result = new ArrayList<>();
         JsonNode root;
         try {
             root = JSON.readTree(json);
         } catch (Exception e) {
-            return result;
+            return Optional.empty();
         }
         if (root == null || !root.path("results").isArray()) {
-            return result;
+            return Optional.empty();
         }
         for (JsonNode item : root.path("results")) {
             if (!item.hasNonNull("id") || !item.hasNonNull("name") || !item.hasNonNull("net")) {
@@ -48,6 +54,14 @@ public class LaunchLibraryParser {
                     status,
                     successful));
         }
-        return result;
+        URI next = null;
+        if (root.hasNonNull("next") && !root.get("next").asText().isBlank()) {
+            try {
+                next = URI.create(root.get("next").asText());
+            } catch (IllegalArgumentException malformedNext) {
+                return Optional.empty();
+            }
+        }
+        return Optional.of(new LaunchPage(result, next));
     }
 }

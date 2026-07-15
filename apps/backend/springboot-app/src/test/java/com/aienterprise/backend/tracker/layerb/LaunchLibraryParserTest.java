@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.Instant;
+import java.net.URI;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
@@ -49,5 +50,29 @@ class LaunchLibraryParserTest {
         assertTrue(parser.parse("").isEmpty());
         assertTrue(parser.parse("not json").isEmpty());
         assertTrue(parser.parse("{\"results\":[]}").isEmpty());
+    }
+
+    @Test
+    void parsesResultsAndNextPageAsOneValidatedPage() {
+        String next = "https://ll.thespacedevs.com/2.3.0/launches/"
+                + "?format=json&limit=100&offset=100&year=2024";
+        String pageJson = """
+                {
+                  "next":"%s",
+                  "results":[
+                    {"id":"abc-1","name":"Falcon 9 | Starlink",
+                     "net":"2024-01-03T23:44:20Z",
+                     "status":{"id":3,"abbrev":"Success"},
+                     "launch_service_provider":{"name":"SpaceX"}}
+                  ]
+                }
+                """.formatted(next);
+
+        LaunchPage page = parser.parsePage(pageJson).orElseThrow();
+
+        assertEquals(1, page.launches().size());
+        assertEquals(URI.create(next), page.next());
+        assertTrue(parser.parsePage("not json").isEmpty());
+        assertTrue(parser.parsePage("{}").isEmpty());
     }
 }
