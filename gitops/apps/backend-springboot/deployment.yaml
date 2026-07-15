@@ -66,6 +66,14 @@ spec:
               value: "30"
             - name: TRACKER_FLUKE_ENABLED
               value: "false"
+            # Phase 3 Layer B Launch Library 2 import. Egress can ship ahead of
+            # activation; live polling stays independently dark by default.
+            - name: TRACKER_LL2_ENABLED
+              value: "false"
+            - name: TRACKER_LL2_CRON
+              value: "0 17 3 8 * *"
+            - name: TRACKER_LL2_MAX_PAGES
+              value: "10"
           envFrom:
             - secretRef:
                 name: backend-springboot-secrets

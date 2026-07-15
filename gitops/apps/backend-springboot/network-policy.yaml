@@ -123,6 +123,15 @@ spec:
         - ports:
             - port: "443"
               protocol: TCP
+    # Launch Library 2 annual cadence collection (Layer B only). Exact host,
+    # HTTPS only; the independent TRACKER_LL2_ENABLED flag remains false until
+    # a reviewed GitOps activation after deployment validation.
+    - toFQDNs:
+        - matchName: ll.thespacedevs.com
+      toPorts:
+        - ports:
+            - port: "443"
+              protocol: TCP
     # Anthropic Messages API (AI news summarization + tracker gate/classify).
     # Scoped to the single FQDN the AnthropicSummarizer and the tracker's
     # AnthropicClient call — without this rule the backend times out

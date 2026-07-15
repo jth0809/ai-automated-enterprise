@@ -23,8 +23,13 @@ $expected = @(
     'feeds.arstechnica.com', 'arstechnica.com', 'www.universetoday.com'
 )
 
-# Non-tracker egress FQDNs that legitimately live in the same policy.
-$allowedOther = @('news.google.com', 'api.anthropic.com', 'adb.ap-osaka-1.oraclecloud.com')
+# Non-source-registry egress FQDNs that legitimately live in the same policy.
+# LL2 is a Layer B metric API, not an article/source_domain feed.
+$ll2Host = 'll.thespacedevs.com'
+$allowedOther = @(
+    'news.google.com', 'api.anthropic.com',
+    'adb.ap-osaka-1.oraclecloud.com', $ll2Host
+)
 
 $yaml = Get-Content -Raw $NetworkPolicy
 
@@ -34,6 +39,19 @@ foreach ($hostName in $expected) {
     if ($count -ne 1) {
         $failures += "network-policy: expected exactly one matchName for '$hostName', found $count"
     }
+}
+
+$ll2Pattern = '(?m)^\s*-\s*matchName:\s*' + [regex]::Escape($ll2Host) + '\s*$'
+$ll2Count = [regex]::Matches($yaml, $ll2Pattern).Count
+if ($ll2Count -ne 1) {
+    $failures += "network-policy: expected exactly one LL2 matchName for '$ll2Host', found $ll2Count"
+}
+$ll2HttpsRule = '(?ms)^\s{4}-\s*toFQDNs:\s*\r?\n'
+$ll2HttpsRule += '\s{8}-\s*matchName:\s*' + [regex]::Escape($ll2Host) + '\s*\r?\n'
+$ll2HttpsRule += '\s{6}toPorts:\s*\r?\n\s{8}-\s*ports:\s*\r?\n'
+$ll2HttpsRule += '\s{12}-\s*port:\s*"443"\s*\r?\n\s{14}protocol:\s*TCP\s*$'
+if ($yaml -notmatch $ll2HttpsRule) {
+    $failures += 'network-policy: LL2 exact host must be bound only to TCP 443'
 }
 
 $allHosts = [regex]::Matches($yaml, '(?m)^\s*-\s*matchName:\s*(\S+)\s*$') |
@@ -60,6 +78,20 @@ foreach ($envName in @('TRACKER_EXTRACT_CRON', 'TRACKER_EXTRACT_BATCH_SIZE', 'TR
 }
 if ($deploy -notmatch '(?s)name:\s*TRACKER_FLUKE_ENABLED\s*\r?\n\s*value:\s*"false"') {
     $failures += 'deployment: TRACKER_FLUKE_ENABLED must default to "false"'
+}
+foreach ($envName in @('TRACKER_LL2_ENABLED', 'TRACKER_LL2_CRON', 'TRACKER_LL2_MAX_PAGES')) {
+    if ($deploy -notmatch ('name:\s*' + [regex]::Escape($envName))) {
+        $failures += "deployment: missing bounded LL2 configuration env '$envName'"
+    }
+}
+if ($deploy -notmatch '(?s)name:\s*TRACKER_LL2_ENABLED\s*\r?\n\s*value:\s*"false"') {
+    $failures += 'deployment: TRACKER_LL2_ENABLED must default to "false"'
+}
+if ($deploy -notmatch '(?s)name:\s*TRACKER_LL2_MAX_PAGES\s*\r?\n\s*value:\s*"10"') {
+    $failures += 'deployment: TRACKER_LL2_MAX_PAGES must stay bounded at 10'
+}
+if ($deploy -notmatch '(?s)name:\s*TRACKER_LL2_CRON\s*\r?\n\s*value:\s*"0 17 3 8 \* \*"') {
+    $failures += 'deployment: TRACKER_LL2_CRON must remain the monthly UTC schedule'
 }
 
 foreach ($file in @($NetworkPolicy, $Deployment)) {
