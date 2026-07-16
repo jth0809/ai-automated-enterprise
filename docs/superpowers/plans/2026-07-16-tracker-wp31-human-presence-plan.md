@@ -287,10 +287,11 @@ Mark WP3.1 complete except the explicitly deferred LIVE_MODEL Layer C promotion.
 WP3.5, and G3 complete only if their required backend/API/browser checks pass; otherwise retain
 the exact open gate. Record that user approval does not replace test evidence.
 
-- [ ] **Step 6: Commit docs, push, and update PR 40**
+- [x] **Step 6: Commit docs, push, and open follow-up PR 42**
 
 Stage only planned Phase 3 files, excluding all protected fixtures. Push `feat/tracker-mvp` and
-update existing PR 40. LIVE_MODEL and all live polling flags remain false.
+open follow-up PR 42 because PR 40 was already merged. LIVE_MODEL and all live polling flags
+remain false.
 
 ## Self-Review
 
