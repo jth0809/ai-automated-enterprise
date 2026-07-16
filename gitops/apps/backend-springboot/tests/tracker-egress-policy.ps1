@@ -23,8 +23,13 @@ $expected = @(
     'feeds.arstechnica.com', 'arstechnica.com', 'www.universetoday.com'
 )
 
-# Non-tracker egress FQDNs that legitimately live in the same policy.
-$allowedOther = @('news.google.com', 'api.anthropic.com', 'adb.ap-osaka-1.oraclecloud.com')
+# Non-source-registry egress FQDNs that legitimately live in the same policy.
+# LL2 is a Layer B metric API, not an article/source_domain feed.
+$ll2Host = 'll.thespacedevs.com'
+$allowedOther = @(
+    'news.google.com', 'api.anthropic.com',
+    'adb.ap-osaka-1.oraclecloud.com', $ll2Host
+)
 
 $yaml = Get-Content -Raw $NetworkPolicy
 
@@ -34,6 +39,19 @@ foreach ($hostName in $expected) {
     if ($count -ne 1) {
         $failures += "network-policy: expected exactly one matchName for '$hostName', found $count"
     }
+}
+
+$ll2Pattern = '(?m)^\s*-\s*matchName:\s*' + [regex]::Escape($ll2Host) + '\s*$'
+$ll2Count = [regex]::Matches($yaml, $ll2Pattern).Count
+if ($ll2Count -ne 1) {
+    $failures += "network-policy: expected exactly one LL2 matchName for '$ll2Host', found $ll2Count"
+}
+$ll2HttpsRule = '(?ms)^\s{4}-\s*toFQDNs:\s*\r?\n'
+$ll2HttpsRule += '\s{8}-\s*matchName:\s*' + [regex]::Escape($ll2Host) + '\s*\r?\n'
+$ll2HttpsRule += '\s{6}toPorts:\s*\r?\n\s{8}-\s*ports:\s*\r?\n'
+$ll2HttpsRule += '\s{12}-\s*port:\s*"443"\s*\r?\n\s{14}protocol:\s*TCP\s*$'
+if ($yaml -notmatch $ll2HttpsRule) {
+    $failures += 'network-policy: LL2 exact host must be bound only to TCP 443'
 }
 
 $allHosts = [regex]::Matches($yaml, '(?m)^\s*-\s*matchName:\s*(\S+)\s*$') |
@@ -60,6 +78,45 @@ foreach ($envName in @('TRACKER_EXTRACT_CRON', 'TRACKER_EXTRACT_BATCH_SIZE', 'TR
 }
 if ($deploy -notmatch '(?s)name:\s*TRACKER_FLUKE_ENABLED\s*\r?\n\s*value:\s*"false"') {
     $failures += 'deployment: TRACKER_FLUKE_ENABLED must default to "false"'
+}
+foreach ($envName in @('TRACKER_LL2_ENABLED', 'TRACKER_LL2_CRON', 'TRACKER_LL2_MAX_PAGES')) {
+    if ($deploy -notmatch ('name:\s*' + [regex]::Escape($envName))) {
+        $failures += "deployment: missing bounded LL2 configuration env '$envName'"
+    }
+}
+if ($deploy -notmatch '(?s)name:\s*TRACKER_LL2_ENABLED\s*\r?\n\s*value:\s*"false"') {
+    $failures += 'deployment: TRACKER_LL2_ENABLED must default to "false"'
+}
+if ($deploy -notmatch '(?s)name:\s*TRACKER_LL2_MAX_PAGES\s*\r?\n\s*value:\s*"10"') {
+    $failures += 'deployment: TRACKER_LL2_MAX_PAGES must stay bounded at 10'
+}
+if ($deploy -notmatch '(?s)name:\s*TRACKER_LL2_CRON\s*\r?\n\s*value:\s*"0 17 3 8 \* \*"') {
+    $failures += 'deployment: TRACKER_LL2_CRON must remain the monthly UTC schedule'
+}
+
+# WP3.3 reuses the immutable local reference resource and the already-approved
+# LL2 path. Its jobs must ship dark, with versioned scenario values explicit in
+# GitOps and no transport-specific egress or secret.
+$transportDefaults = @{
+    TRACKER_TRANSPORT_ECONOMICS_ENABLED = 'false'
+    TRACKER_TRANSPORT_PROJECTION_CRON = '0 47 3 8 * *'
+    TRACKER_COHERENCE_CRON = '0 0 3 1 */3 *'
+    TRACKER_TRANSPORT_TARGET_USD_PER_KG = '200'
+    TRACKER_TRANSPORT_TARGET_EASY_USD_PER_KG = '500'
+    TRACKER_TRANSPORT_TARGET_HARD_USD_PER_KG = '100'
+}
+foreach ($entry in $transportDefaults.GetEnumerator()) {
+    $namePattern = '(?m)^\s*-\s*name:\s*' + [regex]::Escape($entry.Key) + '\s*$'
+    $count = [regex]::Matches($deploy, $namePattern).Count
+    if ($count -ne 1) {
+        $failures += "deployment: expected exactly one '$($entry.Key)', found $count"
+        continue
+    }
+    $pairPattern = '(?s)-\s*name:\s*' + [regex]::Escape($entry.Key)
+    $pairPattern += '\s*\r?\n\s*value:\s*"' + [regex]::Escape($entry.Value) + '"'
+    if ($deploy -notmatch $pairPattern) {
+        $failures += "deployment: '$($entry.Key)' must equal '$($entry.Value)'"
+    }
 }
 
 foreach ($file in @($NetworkPolicy, $Deployment)) {

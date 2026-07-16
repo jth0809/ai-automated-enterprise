@@ -149,16 +149,32 @@
 목표: 비-AI 실측 레이어를 붙여 "1측정 + 1앵커 + 1관측" 구조를 완성한다.
 
 - [ ] **WP3.1 Layer B 수집 + 사건 채널 승격** — Launch Library 2 API(발사 횟수·성공률, 속도 제한 준수) + 월간 수동 ETL 템플릿($/kg, upmass, 체류 인일 — BryceTech 등 PDF 소스), 지표→필라 매핑 레지스트리. **LL2를 Layer C 사건 소스로도 승격** — 뉴스 커버리지와 무관한 발사·시험 전수 포착 (G0 피드백: 커버리지 다변화)
+  - **기반 완료(2026-07-15):** V11 `layer_b_metric`·저작권 안전 시드·멱등
+    로더·API·정직성 UI와 LL2 2.3 페이지 수집→완료 연도 발사 수/성공률 집계를
+    구현했다. LL2는 exact-host 443만 허용하고 `TRACKER_LL2_ENABLED=false`로
+    유지한다. 상세: [WP3.1-A](../superpowers/plans/2026-07-14-tracker-wp31a-layer-b-measurement.md) ·
+    [WP3.1-B](../superpowers/plans/2026-07-14-tracker-wp31b-launch-library.md).
+  - **잔여:** 체류 인일 수동 ETL과 Layer C 승격. 승격은 과도한 자동 추정을
+    피하기 위해 LIVE_MODEL 활성화 이후로 명시 보류하며, WP3.3은 현재 B쌍
+    데이터(공표 $/kg·연간 발사 수)로 먼저 진행한다.
 - [ ] **WP3.2 K-지수** — 연 1회 CSV 인제스트(대체법 기준 명시), 게이지 UI(소수점 4자리·Type I 거리)
-- [ ] **WP3.3 수송 경제성 ETA + B쌍 정합 검사** — Wright's law($/kg **공표 가격** vs 누적 발사량) 외삽 — 가격 기반 추정치임과 목표 경제성 임계값이 선언된 가정임을 데이터·UI에 명시(컨셉 v2.10), 분기 정합 잡(B쌍만 경보·구간 확대, A쌍은 연 1회 관측 각주 — v2.8/2.9 규칙)
+- [x] **WP3.3 수송 경제성 ETA + B쌍 정합 검사** — Wright's law($/kg **공표 가격** vs 누적 발사량) 외삽 — 가격 기반 추정치임과 목표 경제성 임계값이 선언된 가정임을 데이터·UI에 명시(컨셉 v2.10), 분기 정합 잡(B쌍만 경보·구간 확대, A쌍은 연 1회 관측 각주 — v2.8/2.9 규칙)
+  - **완료(2026-07-15):** 중앙 `$200/kg`, 민감도 `$100-$500/kg`, 운용
+    Falcon 공표가 기반 잠정 허용형 Wright 모델, 비파괴 B↔C 정합 overlay,
+    공개/admin API와 compact UI를 구현했다. backend 481/481, frontend 71/71,
+    build·GitOps·browser 검증을 통과했고 job은 기본 비활성이다. 상세:
+    [WP3.3 설계](../superpowers/specs/2026-07-15-tracker-wp33-transport-economics-design.md) ·
+    [WP3.3 TDD 계획](../superpowers/plans/2026-07-15-tracker-wp33-transport-economics-plan.md) ·
+    [검증 증거](../research/tracker-wp33-validation-evidence.md).
 - [ ] **WP3.4 예측 대조 패널 + 숫자로 보는 우주 시대** — Metaculus 수집(수개월 이동 평균 평활) + 기관 목표 연도 수동 등록 테이블, 4열 대조 패널, Layer B 지표 대시보드
 - [ ] **WP3.5 수집 채널 확장 (G0 피드백 신설)** — ① 비영어권 보강: ISRO 보도자료·중국 우주 프로그램 영문 전문 소스 등 피드 3~5개 추가(CNP egress 동반), ② 필라 6 구조화 원장: UNOOSA 조약 상태 DB·관보(FAA 발사 면허) 인제스트 — Tier 1 `source_registry` 항목으로 등록해 기존 검증 도출 규칙 그대로 통과 (상세: [tracker-infra-prework.md](wp/tracker-infra-prework.md) 7절)
 
 **게이트 G3:** 대조 패널 4열(본 모델/수송 경제성/군중/기관) 표시, 첫 분기 정합 리포트 발행.
 
-> **실행준비(2026-07-14):** G2 승인으로 Phase 3 착수 전제 충족. 실행 순서·
+> **진행 중(2026-07-15):** G2 승인으로 Phase 3에 착수했고 WP3.1 측정 기반,
+> LL2 Layer B 경로와 WP3.3 수송 경제성·B쌍 정합을 완료했다. 실행 순서·
 > egress 사전작업·정직성 표기·사용자 결정 항목은 [Phase 3 실행준비 계획](../superpowers/plans/2026-07-14-tracker-phase3-kickoff-plan.md).
-> 권장 순서 3.1→3.3→3.2·3.5→3.4. WP3.1 착수 시 writing-plans로 상세화한다.
+> 다음은 후보군과 egress 경계를 검토한 WP3.2·WP3.5이며, 이후 WP3.4로 G3를 마무리한다.
 
 ---
 

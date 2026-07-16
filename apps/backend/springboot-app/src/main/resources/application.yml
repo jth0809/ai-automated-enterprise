@@ -69,6 +69,20 @@ anthropic:
 tracker:
   enabled: ${TRACKER_ENABLED:false}
   feeds: ${TRACKER_FEEDS:}
+  # Launch Library 2 remains independently dark until GitOps egress review.
+  # It imports only the previous completed year's Layer B cadence metrics;
+  # it never promotes launches into Layer C capability events.
+  ll2-enabled: ${TRACKER_LL2_ENABLED:false}
+  ll2-cron: ${TRACKER_LL2_CRON:0 17 3 8 * *}
+  ll2-max-pages: ${TRACKER_LL2_MAX_PAGES:10}
+  # Declared-assumption transport projections remain dark unless explicitly
+  # enabled. They use reviewed local inputs and perform no LLM or network call.
+  transport-economics-enabled: ${TRACKER_TRANSPORT_ECONOMICS_ENABLED:false}
+  transport-projection-cron: ${TRACKER_TRANSPORT_PROJECTION_CRON:0 47 3 8 * *}
+  coherence-cron: ${TRACKER_COHERENCE_CRON:0 0 3 1 */3 *}
+  transport-target-usd-per-kg: ${TRACKER_TRANSPORT_TARGET_USD_PER_KG:200}
+  transport-target-easy-usd-per-kg: ${TRACKER_TRANSPORT_TARGET_EASY_USD_PER_KG:500}
+  transport-target-hard-usd-per-kg: ${TRACKER_TRANSPORT_TARGET_HARD_USD_PER_KG:100}
   # Weekly live golden evaluation remains dark until both this explicit
   # GitOps flag and the Vault-injected Anthropic key are present.
   golden-live-enabled: ${TRACKER_GOLDEN_LIVE_ENABLED:false}

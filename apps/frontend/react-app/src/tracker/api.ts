@@ -19,6 +19,41 @@ export interface PillarSummary {
   readiness: number | null;
   etaYear: number | null;
   momentum: number | null;
+  baseEtaLow: number | null;
+  baseEtaHigh: number | null;
+  etaLow: number | null;
+  etaHigh: number | null;
+  coherenceAdjusted: boolean;
+  coherenceReportPeriod: string | null;
+}
+
+export interface TransportProjection {
+  status:
+    | "INSUFFICIENT_DATA"
+    | "PROVISIONAL"
+    | "ESTABLISHED"
+    | "NON_DECLINING"
+    | "REACHED"
+    | "BEYOND_HORIZON";
+  sufficiencyTier: "INSUFFICIENT_DATA" | "PROVISIONAL" | "ESTABLISHED";
+  qualificationFlags: string[];
+  observationCount: number;
+  centralTargetUsdPerKg: number;
+  easyTargetUsdPerKg: number;
+  hardTargetUsdPerKg: number;
+  centralEtaYear: number | null;
+  earliestEtaYear: number | null;
+  latestEtaYear: number | null;
+  centralBeyondHorizon: boolean;
+  earliestBeyondHorizon: boolean;
+  latestBeyondHorizon: boolean;
+  priceBasisYear: number;
+  basis: "PUBLISHED_PRICE";
+  priceMeaning: "PUBLISHED_PRICE_DIVIDED_BY_MATCHING_MAX_LEO_PAYLOAD";
+  projectionLabel: string;
+  intervalKind: "ASSUMPTION_SENSITIVITY";
+  coherenceState: string;
+  coherenceAlertActive: boolean;
 }
 
 export type EvidenceKind = "VERBATIM" | "HISTORICAL_REFERENCE";
@@ -60,10 +95,37 @@ export async function getPillars(): Promise<PillarSummary[]> {
   return (await res.json()) as PillarSummary[];
 }
 
+export async function getTransportEconomics(): Promise<TransportProjection> {
+  const res = await fetch("/api/tracker/transport-economics");
+  if (!res.ok) {
+    throw new Error(`tracker transport economics failed: HTTP ${res.status}`);
+  }
+  return (await res.json()) as TransportProjection;
+}
+
 export async function getEvents(limit = 50): Promise<TimelineEvent[]> {
   const res = await fetch(`/api/tracker/events?limit=${limit}`);
   if (!res.ok) throw new Error(`tracker events failed: HTTP ${res.status}`);
   return (await res.json()) as TimelineEvent[];
+}
+
+export interface LayerBMetric {
+  metricCode: string;
+  pillar: number;
+  pillarName: string;
+  observedOn: string;
+  value: number;
+  unit: string;
+  basis: string;
+  sourceLabel: string;
+  sourceUrl: string;
+  factSummary: string;
+}
+
+export async function getLayerB(): Promise<LayerBMetric[]> {
+  const res = await fetch("/api/tracker/layer-b");
+  if (!res.ok) throw new Error(`tracker layer-b failed: HTTP ${res.status}`);
+  return (await res.json()) as LayerBMetric[];
 }
 
 export type ReviewEvidence = TrackerEvidence;

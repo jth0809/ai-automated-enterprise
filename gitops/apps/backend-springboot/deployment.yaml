@@ -66,6 +66,29 @@ spec:
               value: "30"
             - name: TRACKER_FLUKE_ENABLED
               value: "false"
+            # Phase 3 Layer B Launch Library 2 import. Egress can ship ahead of
+            # activation; live polling stays independently dark by default.
+            - name: TRACKER_LL2_ENABLED
+              value: "false"
+            - name: TRACKER_LL2_CRON
+              value: "0 17 3 8 * *"
+            - name: TRACKER_LL2_MAX_PAGES
+              value: "10"
+            # WP3.3 declared-assumption transport projection. It reuses the
+            # reviewed local corpus and LL2 path; both jobs stay dark until a
+            # separately reviewed GitOps activation.
+            - name: TRACKER_TRANSPORT_ECONOMICS_ENABLED
+              value: "false"
+            - name: TRACKER_TRANSPORT_PROJECTION_CRON
+              value: "0 47 3 8 * *"
+            - name: TRACKER_COHERENCE_CRON
+              value: "0 0 3 1 */3 *"
+            - name: TRACKER_TRANSPORT_TARGET_USD_PER_KG
+              value: "200"
+            - name: TRACKER_TRANSPORT_TARGET_EASY_USD_PER_KG
+              value: "500"
+            - name: TRACKER_TRANSPORT_TARGET_HARD_USD_PER_KG
+              value: "100"
           envFrom:
             - secretRef:
                 name: backend-springboot-secrets

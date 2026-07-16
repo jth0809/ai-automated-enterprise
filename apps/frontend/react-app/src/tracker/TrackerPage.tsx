@@ -1,17 +1,33 @@
 import { useEffect, useState } from "react";
-import { getEvents, getPillars, getSummary } from "./api";
-import type { PillarSummary, Summary, TimelineEvent } from "./api";
+import {
+  getEvents,
+  getLayerB,
+  getPillars,
+  getSummary,
+  getTransportEconomics,
+} from "./api";
+import type {
+  LayerBMetric,
+  PillarSummary,
+  Summary,
+  TimelineEvent,
+  TransportProjection,
+} from "./api";
 import { Countdown } from "./Countdown";
 import { EventTimeline } from "./EventTimeline";
+import { LayerBPanel } from "./LayerBPanel";
 import { PillarEtaList } from "./PillarEtaList";
 import { OpsPanel } from "./OpsPanel";
 import { PillarRadar } from "./PillarRadar";
 import { ReviewQueue } from "./ReviewQueue";
+import { TransportEconomicsCard } from "./TransportEconomicsCard";
 
 interface TrackerData {
   summary: Summary;
   pillars: PillarSummary[];
   events: TimelineEvent[];
+  layerB: LayerBMetric[];
+  transportEconomics: TransportProjection;
 }
 
 /** Multiplanetary tracker dashboard: countdown, pillar radar, event timeline. */
@@ -21,9 +37,17 @@ export function TrackerPage() {
 
   useEffect(() => {
     let cancelled = false;
-    Promise.all([getSummary(), getPillars(), getEvents(50)])
-      .then(([summary, pillars, events]) => {
-        if (!cancelled) setData({ summary, pillars, events });
+    Promise.all([
+      getSummary(),
+      getPillars(),
+      getEvents(50),
+      getLayerB(),
+      getTransportEconomics(),
+    ])
+      .then(([summary, pillars, events, layerB, transportEconomics]) => {
+        if (!cancelled) {
+          setData({ summary, pillars, events, layerB, transportEconomics });
+        }
       })
       .catch(() => {
         if (!cancelled) setFailed(true);
@@ -54,6 +78,8 @@ export function TrackerPage() {
       <PillarRadar pillars={data.pillars} bottleneck={data.summary.bottleneckPillar} />
       <PillarEtaList pillars={data.pillars} bottleneck={data.summary.bottleneckPillar} />
       <EventTimeline events={data.events} />
+      <LayerBPanel metrics={data.layerB} />
+      <TransportEconomicsCard projection={data.transportEconomics} />
       <details className="review-section">
         <summary>검수 큐 (admin)</summary>
         <ReviewQueue />

@@ -11,6 +11,12 @@ function pillars(readiness: number[]) {
     readiness: value,
     etaYear: null,
     momentum: null,
+    baseEtaLow: null,
+    baseEtaHigh: null,
+    etaLow: null,
+    etaHigh: null,
+    coherenceAdjusted: false,
+    coherenceReportPeriod: null,
   }));
 }
 

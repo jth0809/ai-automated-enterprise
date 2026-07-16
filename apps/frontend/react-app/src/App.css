@@ -1105,3 +1105,171 @@ body {
   font-size: 0.85rem;
   margin: 0.4rem 0 0;
 }
+
+/* Layer B measured indicators */
+
+.layer-b {
+  margin: 1.5rem 0 0;
+}
+
+.layer-b-title {
+  font-size: 1rem;
+  margin: 0 0 0.25rem;
+}
+
+.layer-b-note {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin: 0 0 0.6rem;
+}
+
+.layer-b-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.layer-b-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) auto auto auto;
+  gap: 0.75rem;
+  align-items: baseline;
+  padding: 0.35rem 0.6rem;
+  border-radius: 0.5rem;
+  background: var(--surface-2);
+  font-size: 0.9rem;
+}
+
+.layer-b-name {
+  font-weight: 600;
+}
+
+.layer-b-value {
+  font-variant-numeric: tabular-nums;
+}
+
+.layer-b-basis {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  background: rgba(93, 100, 115, 0.16);
+  color: var(--text-muted);
+}
+
+.layer-b-basis-published_price {
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+}
+
+.layer-b-basis-constructed {
+  background: rgba(234, 179, 8, 0.16);
+  color: #a16207;
+}
+
+.layer-b-pillar {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+/* WP3.3 transport economics scenario */
+
+.transport-economics {
+  margin: 1.5rem 0 0;
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  box-shadow: var(--shadow-soft);
+}
+
+.transport-economics-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.transport-economics h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.transport-economics-scope,
+.transport-economics-basis {
+  margin: 0.2rem 0 0;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+}
+
+.transport-economics-evidence {
+  flex: none;
+  margin: 0;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+  font-size: 0.75rem;
+  font-weight: 650;
+}
+
+.transport-economics-assumption {
+  margin: 0.8rem 0;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.transport-economics-values {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+  margin: 0;
+}
+
+.transport-economics-values > div {
+  padding: 0.65rem 0.75rem;
+  border-radius: 0.6rem;
+  background: var(--surface-2);
+}
+
+.transport-economics-values dt {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+.transport-economics-values dd {
+  margin: 0.15rem 0 0;
+  font-variant-numeric: tabular-nums;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.transport-economics-central {
+  color: var(--accent-strong);
+}
+
+.transport-economics-warning {
+  margin: 0.75rem 0 0;
+  padding: 0.55rem 0.7rem;
+  border-left: 3px solid var(--danger);
+  border-radius: 0.35rem;
+  background: rgba(220, 38, 38, 0.08);
+  color: var(--danger);
+  font-size: 0.8rem;
+}
+
+@media (max-width: 560px) {
+  .transport-economics-head {
+    display: grid;
+  }
+
+  .transport-economics-evidence {
+    justify-self: start;
+  }
+
+  .transport-economics-values {
+    grid-template-columns: 1fr;
+  }
+}

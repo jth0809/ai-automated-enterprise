@@ -29,6 +29,12 @@ function stubTrackerRoutes() {
               readiness: pillar / 10,
               etaYear: null,
               momentum: null,
+              baseEtaLow: null,
+              baseEtaHigh: null,
+              etaLow: null,
+              etaHigh: null,
+              coherenceAdjusted: false,
+              coherenceReportPeriod: null,
             }))
           : url.includes("/api/tracker/events")
             ? [
@@ -46,14 +52,41 @@ function stubTrackerRoutes() {
                   primaryEvidence: null,
                 },
               ]
-            : { error: "unexpected" };
+            : url.includes("/api/tracker/layer-b")
+              ? []
+              : url.includes("/api/tracker/transport-economics")
+                ? {
+                    status: "PROVISIONAL",
+                    sufficiencyTier: "PROVISIONAL",
+                    qualificationFlags: ["WEAK_FIT"],
+                    observationCount: 3,
+                    centralTargetUsdPerKg: 200,
+                    easyTargetUsdPerKg: 500,
+                    hardTargetUsdPerKg: 100,
+                    centralEtaYear: 2098.4,
+                    earliestEtaYear: 2074.2,
+                    latestEtaYear: null,
+                    centralBeyondHorizon: false,
+                    earliestBeyondHorizon: false,
+                    latestBeyondHorizon: true,
+                    priceBasisYear: 2025,
+                    basis: "PUBLISHED_PRICE",
+                    priceMeaning:
+                      "PUBLISHED_PRICE_DIVIDED_BY_MATCHING_MAX_LEO_PAYLOAD",
+                    projectionLabel:
+                      "Declared-assumption scenario; not provider internal cost",
+                    intervalKind: "ASSUMPTION_SENSITIVITY",
+                    coherenceState: "COHERENT",
+                    coherenceAlertActive: false,
+                  }
+              : { error: "unexpected" };
       return { ok: true, status: 200, json: async () => body } as Response;
     }),
   );
 }
 
 describe("TrackerPage", () => {
-  it("renders countdown, radar, and timeline from the three public endpoints", async () => {
+  it("renders countdown, radar, timeline, and transport economics", async () => {
     stubTrackerRoutes();
     const { container } = render(<TrackerPage />);
 
@@ -66,6 +99,8 @@ describe("TrackerPage", () => {
       await screen.findByText(/ISRU: 추진제·물·산소 현지 생산/),
     ).toBeInTheDocument();
     expect(screen.getByText("FLIGHT_TEST")).toBeInTheDocument();
+    expect(screen.getByText("수송 경제성 시나리오")).toBeInTheDocument();
+    expect(screen.getByText(/중앙 가정 \$200\/kg/)).toBeInTheDocument();
     // The admin review queue is collapsed below the public dashboard and
     // fetches nothing until a token is submitted.
     expect(screen.getByText(/검수 큐/)).toBeInTheDocument();

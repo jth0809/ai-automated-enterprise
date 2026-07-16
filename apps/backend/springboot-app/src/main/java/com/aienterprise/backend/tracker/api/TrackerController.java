@@ -1,5 +1,7 @@
 package com.aienterprise.backend.tracker.api;
 
+import java.time.Clock;
+import java.time.Year;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -7,15 +9,21 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.aienterprise.backend.tracker.domain.LayerBMetric;
 import com.aienterprise.backend.tracker.domain.SnapshotRow;
 import com.aienterprise.backend.tracker.domain.TimelineRow;
 import com.aienterprise.backend.tracker.domain.TrackerRepository;
+import com.aienterprise.backend.tracker.transport.EtaBounds;
+import com.aienterprise.backend.tracker.transport.TransportCoherenceReport;
+import com.aienterprise.backend.tracker.transport.TransportEconomicsRepository;
+import com.aienterprise.backend.tracker.transport.TransportEtaOverlay;
 
 @RestController
 @ConditionalOnProperty(prefix = "tracker", name = "enabled", havingValue = "true")
@@ -34,9 +42,27 @@ public class TrackerController {
             6, "경제·거버넌스");
 
     private final TrackerRepository repository;
+    private final TransportEconomicsRepository transportRepository;
+    private final TransportEtaOverlay transportEtaOverlay;
+    private final Clock clock;
 
-    public TrackerController(TrackerRepository repository) {
+    @Autowired
+    public TrackerController(
+            TrackerRepository repository,
+            TransportEconomicsRepository transportRepository,
+            TransportEtaOverlay transportEtaOverlay) {
+        this(repository, transportRepository, transportEtaOverlay, Clock.systemUTC());
+    }
+
+    TrackerController(
+            TrackerRepository repository,
+            TransportEconomicsRepository transportRepository,
+            TransportEtaOverlay transportEtaOverlay,
+            Clock clock) {
         this.repository = repository;
+        this.transportRepository = transportRepository;
+        this.transportEtaOverlay = transportEtaOverlay;
+        this.clock = clock;
     }
 
     @GetMapping("/summary")
@@ -57,14 +83,25 @@ public class TrackerController {
     @GetMapping("/pillars")
     public ResponseEntity<List<Map<String, Object>>> pillars() {
         List<Map<String, Object>> body = new ArrayList<>();
+        TransportCoherenceReport coherence = transportRepository
+                .findLatestCoherenceReport().orElse(null);
+        int nowYear = Year.now(clock).getValue();
         for (int pillar = 1; pillar <= 6; pillar++) {
             Optional<SnapshotRow> latest = repository.findLatestSnapshot(pillar);
+            EtaBounds bounds = transportEtaOverlay.apply(
+                    pillar, latest.orElse(null), coherence, nowYear);
             Map<String, Object> entry = new LinkedHashMap<>();
             entry.put("pillar", pillar);
             entry.put("name", PILLAR_NAMES.get(pillar));
             entry.put("readiness", latest.map(SnapshotRow::readiness).orElse(null));
             entry.put("etaYear", latest.map(SnapshotRow::etaYear).orElse(null));
             entry.put("momentum", latest.map(SnapshotRow::trendUsed).orElse(null));
+            entry.put("baseEtaLow", bounds.baseEtaLow());
+            entry.put("baseEtaHigh", bounds.baseEtaHigh());
+            entry.put("etaLow", bounds.etaLow());
+            entry.put("etaHigh", bounds.etaHigh());
+            entry.put("coherenceAdjusted", bounds.coherenceAdjusted());
+            entry.put("coherenceReportPeriod", bounds.coherenceReportPeriod());
             body.add(entry);
         }
         return ResponseEntity.ok(body);
@@ -87,6 +124,26 @@ public class TrackerController {
             entry.put("sourceCount", row.sourceCount());
             entry.put("evidenceQuote", row.evidenceQuote());
             entry.put("primaryEvidence", row.primaryEvidence());
+            body.add(entry);
+        }
+        return ResponseEntity.ok(body);
+    }
+
+    @GetMapping("/layer-b")
+    public ResponseEntity<List<Map<String, Object>>> layerB() {
+        List<Map<String, Object>> body = new ArrayList<>();
+        for (LayerBMetric metric : repository.findLatestLayerBByPillar()) {
+            Map<String, Object> entry = new LinkedHashMap<>();
+            entry.put("metricCode", metric.metricCode());
+            entry.put("pillar", metric.pillar());
+            entry.put("pillarName", PILLAR_NAMES.get(metric.pillar()));
+            entry.put("observedOn", metric.observedOn().toString());
+            entry.put("value", metric.value());
+            entry.put("unit", metric.unit());
+            entry.put("basis", metric.basis());
+            entry.put("sourceLabel", metric.sourceLabel());
+            entry.put("sourceUrl", metric.sourceUrl());
+            entry.put("factSummary", metric.factSummary());
             body.add(entry);
         }
         return ResponseEntity.ok(body);

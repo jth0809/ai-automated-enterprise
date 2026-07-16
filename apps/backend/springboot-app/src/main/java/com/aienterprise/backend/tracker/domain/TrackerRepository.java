@@ -323,6 +323,26 @@ public class TrackerRepository {
         return eventIdByNaturalKey(naturalKey);
     }
 
+    public List<Long> findConfirmedPillarOneEventIds(
+            LocalDate startExclusive, LocalDate endInclusive) {
+        return jdbc.sql("""
+                SELECT e.id
+                  FROM event e
+                  JOIN capability_node n ON n.id = e.node_id
+                 WHERE n.pillar = 1
+                   AND e.event_status = 'CONFIRMED'
+                   AND e.occurred_on > :startExclusive
+                   AND e.occurred_on <= :endInclusive
+                 ORDER BY COALESCE(e.impact_score, 0) DESC,
+                          e.occurred_on DESC, e.id
+                 FETCH FIRST 10 ROWS ONLY
+                """)
+                .param("startExclusive", date(startExclusive))
+                .param("endInclusive", date(endInclusive))
+                .query(Long.class)
+                .list();
+    }
+
     /**
      * Bounded candidate events for semantic merge: same node and event type,
      * occurred-on within {@code intervalDays}, excluding the exact natural key,
@@ -361,6 +381,88 @@ public class TrackerRepository {
                         localDate(rs.getDate("occurred_on")),
                         rs.getString("quote")))
                 .list();
+    }
+
+    public long upsertLayerBMetric(LayerBMetric draft) {
+        Optional<Long> existing = jdbc.sql(
+                "SELECT id FROM layer_b_metric WHERE metric_code = :code AND observed_on = :on")
+                .param("code", draft.metricCode()).param("on", date(draft.observedOn()))
+                .query(Long.class).optional();
+        if (existing.isPresent()) {
+            return existing.get();
+        }
+        jdbc.sql("""
+                INSERT INTO layer_b_metric
+                  (metric_code, pillar, observed_on, metric_value, unit, basis,
+                   source_label, source_url, accessed_on, content_sha256, fact_summary)
+                VALUES
+                  (:code, :pillar, :on, :value, :unit, :basis,
+                   :label, :url, :accessed, :hash, :summary)
+                """)
+                .param("code", draft.metricCode()).param("pillar", draft.pillar())
+                .param("on", date(draft.observedOn())).param("value", draft.value())
+                .param("unit", draft.unit()).param("basis", draft.basis())
+                .param("label", draft.sourceLabel()).param("url", draft.sourceUrl())
+                .param("accessed", date(draft.accessedOn())).param("hash", draft.contentSha256())
+                .param("summary", draft.factSummary()).update();
+        return jdbc.sql("SELECT id FROM layer_b_metric WHERE metric_code = :code AND observed_on = :on")
+                .param("code", draft.metricCode()).param("on", date(draft.observedOn()))
+                .query(Long.class).single();
+    }
+
+    public Optional<LayerBMetric> findLayerBMetric(String metricCode, LocalDate observedOn) {
+        return jdbc.sql("""
+                SELECT id, metric_code, pillar, observed_on, metric_value, unit, basis,
+                       source_label, source_url, accessed_on, content_sha256, fact_summary
+                  FROM layer_b_metric
+                 WHERE metric_code = :code AND observed_on = :on
+                """)
+                .param("code", metricCode)
+                .param("on", date(observedOn))
+                .query((rs, rowNum) -> new LayerBMetric(
+                        rs.getLong("id"), rs.getString("metric_code"), rs.getInt("pillar"),
+                        localDate(rs.getDate("observed_on")), rs.getBigDecimal("metric_value"),
+                        rs.getString("unit"), rs.getString("basis"),
+                        rs.getString("source_label"), rs.getString("source_url"),
+                        localDate(rs.getDate("accessed_on")), rs.getString("content_sha256"),
+                        rs.getString("fact_summary")))
+                .optional();
+    }
+
+    public int countLayerBMetrics() {
+        return jdbc.sql("SELECT COUNT(*) FROM layer_b_metric").query(Integer.class).single();
+    }
+
+    public List<LayerBMetric> findLatestLayerBByPillar() {
+        return jdbc.sql("""
+                SELECT m.id, m.metric_code, m.pillar, m.observed_on, m.metric_value, m.unit, m.basis,
+                       m.source_label, m.source_url, m.accessed_on, m.content_sha256, m.fact_summary
+                  FROM layer_b_metric m
+                 WHERE m.observed_on = (SELECT MAX(m2.observed_on) FROM layer_b_metric m2
+                                         WHERE m2.metric_code = m.metric_code)
+                 ORDER BY m.pillar, m.metric_code
+                """)
+                .query((rs, rowNum) -> new LayerBMetric(
+                        rs.getLong("id"), rs.getString("metric_code"), rs.getInt("pillar"),
+                        localDate(rs.getDate("observed_on")), rs.getBigDecimal("metric_value"),
+                        rs.getString("unit"), rs.getString("basis"), rs.getString("source_label"),
+                        rs.getString("source_url"), localDate(rs.getDate("accessed_on")),
+                        rs.getString("content_sha256"), rs.getString("fact_summary")))
+                .list();
+    }
+
+    public Optional<String> findLayerBImportSha(String datasetVersion) {
+        return jdbc.sql("SELECT dataset_sha256 FROM layer_b_metric_import WHERE dataset_version = :v")
+                .param("v", datasetVersion).query(String.class).optional();
+    }
+
+    public void recordLayerBImport(String datasetVersion, String datasetSha256, int recordCount) {
+        jdbc.sql("""
+                INSERT INTO layer_b_metric_import (dataset_version, dataset_sha256, record_count)
+                VALUES (:v, :h, :n)
+                """)
+                .param("v", datasetVersion).param("h", datasetSha256).param("n", recordCount)
+                .update();
     }
 
     public long insertClassification(ClassificationRow draft) {
