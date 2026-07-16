@@ -5,9 +5,10 @@
 > 선행 조건: **G2 승인 완료(2026-07-14)** — 35/35 감사·주간 백필·골든셋·관제·
 > 정식 검수 UI·로컬 임베딩 병합. 증거: [G2 증거 행렬](../../research/tracker-phase2-g2-evidence.md).
 >
-> 상태: **실행 중(2026-07-15).** WP3.1-A 측정 기반, WP3.1-B LL2 Layer B
-> 경로, WP3.3 수송 경제성·B쌍 정합과 WP3.2 K-지수 구현 완료. 각 후속 WP는 `superpowers:writing-plans`로 TDD 상세 계획을
-> 별도 작성한 뒤 `superpowers:executing-plans`로 실행한다.
+> 상태: **Phase 3 및 G3 완료(2026-07-16).** WP3.1 Layer B·궤도 인일,
+> WP3.2 K-지수, WP3.3 수송 경제성, WP3.5 수집 채널 확장, WP3.4 4열 대조
+> 패널을 구현하고 전체 회귀·실제 API·browser·GitOps 통합 검증을 완료했다.
+> LIVE_MODEL과 모든 신규 live polling은 비활성이다.
 
 **목표:** 비-AI 실측 레이어를 붙여 "1측정 + 1앵커 + 1관측" 구조를 완성한다.
 게이트 G3 = 4열 대조 패널(본 모델/수송 경제성/군중/기관) 표시 + 첫 분기 정합
@@ -33,9 +34,11 @@
   - WP3.4: Metaculus (`metaculus.com` API) — 수개월 이동평균으로 평활.
   - WP3.5: ISRO 보도자료, 중국 우주 프로그램 영문 전문 소스, UNOOSA 조약
     상태 DB, GOVINFO(FAA 발사 면허 관보).
-- **시크릿:** LL2·Metaculus는 공개 API지만 상향 rate가 필요하면 키를 OCI
-  Vault + ESO로 주입(평문 커밋 금지). 신규 키 경로는 [인프라 사전작업
-  문서](../../plans/wp/tracker-infra-prework.md)에 등록.
+- **시크릿:** LL2 공개 경로에는 현재 키가 필요하지 않지만 Metaculus API는 모든
+  요청에 토큰과 데이터 이용 승인이 필요하다. 승인 전에는 수집을 비활성으로
+  유지하고 secret 참조도 만들지 않는다. 승인 후에만 토큰을 OCI Vault + ESO로
+  주입하며(평문 커밋 금지), 신규 키 경로를 [인프라 사전작업
+  문서](../../plans/wp/tracker-infra-prework.md)에 등록한다.
 - **리소스 예산(free tier CPU 포화 이력):** 신규 pod/Kubernetes CronJob은
   만들지 않는다. 기존 backend의 조건부 `@Scheduled` + ShedLock을 저빈도로
   시간대 분산한다. LL2는 매월 8일 03:17 UTC, 수송 경제성 정합은 분기 단위로
@@ -66,10 +69,11 @@
    기관 목표 연도를 대조한다.
 3. **WP3.3 공표가:** 운용 Falcon 9·Falcon Heavy 공개 가격만 사용하고 Starship은
    운용 전 추정에서 제외하며, 항상 `PUBLISHED_PRICE`로 표시한다.
-4. **API 키:** 초기에는 공개 rate로 충분하다고 보고 새 secret을 만들지 않는다.
-   상향 rate가 필요해질 때만 OCI Vault + ESO로 추가한다.
+4. **API 키:** LL2는 초기 공개 rate를 사용한다. Metaculus는 인증·데이터 이용
+   승인 전에는 수집하지 않으므로 새 secret을 만들지 않는다. 양쪽 승인이 확인된
+   뒤에만 토큰을 OCI Vault + ESO로 추가한다.
 
-## WP3.1 실행 결과 (2026-07-15)
+## WP3.1 실행 결과 (2026-07-15~16)
 
 - WP3.1-A: V11 Layer B 스키마, 3개 시드, 엄격 검증·멱등 로더, 공개 API와
   UI 정직성 라벨 완료.
@@ -77,8 +81,13 @@
   완료된 성공/실패/부분실패만 집계, 직전 완료 연도 멱등 upsert 완료.
 - 배포 경계: `ll.thespacedevs.com:443` exact CNP, 월간 in-process 잡,
   `TRACKER_LL2_ENABLED=false`. LIVE_MODEL 및 Layer C 승격은 미활성/보류.
-- 검증: backend 403/403, frontend 67/67, production build, GitOps verifier,
-  416-line kustomize render, 로컬 브라우저 Tracker/Layer B 렌더·console error 0.
+- WP3.1-C(2026-07-16): 전 세계 궤도 인구 전이를 UTC로 적분해 2024년
+  4,241.8711 인일/최대 19명, 2025년 3,922.2028 인일/최대 14명을 Pillar 2
+  Layer B에 멱등 적재했다. 준궤도 제외와 자동 점수 효과 없음을 UI에 명시했다.
+- 통합 검증: backend 600/600, frontend 79/79, 잠금파일 정확 TypeScript·Vite
+  build, GitOps verifier, kustomize 렌더, 실제 8080/5176 API·browser,
+  375px 문서 가로 overflow 0, console error 0. 상세:
+  [궤도 인일 검증 증거](../../research/tracker-wp31-human-presence-validation-evidence.md).
 
 ## WP3.3 실행 결과 (2026-07-15)
 
@@ -110,10 +119,37 @@
   production build와 브라우저 console error 0이다. 상세:
   [WP3.2 검증 증거](../../research/tracker-wp32-validation-evidence.md).
 
+## WP3.5 구현 결과 (2026-07-16)
+
+- V14 평가 격리, ISRO·CNSA 직접·CNSA hosted-media 세 고정 인덱스, 최대 40개
+  metadata-only 후보 수집 경로를 구현했다. 후보는 `evaluation_allowed=N`이라
+  LIVE_MODEL과 무관하게 자동 평가·점수·승격되지 않는다.
+- UNOOSA·FAA·GovInfo 인간 검수 사실 9건을 원문 없이 구조화 원장에 넣고 읽기
+  API를 추가했다. readiness·ETA에는 자동 효과가 없다.
+- exact-host egress와 in-process job은 dark launch이며 신규 workload·secret은 없다.
+- Maven 전체 600/600, governance 실제 API 9건, GitOps verifier와 kustomize,
+  프런트 회귀·build를 통과해 WP3.5를 완료했다. 상세:
+  [WP3.5 검증 증거](../../research/tracker-wp35-validation-evidence.md).
+
+## WP3.4 구현 결과와 G3 상태 (2026-07-16)
+
+- V15 검수 참조 10건, 90일 군중예측 평활, 삼중 비활성 Metaculus 수집기,
+  세 목표×네 출처 비교 API와 React 패널을 구현했다.
+- 백엔드 600/600, 프런트 79/79, 잠금파일 정확 Vite 8.1.4/plugin-react 6.0.3/
+  TypeScript 7.0.2 build, GitOps verifier·kustomize를 통과했다. 잘못된 HTTP 200
+  비교 응답도 패널 전용 실패로 격리한다.
+- 실제 Spring 8080 API와 표준 Vite 5176 브라우저에서 4열 패널과 상태 라벨을
+  확인했다. 375px에서 표만 자체 가로 스크롤하고 console error는 0건이었다.
+- [2026 Q2 정합 리포트](../../research/tracker-phase3-g3-coherence-report-2026-q2.md)는
+  `PARTIAL`로 발행했다. 수송 중앙 2030.4는 `$200/kg` 보조 조건이고, 군중은
+  `AUTHORIZATION_REQUIRED`, 기관의 현재 목표는 `UNDATED`, 전체 모델 ETA는
+  `INSUFFICIENT_DATA`로 유지한다.
+- 보고서 판정 `PARTIAL`은 현재 자료 상태이며 게이트 실패가 아니다. 필요한 통합
+  검증을 모두 통과해 WP3.4와 G3를 완료·승인했다. 상세:
+  [WP3.4 검증 증거](../../research/tracker-wp34-validation-evidence.md).
+
 ## 다음 행동
 
-- WP3.2와 WP3.3은 각각 승인 설계와 TDD 상세 계획에 따라 완료했다.
-- 다음 실행 순서는 WP3.5의 후보군·egress 경계를 확정해 수집 채널을 확장하고,
-  마지막으로 WP3.4 4열 대조 패널을 구현해 G3 증거를 만든다.
-- WP3.1 잔여 체류 인일 ETL은 WP3.3에 필요한 B쌍을 방해하지 않으므로 별도
-  후속으로 유지한다. LL2→Layer C 승격은 LIVE_MODEL 활성화 전에는 실행하지 않는다.
+- 보호 픽스처를 제외한 Phase 3 파일만 커밋·push해 기존 PR 40을 갱신한다.
+- LL2→Layer C 승격, official index polling, Metaculus polling, LIVE_MODEL 활성화는
+  Phase 3 완료와 분리된 후속 인간 승인 사항으로 유지한다.

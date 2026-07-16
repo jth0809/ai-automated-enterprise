@@ -39,7 +39,7 @@
 - `HumanPresenceAggregator.aggregate(HumanPresenceDataset) -> List<HumanPresenceYear>`.
 - `HumanPresenceYear(int year, BigDecimal personDays, int maxOrbitPopulation)`.
 
-- [ ] **Step 1: Write failing validator tests**
+- [x] **Step 1: Write failing validator tests**
 
 Add tests for a canonical two-year dataset and separate failures for unknown/missing metadata,
 unsafe source URL, malformed header, duplicate or descending timestamps, population outside
@@ -61,7 +61,7 @@ timestamp_utc,orbit_population
 2025-02-01T00:00:00Z,5
 ```
 
-- [ ] **Step 2: Run the validator test and confirm RED**
+- [x] **Step 2: Run the validator test and confirm RED**
 
 ```powershell
 & $mvn -o "-Dmaven.repo.local=$repo" -Dtest=HumanPresenceCsvValidatorTest test
@@ -69,34 +69,34 @@ timestamp_utc,orbit_population
 
 Expected: missing `HumanPresenceCsvValidator`/domain types compilation failure.
 
-- [ ] **Step 3: Implement the strict parser and domain records**
+- [x] **Step 3: Implement the strict parser and domain records**
 
 Use a dependency-free, comma-free canonical parser. Decode UTF-8 strictly, reject files over
 256 KiB and more than 5000 transitions, parse exact metadata/header, require UTC `Z`, strictly
 increasing timestamps, explicit annual boundaries through the completion cutoff, and return no
 dataset when any error exists. Permit later draft rows but preserve the explicit cutoff.
 
-- [ ] **Step 4: Re-run validator tests and confirm GREEN**
+- [x] **Step 4: Re-run validator tests and confirm GREEN**
 
 Expected: all validator cases pass with no warning output from product code.
 
-- [ ] **Step 5: Write failing aggregation tests**
+- [x] **Step 5: Write failing aggregation tests**
 
 Cover a leap year split, interval clipping at Jan 1, persisted population between transitions,
 maximum population, four-decimal `HALF_UP`, and exclusion after the cutoff. The canonical leap-year
 test above must produce `1100.0000` person-days and maximum `4`.
 
-- [ ] **Step 6: Run aggregation tests and confirm RED**
+- [x] **Step 6: Run aggregation tests and confirm RED**
 
 Expected: missing `HumanPresenceAggregator` failure.
 
-- [ ] **Step 7: Implement pure interval aggregation**
+- [x] **Step 7: Implement pure interval aggregation**
 
 Iterate adjacent transitions, clip each interval to each closed calendar year, sum exact seconds
 as `BigDecimal(population * seconds) / 86400`, round only the final annual result, and calculate
 the maximum from non-empty clipped intervals. Return years in ascending order.
 
-- [ ] **Step 8: Add the reviewed production CSV and production contract test**
+- [x] **Step 8: Add the reviewed production CSV and production contract test**
 
 The CSV contains only the 2024-01-01 through 2026-01-01 UTC boundaries and reviewed
 `orbit_population` changes from the approved source. The test must validate it without fixing an
@@ -107,7 +107,7 @@ exact transition count and assert exactly these completed-year results:
 2025 -> 3922.2028 person-days, max 14
 ```
 
-- [ ] **Step 9: Run all Task 1 tests**
+- [x] **Step 9: Run all Task 1 tests**
 
 ```powershell
 & $mvn -o "-Dmaven.repo.local=$repo" -Dtest=HumanPresenceCsvValidatorTest,HumanPresenceAggregatorTest,HumanPresenceProductionDatasetTest test
@@ -115,7 +115,7 @@ exact transition count and assert exactly these completed-year results:
 
 Expected: all Task 1 tests pass.
 
-- [ ] **Step 10: Commit Task 1**
+- [x] **Step 10: Commit Task 1**
 
 ```powershell
 git add -- apps/backend/springboot-app/src/main/java/com/aienterprise/backend/tracker/layerb apps/backend/springboot-app/src/main/resources/tracker/human-presence-transitions-v1.csv apps/backend/springboot-app/src/test/java/com/aienterprise/backend/tracker/layerb docs/superpowers/specs/2026-07-16-tracker-wp31-human-presence-design.md docs/superpowers/plans/2026-07-16-tracker-wp31-human-presence-plan.md
@@ -140,14 +140,14 @@ git commit -m "feat(tracker): calculate reviewed orbital person-days"
   resource under `human-presence-v1`.
 - Existing `GET /api/tracker/layer-b` adds `accessedOn` and returns the two Pillar 2 metrics.
 
-- [ ] **Step 1: Write failing loader tests**
+- [x] **Step 1: Write failing loader tests**
 
 Test first import (four metrics, one import audit), same-version/same-hash no-op,
 same-version/different-hash failure, invalid CSV all-or-nothing rollback, and pre-existing
 conflicting natural-key failure before any new metric is written. Assert no event, history,
 snapshot, or node level row changes.
 
-- [ ] **Step 2: Run loader tests and confirm RED**
+- [x] **Step 2: Run loader tests and confirm RED**
 
 ```powershell
 & $mvn -o "-Dmaven.repo.local=$repo" -Dtest=HumanPresenceLoaderTest test
@@ -155,7 +155,7 @@ snapshot, or node level row changes.
 
 Expected: missing loader compilation failure.
 
-- [ ] **Step 3: Implement generated metrics and transactional loader**
+- [x] **Step 3: Implement generated metrics and transactional loader**
 
 Map each `HumanPresenceYear` to:
 
@@ -169,20 +169,20 @@ Use Dec 31 as `observed_on`, the CSV metadata as source provenance, and the raw 
 calling existing upserts. Run transactionally under lock `tracker-human-presence-import` and
 record generated metric count in `layer_b_metric_import`.
 
-- [ ] **Step 4: Wire the boot import without enabling a live path**
+- [x] **Step 4: Wire the boot import without enabling a live path**
 
 Add an ApplicationRunner guarded by `tracker.human-presence-on-boot` with default true and the
 same `!test | demo` profile expression as other local resources. Add defaults for resource and
 dataset version. Set `TRACKER_HUMAN_PRESENCE_ON_BOOT=true` explicitly in GitOps; tracker itself
 remains false and there is no egress or secret.
 
-- [ ] **Step 5: Extend the Layer B metric registry and API test**
+- [x] **Step 5: Extend the Layer B metric registry and API test**
 
 Add the two codes to `LayerBDatasetValidator`'s allowlist. Extend `LayerBApiTest` to load the
 human resource manually and assert Pillar 2, values, units, basis, source URL, and `accessedOn`.
 The controller change is additive only.
 
-- [ ] **Step 6: Run Task 2 focused tests**
+- [x] **Step 6: Run Task 2 focused tests**
 
 ```powershell
 & $mvn -o "-Dmaven.repo.local=$repo" -Dtest=HumanPresenceLoaderTest,LayerBDatasetValidatorTest,LayerBApiTest,TrackerConfigTest test
@@ -190,7 +190,7 @@ The controller change is additive only.
 
 Expected: all Task 2 tests pass.
 
-- [ ] **Step 7: Commit Task 2**
+- [x] **Step 7: Commit Task 2**
 
 ```powershell
 git add -- apps/backend/springboot-app/src/main/java/com/aienterprise/backend/tracker/ingest/HumanPresenceLoader.java apps/backend/springboot-app/src/main/java/com/aienterprise/backend/tracker/layerb/LayerBDatasetValidator.java apps/backend/springboot-app/src/main/java/com/aienterprise/backend/tracker/config/TrackerConfig.java apps/backend/springboot-app/src/main/java/com/aienterprise/backend/tracker/api/TrackerController.java apps/backend/springboot-app/src/main/resources/application.yml apps/backend/springboot-app/src/test/java/com/aienterprise/backend/tracker gitops/apps/backend-springboot/deployment.yaml
@@ -209,13 +209,13 @@ git commit -m "feat(tracker): import orbital human presence metrics"
 - `LayerBMetric` adds `accessedOn: string`.
 - `LayerBPanel` localizes approved metric names/units and preserves person-day precision.
 
-- [ ] **Step 1: Write failing component tests**
+- [x] **Step 1: Write failing component tests**
 
 Add a Pillar 2 fixture and assert `연간 궤도 인류 체류`, `4,241.8711 인일`,
 `연중 최대 동시 궤도 인원`, `19 명`, observed/accessed dates, safe source link, and the exact
 copy `전 세계 궤도 기준 · 준궤도 제외 · 자동 점수 효과 없음`.
 
-- [ ] **Step 2: Run focused Vitest and confirm RED**
+- [x] **Step 2: Run focused Vitest and confirm RED**
 
 ```powershell
 npm test -- --run src/tracker/LayerBPanel.test.tsx
@@ -223,13 +223,13 @@ npm test -- --run src/tracker/LayerBPanel.test.tsx
 
 Expected: raw metric code/default three-decimal formatting causes assertion failures.
 
-- [ ] **Step 3: Implement localized labels, units, provenance, and styling**
+- [x] **Step 3: Implement localized labels, units, provenance, and styling**
 
 Keep the exact code visible as secondary metadata, format `PERSON_DAYS` with exactly four
 fraction digits, all other counts without invented precision, render the source as
 `target="_blank" rel="noreferrer"`, and retain the existing basis distinction.
 
-- [ ] **Step 4: Run focused and full frontend verification**
+- [x] **Step 4: Run focused and full frontend verification**
 
 ```powershell
 npm test -- --run src/tracker/LayerBPanel.test.tsx src/tracker/TrackerPage.test.tsx
@@ -239,7 +239,7 @@ npm run build
 
 Expected: focused/full tests and production build pass.
 
-- [ ] **Step 5: Commit Task 3**
+- [x] **Step 5: Commit Task 3**
 
 ```powershell
 git add -- apps/frontend/react-app/src/tracker/api.ts apps/frontend/react-app/src/tracker/LayerBPanel.tsx apps/frontend/react-app/src/tracker/LayerBPanel.test.tsx apps/frontend/react-app/src/App.css
@@ -256,32 +256,32 @@ git commit -m "feat(tracker): show orbital human presence metrics"
 - Modify: `docs/research/tracker-wp35-validation-evidence.md`
 - Modify: `docs/research/tracker-phase3-g3-coherence-report-2026-q2.md`
 
-- [ ] **Step 1: Run focused and full backend verification**
+- [x] **Step 1: Run focused and full backend verification**
 
 Run WP3.1/3.4/3.5 focused tests, then the complete offline Maven suite. Record exact totals,
 failures, errors, skips, and any environment warning.
 
-- [ ] **Step 2: Run exact frontend toolchain verification**
+- [x] **Step 2: Run exact frontend toolchain verification**
 
 Install/use lockfile versions without editing the lockfile, then run full Vitest, TypeScript, and
 Vite production build. If dependency retrieval is unavailable, report it as an open gate rather
 than substituting stale-toolchain evidence.
 
-- [ ] **Step 3: Verify GitOps and static safety invariants**
+- [x] **Step 3: Verify GitOps and static safety invariants**
 
 Run `tracker-egress-policy.ps1`, `git diff --check`, secret scan, live-flag scan, workload scan,
 and protected-file staging audit. Attempt kustomize once with the approved platform command; if
 the known Windows symlink ACL failure repeats, record the exact environment limitation without
 circumvention.
 
-- [ ] **Step 4: Run actual Spring backend and browser smoke**
+- [x] **Step 4: Run actual Spring backend and browser smoke**
 
 Start the `test,demo,refbackfill` backend with human-presence import enabled and Vite. Verify
 `/api/tracker/layer-b`, the Tracker tab, both Pillar 2 rows, the 4-column forecast panel, governance
 API, responsive Layer B/forecast sections, and browser console error count zero. Distinguish this
 from any mock-backed screen evidence.
 
-- [ ] **Step 5: Update evidence and gate status truthfully**
+- [x] **Step 5: Update evidence and gate status truthfully**
 
 Mark WP3.1 complete except the explicitly deferred LIVE_MODEL Layer C promotion. Mark WP3.4,
 WP3.5, and G3 complete only if their required backend/API/browser checks pass; otherwise retain
