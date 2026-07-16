@@ -143,6 +143,7 @@ public class TrackerController {
             entry.put("basis", metric.basis());
             entry.put("sourceLabel", metric.sourceLabel());
             entry.put("sourceUrl", metric.sourceUrl());
+            entry.put("accessedOn", metric.accessedOn().toString());
             entry.put("factSummary", metric.factSummary());
             body.add(entry);
         }
