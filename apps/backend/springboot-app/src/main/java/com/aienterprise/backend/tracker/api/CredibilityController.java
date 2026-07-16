@@ -179,7 +179,8 @@ public class CredibilityController {
         return ResponseEntity.ok(projections.findCurrent()
                 .map(run -> new ProjectionResponse(
                         RunStatus.COMPLETED, run.id(),
-                        run.output().inputSha256(), run.output().seed(),
+                        run.output().inputSha256(),
+                        Long.toString(run.output().seed()),
                         run.output().requestedSamples(),
                         run.output().validSamples(),
                         run.output().invalidSamples(), run.paramsVersion(),
@@ -195,6 +196,7 @@ public class CredibilityController {
                 .map(run -> new BacktestResponse(
                         RunStatus.COMPLETED, run.id(),
                         run.report().inputSha256(), run.reportSha256(),
+                        Long.toString(run.report().seed()),
                         run.startedAt(), run.completedAt(), run.report()))
                 .orElseGet(BacktestResponse::notRun));
     }
@@ -339,7 +341,7 @@ public class CredibilityController {
             RunStatus status,
             Long runId,
             String inputSha256,
-            Long seed,
+            String seed,
             Integer requestedSamples,
             Integer validSamples,
             Integer invalidSamples,
@@ -363,13 +365,15 @@ public class CredibilityController {
             Long runId,
             String inputSha256,
             String reportSha256,
+            String seed,
             Instant startedAt,
             Instant completedAt,
             BacktestReport report) {
 
         static BacktestResponse notRun() {
             return new BacktestResponse(
-                    RunStatus.NOT_RUN, null, null, null, null, null, null);
+                    RunStatus.NOT_RUN, null, null, null, null, null, null,
+                    null);
         }
     }
 

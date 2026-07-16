@@ -50,6 +50,14 @@ class CredibilityControllerTest {
     }
 
     @Test
+    void publishesDeterministicSeedsAsExactDecimalStrings() {
+        assertEquals(String.class, recordType(
+                CredibilityController.ProjectionResponse.class, "seed"));
+        assertEquals(String.class, recordType(
+                CredibilityController.BacktestResponse.class, "seed"));
+    }
+
+    @Test
     void methodologyPublishesExactHonestyTextAndDarkRuntimeFlags() {
         CredibilityController.MethodologyResponse response = controller
                 .methodology().getBody();
@@ -104,6 +112,12 @@ class CredibilityControllerTest {
         Method method = CredibilityController.class.getMethod(methodName);
         assertEquals(List.of(expected),
                 List.of(method.getAnnotation(GetMapping.class).value()));
+    }
+
+    private static Class<?> recordType(Class<?> type, String name) {
+        return java.util.Arrays.stream(type.getRecordComponents())
+                .filter(component -> component.getName().equals(name))
+                .findFirst().orElseThrow().getType();
     }
 
     private int count(String table) {
