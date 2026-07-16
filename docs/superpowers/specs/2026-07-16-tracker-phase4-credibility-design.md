@@ -145,6 +145,9 @@ W_p = clamp(m * median_interval_years, 4, 15)
 
 유효한 상태 변화 간격이 두 개 미만이면 기존 `window_fixed_years=10`을 사용한다.
 필라별 임의 창을 백테스트로 탐색하지 않고 공통 계수 `m`만 보정한다.
+`median_interval_years`, 사건 수 `n`, 활성 regime은 모두 계산의 `asOfDate` 이하
+사건만으로 산출한다. hindcast에서는 cutoff 이후 사건이 회귀 창이나 희소성 판정에
+간접적으로도 들어갈 수 없다.
 
 ### 5.3 사건 수축
 
@@ -190,7 +193,8 @@ Holt 계열 계산은 ETA에 사용하지 않는다. 별도 `MomentumService`가
 - 회귀 절편·기울기: 적합 공분산 기반 정규 표본
 - 노드 가중치: 양수 표본 후 필라별 합 1.0으로 재정규화
 - TRL/EGL 사상: bounded perturbation 후 단조성 재투영
-- 간선별 `delta_e`: 0–0.5 범위 bounded 분포
+- `delta_e`: registry의 간선별 상대값은 고정하고 모든 간선에 공유되는 하나의
+  배율 `s_delta`를 표본화한 뒤 0–0.5 범위로 clamp
 - `k`: 양수 log-normal 분포
 - 휴면 시작·감쇠·floor: 순서와 범위를 보존하는 bounded 분포
 
@@ -228,6 +232,8 @@ Holt 계열 계산은 ETA에 사용하지 않는다. 별도 `MomentumService`가
 
 기존 검수 완료 역사 claim을 날짜순으로 재생한다. 각 cutoff에서는 그 날짜 이후의
 사건·결과·현재 상태를 전혀 읽지 않고 당시 알 수 있었던 상태만 구성한다.
+적응형 회귀 창, 사건 수축, 승인된 regime break를 포함한 모든 파생 feature도
+cutoff 시점의 가시 데이터만 사용한다.
 
 ```text
 historical claims
@@ -248,8 +254,12 @@ historical claims
 
 ### 7.3 보정 대상과 목적함수
 
-보정 대상은 공통 `m`, `k`, 간선 `delta_e`의 제한된 후보 집합이다. 필라별
-`W_p`, 노드 가중치, 루브릭 수준, 역사 정답을 자유 탐색하지 않는다.
+보정 대상은 공통 `m`, `k`와 공유 간선 배율 `s_delta`의 제한된 후보 집합이다.
+`s_delta`는 정확히 `[0.75, 1.00, 1.25]` 중 하나이며
+`delta_e' = clamp(delta_e * s_delta, 0, 0.5)`로 계산한다. 따라서 29개 간선을
+독립 파라미터로 맞추지 않는다. 간선별 기준값을 바꾸려면 인간 검수를 거친 새
+graph registry 및 모델 버전이 필요하다. 필라별 `W_p`, 노드 가중치, 루브릭 수준,
+역사 정답은 자유 탐색하지 않는다.
 
 목적함수는 보정 구간의 다음 항목으로 사전 고정한다.
 
@@ -298,14 +308,19 @@ lambda_node = (N_node + kappa * lambda_p) / (E_node + kappa)
 P_raw(T) = 1 - exp(-lambda_node * T)
 ```
 
-- `N_node`: 보정 구간의 검증된 노드 전진 수
-- `E_node`: 노드가 관측 가능했던 exposure years
+- `N_node`: 노출 구간 안에서 검증된 노드 전진 수
+- `E_node`: 1957-01-07부터 계산 cutoff까지 주 단위 상태를 재생해 합산한 exposure
+  years. 노드가 `ACTIVE`이고 L8 미만이며 다음 등록 수준이 유효한 기간만 포함하고,
+  휴면 기간과 L8–L9 기간은 제외
 - `lambda_p`: 같은 필라의 pooled rate
 - `kappa`: hazard prior strength, 예측 파라미터 버전에 저장
 - `T`: 0.5, 1.0, 1.5, 2.0년
 
 이는 Gamma–Poisson posterior mean과 동치이며 희소 노드가 단일 사건으로 100%에
 가까워지는 것을 막는다. 확률은 최종적으로 `[0.02, 0.98]`에 제한한다.
+현행 node set을 1957-01-07부터 동일한 목표 체계로 재생하는 것은 명시된 모델
+가정이다. 노드가 후대에 의미를 얻었다고 판단되면 과거를 자동 단축하지 않고,
+인간 승인된 registry 유효 시작일을 새 버전에 기록해 그 시점부터 노출한다.
 
 ### 8.3 발행 정책
 
@@ -321,7 +336,8 @@ P_raw(T) = 1 - exp(-lambda_node * T)
 
 - due date 이전에 target 이상으로 확인된 최초 상태 전이가 있으면 `HIT`
 - due date까지 없으면 `MISS`
-- 노드 삭제·루브릭 의미 변경으로 문장 자체가 무효가 된 경우만 `VOID`
+- node-set 승계 또는 루브릭 의미 변경으로 발행 당시 술어 자체를 더는 판정할 수
+  없는 경우만 `VOID`
 - 불리한 결과, 프로그램 취소, 데이터 부족은 `VOID` 사유가 아님
 - `brier = (issued_probability - outcome_binary)^2`
 - cohort, horizon, pillar, 전체의 평균과 표본 수를 함께 공개
@@ -337,6 +353,10 @@ P_raw(T) = 1 - exp(-lambda_node * T)
 - calibration-in-the-large, Brier 추세, 예측 빈도 분포가 관리 한계를 넘으면
   drift alert를 생성
 - drift는 예측 발행을 동결할 수 있지만 구조 파라미터를 자동 변경하지 않음
+
+30건·4개 분기는 과적합을 줄이기 위해 사전 선언한 최소 운영 gate이지 통계적
+보정 품질을 보장하는 기준이 아니다. gate 통과 뒤에도 표본 수와 신뢰도 진단을
+공개하며 근거가 부족하면 `INSUFFICIENT_CALIBRATION_DATA`를 유지한다.
 
 ## 9. WP4.6 — 방법론 투명성 페이지
 
@@ -399,7 +419,11 @@ TRACKER_PHASE4_PREDICTION_ISSUANCE_ENABLED=false
 TRACKER_PHASE4_PREDICTION_RESOLUTION_ENABLED=false
 ```
 
-읽기 API와 classpath 검수 데이터 로딩은 네트워크 egress를 요구하지 않는다.
+`TRACKER_ENABLED=false`이면 GitOps 운영 환경의 Tracker API와 job 전체가
+비활성이다. 하위 Phase 4 플래그는 이 상위 gate를 우회할 수 없다. 로컬·테스트·
+demo에서는 `tracker.enabled=true`로 읽기 API를 검증하되 live/polling 및 Phase 4
+자동 job 플래그는 계속 false로 둔다. 읽기 API와 classpath 검수 데이터 로딩
+자체는 네트워크 egress를 요구하지 않는다.
 
 ## 11. 데이터 마이그레이션 전략
 
