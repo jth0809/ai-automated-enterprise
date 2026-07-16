@@ -27,7 +27,21 @@ public class CapabilityReadinessService {
             List<NodeRow> nodes,
             Params params,
             LocalDate asOf) {
+        CapabilityGraph graph = loadActiveGraph(nodes);
+        return calculate(nodes, graph, params, asOf);
+    }
+
+    public CapabilityGraph loadActiveGraph(List<NodeRow> nodes) {
         CapabilityGraph graph = repository.loadActive();
+        validator.validate(graph, nodes);
+        return graph;
+    }
+
+    public ReadinessResult calculate(
+            List<NodeRow> nodes,
+            CapabilityGraph graph,
+            Params params,
+            LocalDate asOf) {
         validator.validate(graph, nodes);
         return engine.calculate(nodes, graph, params, asOf);
     }

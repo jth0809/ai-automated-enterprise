@@ -86,15 +86,6 @@ public class BackfillLoader {
             TrackerRepository repository,
             Resource candidatesResource,
             Resource mappingsResource,
-            String datasetVersion) {
-        this(repository, candidatesResource, mappingsResource, datasetVersion,
-                new WeeklyBackfillProjector(repository));
-    }
-
-    BackfillLoader(
-            TrackerRepository repository,
-            Resource candidatesResource,
-            Resource mappingsResource,
             String datasetVersion,
             WeeklyBackfillProjector weeklyProjector) {
         this.repository = repository;

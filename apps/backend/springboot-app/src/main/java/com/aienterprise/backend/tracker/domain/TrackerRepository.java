@@ -1218,8 +1218,8 @@ public class TrackerRepository {
         jdbcTemplate.batchUpdate("""
                 INSERT INTO pillar_snapshot
                   (pillar, snapshot_date, readiness, raw_readiness,
-                   logit_clipped, params_version)
-                VALUES (?, ?, ?, ?, ?, ?)
+                   logit_clipped, params_version, graph_version)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
                 """, snapshots, 1000, (statement, snapshot) -> {
                     statement.setInt(1, snapshot.pillar());
                     statement.setDate(2, date(snapshot.snapshotDate()));
@@ -1229,6 +1229,7 @@ public class TrackerRepository {
                             : snapshot.rawReadiness());
                     statement.setDouble(5, snapshot.logitClipped());
                     statement.setString(6, snapshot.paramsVersion());
+                    statement.setString(7, snapshot.graphVersion());
                 });
     }
 
