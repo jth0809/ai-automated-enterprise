@@ -13,13 +13,24 @@ on:
     paths:
       - "infrastructure/**"
       - "gitops/**"
+      - "scripts/**.ps1"
+      - "docs/runbooks/discord-alerting.md"
+      - "docs/superpowers/specs/2026-07-10-discord-alerting-design.md"
+      - "REQUIRED_SECRETS.md"
+      - "BACKLOG_BY_DOMAIN.md"
       - "**/Dockerfile"
       - ".github/workflows/security-scan-iac.yaml"
   pull_request:
     paths:
       - "infrastructure/**"
       - "gitops/**"
+      - "scripts/**.ps1"
+      - "docs/runbooks/discord-alerting.md"
+      - "docs/superpowers/specs/2026-07-10-discord-alerting-design.md"
+      - "REQUIRED_SECRETS.md"
+      - "BACKLOG_BY_DOMAIN.md"
       - "**/Dockerfile"
+      - ".github/workflows/security-scan-iac.yaml"
   workflow_dispatch:
 
 permissions:
@@ -37,6 +48,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+
+      - name: Validate GitOps alerting contracts
+        shell: pwsh
+        run: pwsh -NoProfile -File scripts/test-gitops-alerting.ps1
 
       - name: Scan IaC with Trivy (gate on HIGH/CRITICAL)
         uses: aquasecurity/trivy-action@v0.36.0

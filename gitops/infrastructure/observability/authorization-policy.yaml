@@ -1,0 +1,66 @@
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: allow-prometheus-to-alertmanager
+  namespace: monitoring
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: alertmanager
+      alertmanager: kube-prometheus-stack-alertmanager
+  action: ALLOW
+  rules:
+    - from:
+        - source:
+            serviceAccounts:
+              - monitoring/kube-prometheus-stack-prometheus
+      to:
+        - operation:
+            ports:
+              - "9093"
+              - "8080"
+---
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: allow-observability-clients-to-prometheus
+  namespace: monitoring
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: prometheus
+      prometheus: kube-prometheus-stack-prometheus
+  action: ALLOW
+  rules:
+    - from:
+        - source:
+            serviceAccounts:
+              - flagger-system/flagger
+              - monitoring/kube-prometheus-stack-grafana
+              - monitoring/kube-prometheus-stack-prometheus
+      to:
+        - operation:
+            ports:
+              - "9090"
+---
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: allow-prometheus-to-cert-manager
+  namespace: cert-manager
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: cert-manager
+      app.kubernetes.io/instance: cert-manager
+      app.kubernetes.io/component: controller
+  action: ALLOW
+  rules:
+    - from:
+        - source:
+            serviceAccounts:
+              - monitoring/kube-prometheus-stack-prometheus
+      to:
+        - operation:
+            ports:
+              - "9402"

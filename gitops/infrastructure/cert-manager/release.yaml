@@ -39,6 +39,17 @@ spec:
       enableGatewayAPI: true
     prometheus:
       enabled: true
+      servicemonitor:
+        enabled: true
+        honorLabels: true
+        labels:
+          release: kube-prometheus-stack
+        endpointAdditionalProperties:
+          relabelings:
+            - sourceLabels:
+                - __meta_kubernetes_service_label_app_kubernetes_io_component
+              regex: controller
+              action: keep
     # Sized for Always Free ARM A1 (2 OCPU / 12GB total).
     resources:
       requests:
