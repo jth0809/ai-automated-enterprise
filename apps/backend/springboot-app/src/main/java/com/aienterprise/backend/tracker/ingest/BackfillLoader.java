@@ -1,18 +1,12 @@
 package com.aienterprise.backend.tracker.ingest;
 
-import java.io.IOException;
 import java.net.URI;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HexFormat;
 import java.util.List;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.regex.Pattern;
 
 import org.slf4j.Logger;
@@ -26,6 +20,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.aienterprise.backend.tracker.backfill.BackfillClaim;
+import com.aienterprise.backend.tracker.backfill.BackfillDatasetFingerprint;
 import com.aienterprise.backend.tracker.backfill.BackfillDatasetValidator;
 import com.aienterprise.backend.tracker.backfill.HistoricalCandidate;
 import com.aienterprise.backend.tracker.backfill.HistoricalEvidenceReference;
@@ -42,10 +37,6 @@ import com.aienterprise.backend.tracker.event.SourceEvidence;
 import com.aienterprise.backend.tracker.event.VerificationDeriver;
 import com.aienterprise.backend.tracker.event.VerificationLevel;
 import com.aienterprise.backend.tracker.math.Params;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 
@@ -54,7 +45,6 @@ import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 public class BackfillLoader {
 
     private static final Logger log = LoggerFactory.getLogger(BackfillLoader.class);
-    private static final ObjectMapper JSON = new ObjectMapper();
     private static final String NODE_SET_VERSION = "nodes-v1.0";
     private static final String RUBRIC_VERSION = "r2.0";
     private static final Pattern SHA256 = Pattern.compile("[0-9a-f]{64}");
@@ -98,8 +88,9 @@ public class BackfillLoader {
     @Transactional
     @SchedulerLock(name = "tracker-backfill-import", lockAtMostFor = "PT30M")
     public void loadDatasetIfNeeded() {
-        DatasetContent content = readContent();
-        String datasetSha256 = datasetHash(content);
+        String datasetSha256 = BackfillDatasetFingerprint.sha256(
+                candidatesResource, mappingsResource, datasetVersion,
+                NODE_SET_VERSION, RUBRIC_VERSION);
         var existing = repository.findBackfillImport(datasetVersion);
         if (existing.isPresent()) {
             if (!datasetSha256.equals(existing.get().datasetSha256())) {
@@ -289,62 +280,6 @@ public class BackfillLoader {
         }
     }
 
-    private DatasetContent readContent() {
-        try {
-            return new DatasetContent(
-                    candidatesResource.getContentAsByteArray(),
-                    mappingsResource.getContentAsByteArray());
-        } catch (IOException e) {
-            throw new IllegalStateException(
-                    "Cannot load tracker backfill dataset " + datasetVersion, e);
-        }
-    }
-
-    private String datasetHash(DatasetContent content) {
-        try {
-            String candidates = normalizeLf(
-                    new String(content.candidates(), StandardCharsets.UTF_8));
-            JsonNode mappings = JSON.readTree(content.mappings());
-            byte[] canonicalMappings = JSON.writeValueAsBytes(canonicalize(mappings));
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            digest.update(("datasetVersion=" + datasetVersion + "\n").getBytes(StandardCharsets.UTF_8));
-            digest.update(("nodeSetVersion=" + NODE_SET_VERSION + "\n")
-                    .getBytes(StandardCharsets.UTF_8));
-            digest.update(("rubricVersion=" + RUBRIC_VERSION + "\n")
-                    .getBytes(StandardCharsets.UTF_8));
-            digest.update("candidates\n".getBytes(StandardCharsets.UTF_8));
-            digest.update(candidates.getBytes(StandardCharsets.UTF_8));
-            digest.update("\nmappings\n".getBytes(StandardCharsets.UTF_8));
-            digest.update(canonicalMappings);
-            return HexFormat.of().formatHex(digest.digest());
-        } catch (IOException e) {
-            throw new IllegalStateException(
-                    "Cannot canonicalize tracker backfill mappings " + datasetVersion, e);
-        } catch (NoSuchAlgorithmException impossible) {
-            throw new IllegalStateException("SHA-256 is unavailable", impossible);
-        }
-    }
-
-    private static JsonNode canonicalize(JsonNode node) {
-        if (node.isObject()) {
-            ObjectNode result = JSON.createObjectNode();
-            TreeSet<String> names = new TreeSet<>();
-            node.fieldNames().forEachRemaining(names::add);
-            for (String name : names) {
-                result.set(name, canonicalize(node.get(name)));
-            }
-            return result;
-        }
-        if (node.isArray()) {
-            ArrayNode result = JSON.createArrayNode();
-            for (JsonNode item : node) {
-                result.add(canonicalize(item));
-            }
-            return result;
-        }
-        return node.deepCopy();
-    }
-
     private static void validatePersistedReference(HistoricalEvidenceReference reference) {
         URI url = reference.url();
         if (!"https".equalsIgnoreCase(url.getScheme()) || url.getHost() == null) {
@@ -354,10 +289,6 @@ public class BackfillLoader {
             throw new IllegalArgumentException(
                     "Historical evidence SHA-256 must be lowercase hexadecimal");
         }
-    }
-
-    private static String normalizeLf(String value) {
-        return value.replace("\r\n", "\n").replace('\r', '\n');
     }
 
     private static VerificationLevel max(
@@ -371,9 +302,6 @@ public class BackfillLoader {
                     "tracker.backfill-dataset-version must be 1-40 characters");
         }
         return value.trim();
-    }
-
-    private record DatasetContent(byte[] candidates, byte[] mappings) {
     }
 
     private record EvidenceBinding(

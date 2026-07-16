@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.LocalDate;
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -61,6 +62,27 @@ class TrendFeatureRepositoryTest {
                 6, LocalDate.of(2025, 1, 1)).isEmpty());
     }
 
+    @Test
+    void approvedBreakHistoryIsOrderedAndStrictlyCutoffBounded() {
+        long earlier = insertChange("break-history-earlier", "FLIGHT_TEST",
+                LocalDate.of(2018, 1, 1), 1, 2);
+        long later = insertChange("break-history-later", "FLIGHT_TEST",
+                LocalDate.of(2022, 1, 1), 2, 3);
+        long future = insertChange("break-history-future", "FLIGHT_TEST",
+                LocalDate.of(2030, 1, 1), 3, 4);
+        insertBreak(earlier, LocalDate.of(2018, 1, 1), "APPROVED");
+        insertBreak(later, LocalDate.of(2022, 1, 1), "APPROVED");
+        insertBreak(future, LocalDate.of(2030, 1, 1), "APPROVED");
+        insertBreak(later, LocalDate.of(2021, 1, 1), "RETIRED");
+
+        List<RegimeBreak> values = repository.findApprovedBreaks(
+                LocalDate.of(2025, 1, 1), "params-v2");
+
+        assertEquals(List.of(
+                LocalDate.of(2018, 1, 1), LocalDate.of(2022, 1, 1)),
+                values.stream().map(RegimeBreak::breakDate).toList());
+    }
+
     private long insertChange(
             String key, String type, LocalDate occurredOn, int previous, int next) {
         long eventId = insertEvent(key, type, occurredOn, "CONFIRMED");
@@ -87,6 +109,22 @@ class TrendFeatureRepositoryTest {
                 .update();
         return jdbc.sql("SELECT id FROM event WHERE natural_key = :key")
                 .param("key", key).query(Long.class).single();
+    }
+
+    private void insertBreak(
+            long eventId, LocalDate breakDate, String reviewStatus) {
+        jdbc.sql("""
+                INSERT INTO model_regime_break
+                  (pillar, break_date, cause_event_id, review_status,
+                   reviewer, reviewer_note, params_version)
+                VALUES
+                  (6, :breakDate, :eventId, :reviewStatus,
+                   'test-reviewer', 'Synthetic history break.', 'params-v2')
+                """)
+                .param("breakDate", java.sql.Date.valueOf(breakDate))
+                .param("eventId", eventId)
+                .param("reviewStatus", reviewStatus)
+                .update();
     }
 
     private void insertHistory(

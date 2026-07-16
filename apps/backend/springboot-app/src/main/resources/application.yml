@@ -72,6 +72,9 @@ tracker:
   # Phase 4 Monte Carlo projection is local-only but remains independently dark.
   # When enabled it stores summary quantiles only; no samples or network calls.
   phase4-projection-enabled: ${TRACKER_PHASE4_PROJECTION_ENABLED:false}
+  # WP4.4 historical backtesting is local and deterministic, but intentionally
+  # expensive. It stays dark until explicitly run and performs no network call.
+  phase4-backtest-enabled: ${TRACKER_PHASE4_BACKTEST_ENABLED:false}
   # Launch Library 2 remains independently dark until GitOps egress review.
   # It imports only the previous completed year's Layer B cadence metrics;
   # it never promotes launches into Layer C capability events.

@@ -13,6 +13,11 @@ import com.aienterprise.backend.tracker.math.Params;
 
 final class BacktestTestFixtures {
 
+    private static final class ReportHolder {
+        private static final BacktestReport REPORT = new BacktestHarness().run(
+                input(LocalDate.of(2011, 1, 3)));
+    }
+
     private BacktestTestFixtures() {
     }
 
@@ -26,6 +31,10 @@ final class BacktestTestFixtures {
                         graph.version(), graph.declaredSha256(), 1_000, schedule);
         return new BacktestHarness.Input(
                 descriptor, nodes(), List.of(), graph, model(), Map.of(), .85);
+    }
+
+    static BacktestReport report() {
+        return ReportHolder.REPORT;
     }
 
     static List<NodeRow> nodes() {

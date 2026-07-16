@@ -83,6 +83,35 @@ public class TrendFeatureRepository {
         return result;
     }
 
+    public List<RegimeBreak> findApprovedBreaks(
+            LocalDate asOf, String paramsVersion) {
+        if (asOf == null || paramsVersion == null || paramsVersion.isBlank()) {
+            throw new IllegalArgumentException(
+                    "asOf and paramsVersion are required");
+        }
+        List<RegimeBreak> results = jdbc.sql("""
+                SELECT id, pillar, break_date, cause_event_id, params_version
+                  FROM model_regime_break
+                 WHERE break_date <= :asOf
+                   AND review_status = 'APPROVED'
+                   AND params_version = :paramsVersion
+                 ORDER BY pillar, break_date, id
+                """)
+                .param("asOf", Date.valueOf(asOf))
+                .param("paramsVersion", paramsVersion)
+                .query((rs, rowNum) -> new RegimeBreak(
+                        rs.getLong("id"),
+                        rs.getInt("pillar"),
+                        rs.getDate("break_date").toLocalDate(),
+                        rs.getLong("cause_event_id"),
+                        rs.getString("params_version")))
+                .list();
+        if (results.stream().anyMatch(value -> value.breakDate().isAfter(asOf))) {
+            throw new IllegalStateException("regime-break query leaked beyond cutoff");
+        }
+        return List.copyOf(results);
+    }
+
     private static void requirePillarAndDate(int pillar, LocalDate asOf) {
         if (pillar < 1 || pillar > 6 || asOf == null) {
             throw new IllegalArgumentException("valid pillar and asOf are required");
