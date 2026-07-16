@@ -169,7 +169,7 @@ public final class PredictionCandidateSelector {
                     || issuedOn == null || dueOn == null || !dueOn.isAfter(issuedOn)
                     || !List.of(6, 12, 18, 24).contains(horizonMonths)
                     || !unit(rawProbability)
-                    || !Double.isFinite(calibratedProbability)
+                    || !unit(calibratedProbability)
                     || !unit(issuedProbability)
                     || !Double.isFinite(informationScore)
                     || informationScore < 0 || informationScore > 0.25

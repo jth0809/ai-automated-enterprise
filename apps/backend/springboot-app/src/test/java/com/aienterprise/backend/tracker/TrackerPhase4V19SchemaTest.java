@@ -61,6 +61,13 @@ class TrackerPhase4V19SchemaTest {
 
         assertEquals(1, count("SELECT COUNT(*) FROM prediction_cohort"));
         assertEquals(1, count("SELECT COUNT(*) FROM prediction_resolution_evidence"));
+        assertEquals(1, count("""
+                SELECT COUNT(*) FROM prediction
+                 WHERE id = %d AND current_level >= 0
+                   AND advance_count = 2 AND exposure_years = 20.0
+                   AND pillar_rate = 0.1 AND node_rate = 0.2
+                   AND information_score = 0.24
+                """.formatted(predictionId)));
     }
 
     @Test
@@ -74,14 +81,19 @@ class TrackerPhase4V19SchemaTest {
         assertThrows(DataIntegrityViolationException.class, () -> jdbc.sql("""
                 INSERT INTO prediction
                   (statement, node_id, probability, issued_on, due_on,
-                   params_version, cohort_id, node_code, pillar, target_level,
+                   params_version, cohort_id, node_code, node_name, pillar,
+                   node_weight, integration_node, cohort_rank, target_level,
                    horizon_months, raw_probability, calibrated_probability,
                    calibration_version, information_status, input_sha256,
-                   statement_sha256, node_set_version, rubric_version)
+                   statement_sha256, node_set_version, rubric_version,
+                   current_level, advance_count, exposure_years,
+                   pillar_rate, node_rate, information_score)
                 SELECT 'invalid horizon', id, 0.40, DATE '2026-07-16',
-                       DATE '2027-04-16', 'hazard-v1', :cohortId, code, pillar,
-                       6, 9, 0.40, 0.40, :calibrationVersion, 'INFORMATIVE',
+                       DATE '2027-04-16', 'hazard-v1', :cohortId, code,
+                       name_ko, pillar, weight, is_integration_node,
+                       2, 6, 9, 0.40, 0.40, :calibrationVersion, 'INFORMATIVE',
                        :inputHash, :statementHash, node_set_version, 'r2.0'
+                       , current_level, 2, 20.0, 0.1, 0.2, 0.24
                   FROM capability_node WHERE code = 'P1-ORBIT-REFUEL'
                 """)
                 .param("cohortId", cohortId)
@@ -183,15 +195,20 @@ class TrackerPhase4V19SchemaTest {
         jdbc.sql("""
                 INSERT INTO prediction
                   (statement, node_id, probability, issued_on, due_on,
-                   params_version, cohort_id, node_code, pillar, target_level,
+                   params_version, cohort_id, node_code, node_name, pillar,
+                   node_weight, integration_node, cohort_rank, target_level,
                    horizon_months, raw_probability, calibrated_probability,
                    calibration_version, information_status, input_sha256,
-                   statement_sha256, node_set_version, rubric_version)
+                   statement_sha256, node_set_version, rubric_version,
+                   current_level, advance_count, exposure_years,
+                   pillar_rate, node_rate, information_score)
                 SELECT name_ko || ' advances', id, 0.40, DATE '2026-07-16',
-                       DATE '2027-01-16', 'hazard-v1', :cohortId, code, pillar,
-                       current_level + 1, 6, 0.40, 0.40,
+                       DATE '2027-01-16', 'hazard-v1', :cohortId, code,
+                       name_ko, pillar, weight, is_integration_node,
+                       1, current_level + 1, 6, 0.40, 0.40,
                        :calibrationVersion, 'INFORMATIVE', :inputHash,
                        :statementHash, node_set_version, 'r2.0'
+                       , current_level, 2, 20.0, 0.1, 0.2, 0.24
                   FROM capability_node WHERE code = :nodeCode
                 """)
                 .param("cohortId", cohortId)

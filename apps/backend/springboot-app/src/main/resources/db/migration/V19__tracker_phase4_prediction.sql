@@ -116,7 +116,11 @@ ALTER TABLE prediction MODIFY brier NUMBER(10,8);
 ALTER TABLE prediction ADD (
   cohort_id                 NUMBER REFERENCES prediction_cohort(id),
   node_code                 VARCHAR2(80),
+  node_name                 VARCHAR2(200),
   pillar                    NUMBER(1),
+  node_weight               NUMBER(8,6),
+  integration_node          CHAR(1),
+  cohort_rank               NUMBER(2),
   target_level              NUMBER(1),
   horizon_months            NUMBER(2),
   raw_probability           NUMBER(10,8),
@@ -127,6 +131,12 @@ ALTER TABLE prediction ADD (
   statement_sha256          CHAR(64),
   node_set_version          VARCHAR2(40),
   rubric_version            VARCHAR2(40),
+  current_level             NUMBER(1),
+  advance_count             NUMBER(4),
+  exposure_years            NUMBER(16,10),
+  pillar_rate               NUMBER(16,12),
+  node_rate                 NUMBER(16,12),
+  information_score         NUMBER(12,10),
   resolution_status         VARCHAR2(24) DEFAULT 'PENDING' NOT NULL,
   resolved_at               TIMESTAMP
 );
@@ -140,6 +150,8 @@ ALTER TABLE prediction ADD CONSTRAINT fk_prediction_rubric
   FOREIGN KEY (rubric_version) REFERENCES rubric_version(version_label);
 ALTER TABLE prediction ADD CONSTRAINT uq_prediction_cohort_target
   UNIQUE (cohort_id, node_id, target_level);
+ALTER TABLE prediction ADD CONSTRAINT uq_prediction_cohort_rank
+  UNIQUE (cohort_id, cohort_rank);
 ALTER TABLE prediction ADD CONSTRAINT ck_prediction_due
   CHECK (due_on > issued_on);
 ALTER TABLE prediction ADD CONSTRAINT ck_prediction_brier_range
@@ -150,7 +162,11 @@ ALTER TABLE prediction ADD CONSTRAINT ck_prediction_phase4_complete
   CHECK (cohort_id IS NULL OR (
     node_id IS NOT NULL
     AND node_code IS NOT NULL
+    AND node_name IS NOT NULL
     AND pillar BETWEEN 1 AND 6
+    AND node_weight > 0
+    AND integration_node IN ('Y','N')
+    AND cohort_rank BETWEEN 1 AND 12
     AND target_level BETWEEN 1 AND 8
     AND horizon_months IN (6,12,18,24)
     AND raw_probability BETWEEN 0 AND 1
@@ -161,7 +177,14 @@ ALTER TABLE prediction ADD CONSTRAINT ck_prediction_phase4_complete
     AND LENGTH(input_sha256) = 64
     AND LENGTH(statement_sha256) = 64
     AND node_set_version IS NOT NULL
-    AND rubric_version IS NOT NULL));
+    AND rubric_version IS NOT NULL
+    AND current_level BETWEEN 0 AND 7
+    AND target_level = current_level + 1
+    AND advance_count >= 0
+    AND exposure_years >= 0
+    AND pillar_rate >= 0
+    AND node_rate >= 0
+    AND information_score BETWEEN 0 AND 0.25));
 ALTER TABLE prediction ADD CONSTRAINT ck_prediction_phase4_outcome
   CHECK (cohort_id IS NULL OR (
     (outcome = 'PENDING' AND brier IS NULL AND resolved_at IS NULL

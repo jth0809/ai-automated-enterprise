@@ -98,11 +98,11 @@ published calibration is identity with an explicit insufficiency status.
 - Create `PredictionInputFactory.java`, `PredictionRepository.java`, and
   `PredictionIssuanceService.java` with focused integration tests.
 
-- [ ] Validate the reviewed resource hash/count against its imported audit row.
-- [ ] Persist one completed immutable cohort atomically; reuse identical input.
-- [ ] Reject duplicate cohort/node/target rows and preserve prior cohorts on
+- [x] Validate the reviewed resource hash/count against its imported audit row.
+- [x] Persist one completed immutable cohort atomically; reuse identical input.
+- [x] Reject duplicate cohort/node/target rows and preserve prior cohorts on
   calculation or persistence failure.
-- [ ] Commit as `feat(tracker): issue immutable prediction cohorts`.
+- [x] Commit as `feat(tracker): issue immutable prediction cohorts`.
 
 ## Task 4: Due-date resolution and Brier scorecards
 
