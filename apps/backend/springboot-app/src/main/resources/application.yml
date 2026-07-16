@@ -75,6 +75,17 @@ tracker:
   ll2-enabled: ${TRACKER_LL2_ENABLED:false}
   ll2-cron: ${TRACKER_LL2_CRON:0 17 3 8 * *}
   ll2-max-pages: ${TRACKER_LL2_MAX_PAGES:10}
+  # Reviewed worldwide orbital-population transitions are bundled locally.
+  # Completed years only become Pillar 2 Layer B measurements; no event,
+  # readiness, ETA, network call, or model invocation is involved.
+  human-presence-on-boot: ${TRACKER_HUMAN_PRESENCE_ON_BOOT:true}
+  human-presence-resource: ${TRACKER_HUMAN_PRESENCE_RESOURCE:tracker/human-presence-transitions-v1.csv}
+  human-presence-dataset-version: ${TRACKER_HUMAN_PRESENCE_DATASET_VERSION:human-presence-v1}
+  # WP3.5 non-RSS discovery stays independently dark. When enabled it fetches
+  # only three fixed official indexes and stores evaluation-quarantined metadata.
+  official-index-enabled: ${TRACKER_OFFICIAL_INDEX_ENABLED:false}
+  official-index-cron: ${TRACKER_OFFICIAL_INDEX_CRON:0 23 4 * * WED}
+  official-index-max-links: ${TRACKER_OFFICIAL_INDEX_MAX_LINKS:40}
   # Declared-assumption transport projections remain dark unless explicitly
   # enabled. They use reviewed local inputs and perform no LLM or network call.
   transport-economics-enabled: ${TRACKER_TRANSPORT_ECONOMICS_ENABLED:false}
@@ -88,6 +99,22 @@ tracker:
   k-index-on-boot: ${TRACKER_K_INDEX_ON_BOOT:true}
   k-index-resource: ${TRACKER_K_INDEX_RESOURCE:tracker/k-index-energy-v1.csv}
   k-index-dataset-version: ${TRACKER_K_INDEX_DATASET_VERSION:k-index-energy-v1}
+  # Human-reviewed P6 reference facts are bundled locally and never score a node.
+  governance-on-boot: ${TRACKER_GOVERNANCE_ON_BOOT:true}
+  governance-resource: ${TRACKER_GOVERNANCE_RESOURCE:tracker/governance-ledger-v1.json}
+  governance-dataset-version: ${TRACKER_GOVERNANCE_DATASET_VERSION:governance-ledger-v1}
+  # WP3.4 target definitions are reviewed reference metadata. Crowd values are
+  # deliberately absent until the separate Metaculus authorization gate opens.
+  forecast-reference-on-boot: ${TRACKER_FORECAST_REFERENCE_ON_BOOT:true}
+  forecast-reference-resource: ${TRACKER_FORECAST_REFERENCE_RESOURCE:tracker/forecast-reference-v1.json}
+  forecast-reference-dataset-version: ${TRACKER_FORECAST_REFERENCE_DATASET_VERSION:forecast-reference-v1}
+  # All current Metaculus API requests require authentication and data-use
+  # authorization. Both gates ship false; the token may only come from Vault.
+  metaculus-enabled: ${TRACKER_METACULUS_ENABLED:false}
+  metaculus-terms-approved: ${TRACKER_METACULUS_TERMS_APPROVED:false}
+  metaculus-token: ${TRACKER_METACULUS_TOKEN:}
+  metaculus-cron: ${TRACKER_METACULUS_CRON:0 17 5 * * MON}
+  metaculus-max-posts: ${TRACKER_METACULUS_MAX_POSTS:2}
   # Weekly live golden evaluation remains dark until both this explicit
   # GitOps flag and the Vault-injected Anthropic key are present.
   golden-live-enabled: ${TRACKER_GOLDEN_LIVE_ENABLED:false}

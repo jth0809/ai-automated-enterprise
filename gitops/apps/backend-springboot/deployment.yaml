@@ -74,6 +74,23 @@ spec:
               value: "0 17 3 8 * *"
             - name: TRACKER_LL2_MAX_PAGES
               value: "10"
+            # Reviewed local orbital-population facts. This performs no live
+            # fetch or model call and only writes completed-year Layer B rows.
+            - name: TRACKER_HUMAN_PRESENCE_ON_BOOT
+              value: "true"
+            - name: TRACKER_HUMAN_PRESENCE_RESOURCE
+              value: tracker/human-presence-transitions-v1.csv
+            - name: TRACKER_HUMAN_PRESENCE_DATASET_VERSION
+              value: human-presence-v1
+            # WP3.5 bounded official HTML-index discovery. The exact ISRO/CNSA
+            # hosts can ship ahead of activation; all discovered rows remain
+            # evaluation-quarantined until a separate LIVE_MODEL review.
+            - name: TRACKER_OFFICIAL_INDEX_ENABLED
+              value: "false"
+            - name: TRACKER_OFFICIAL_INDEX_CRON
+              value: "0 23 4 * * WED"
+            - name: TRACKER_OFFICIAL_INDEX_MAX_LINKS
+              value: "40"
             # WP3.3 declared-assumption transport projection. It reuses the
             # reviewed local corpus and LL2 path; both jobs stay dark until a
             # separately reviewed GitOps activation.
@@ -89,6 +106,17 @@ spec:
               value: "500"
             - name: TRACKER_TRANSPORT_TARGET_HARD_USD_PER_KG
               value: "100"
+            # WP3.4 Metaculus path is deployed as code-only dark launch. Both
+            # authorization gates stay false and no token secret is referenced
+            # until data-use approval and a Vault key are reviewed separately.
+            - name: TRACKER_METACULUS_ENABLED
+              value: "false"
+            - name: TRACKER_METACULUS_TERMS_APPROVED
+              value: "false"
+            - name: TRACKER_METACULUS_CRON
+              value: "0 17 5 * * MON"
+            - name: TRACKER_METACULUS_MAX_POSTS
+              value: "2"
           envFrom:
             - secretRef:
                 name: backend-springboot-secrets

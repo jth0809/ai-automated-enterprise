@@ -23,10 +23,13 @@ import com.aienterprise.backend.tracker.domain.TrackerRepository;
 import com.aienterprise.backend.tracker.ingest.ArticleBodyExtractor;
 import com.aienterprise.backend.tracker.ingest.ArticlePageFetcher;
 import com.aienterprise.backend.tracker.ingest.BackfillLoader;
+import com.aienterprise.backend.tracker.ingest.ForecastReferenceLoader;
+import com.aienterprise.backend.tracker.ingest.HumanPresenceLoader;
 import com.aienterprise.backend.tracker.ingest.LayerBLoader;
 import com.aienterprise.backend.tracker.ingest.JdkPageTransport;
 import com.aienterprise.backend.tracker.ingest.JsoupReadabilityExtractor;
 import com.aienterprise.backend.tracker.ingest.KIndexLoader;
+import com.aienterprise.backend.tracker.ingest.GovernanceLedgerLoader;
 import com.aienterprise.backend.tracker.ingest.TransportEconomicsLoader;
 
 import net.javacrumbs.shedlock.core.LockProvider;
@@ -118,6 +121,15 @@ public class TrackerConfig {
     }
 
     @Bean
+    @ConditionalOnProperty(prefix = "tracker", name = "human-presence-on-boot",
+            havingValue = "true", matchIfMissing = true)
+    @Profile("!test | demo")
+    ApplicationRunner trackerHumanPresenceRunner(
+            ObjectProvider<HumanPresenceLoader> humanPresenceLoader) {
+        return args -> humanPresenceLoader.ifAvailable(HumanPresenceLoader::loadIfNeeded);
+    }
+
+    @Bean
     @ConditionalOnProperty(prefix = "tracker", name = "transport-economics-on-boot",
             havingValue = "true", matchIfMissing = true)
     @Profile("!test | demo")
@@ -134,5 +146,25 @@ public class TrackerConfig {
     ApplicationRunner trackerKIndexRunner(
             ObjectProvider<KIndexLoader> kIndexLoader) {
         return args -> kIndexLoader.ifAvailable(KIndexLoader::loadIfNeeded);
+    }
+
+    @Bean
+    @ConditionalOnProperty(prefix = "tracker", name = "governance-on-boot",
+            havingValue = "true", matchIfMissing = true)
+    @Profile("!test | demo")
+    ApplicationRunner trackerGovernanceRunner(
+            ObjectProvider<GovernanceLedgerLoader> governanceLoader) {
+        return args -> governanceLoader.ifAvailable(
+                GovernanceLedgerLoader::loadIfNeeded);
+    }
+
+    @Bean
+    @ConditionalOnProperty(prefix = "tracker", name = "forecast-reference-on-boot",
+            havingValue = "true", matchIfMissing = true)
+    @Profile("!test | demo")
+    ApplicationRunner trackerForecastReferenceRunner(
+            ObjectProvider<ForecastReferenceLoader> forecastReferenceLoader) {
+        return args -> forecastReferenceLoader.ifAvailable(
+                ForecastReferenceLoader::loadIfNeeded);
     }
 }

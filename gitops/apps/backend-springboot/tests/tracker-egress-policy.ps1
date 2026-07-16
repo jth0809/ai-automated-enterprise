@@ -12,23 +12,31 @@ param(
 
 $failures = @()
 
-# The active source_domain deployment set (V3+V4 seeds): 12 feed hosts plus
+# The active source_domain deployment set (V3+V4+V14 seeds): 12 feed hosts plus
 # the extra body hosts science.nasa.gov, arxiv.org, export.arxiv.org,
-# arstechnica.com. Keep in sync with the Flyway seeds.
+# arstechnica.com and the two bounded WP3.5 HTML-index hosts. Duplicate CNSA
+# source identities share one exact network host. Keep in sync with Flyway.
 $expected = @(
     'www.nasa.gov', 'science.nasa.gov', 'www.esa.int', 'global.jaxa.jp',
+    'www.isro.gov.in', 'www.cnsa.gov.cn',
     'rss.arxiv.org', 'arxiv.org', 'export.arxiv.org',
     'spacenews.com', 'www.nasaspaceflight.com', 'spaceflightnow.com',
     'www.planetary.org', 'phys.org', 'www.space.com',
     'feeds.arstechnica.com', 'arstechnica.com', 'www.universetoday.com'
 )
 
+$wp35Hosts = @('www.isro.gov.in', 'www.cnsa.gov.cn')
+$forbiddenGovernanceRuntimeHosts = @(
+    'www.unoosa.org', 'www.faa.gov', 'www.govinfo.gov'
+)
+
 # Non-source-registry egress FQDNs that legitimately live in the same policy.
 # LL2 is a Layer B metric API, not an article/source_domain feed.
 $ll2Host = 'll.thespacedevs.com'
+$metaculusHost = 'www.metaculus.com'
 $allowedOther = @(
     'news.google.com', 'api.anthropic.com',
-    'adb.ap-osaka-1.oraclecloud.com', $ll2Host
+    'adb.ap-osaka-1.oraclecloud.com', $ll2Host, $metaculusHost
 )
 
 $yaml = Get-Content -Raw $NetworkPolicy
@@ -38,6 +46,27 @@ foreach ($hostName in $expected) {
     $count = [regex]::Matches($yaml, $pattern).Count
     if ($count -ne 1) {
         $failures += "network-policy: expected exactly one matchName for '$hostName', found $count"
+    }
+}
+
+$trackerBlock = [regex]::Match($yaml,
+    '(?ms)# Multiplanetary tracker collection.*?(?=# Launch Library 2)')
+if (-not $trackerBlock.Success) {
+    $failures += 'network-policy: tracker source egress block not found'
+} else {
+    foreach ($hostName in $wp35Hosts) {
+        if ($trackerBlock.Value -notmatch ('matchName:\s*' + [regex]::Escape($hostName))) {
+            $failures += "network-policy: WP3.5 host '$hostName' must stay in the bounded tracker source block"
+        }
+    }
+    if ($trackerBlock.Value -notmatch 'port:\s*"443"') {
+        $failures += 'network-policy: tracker source block must bind WP3.5 hosts to TCP 443'
+    }
+}
+
+foreach ($hostName in $forbiddenGovernanceRuntimeHosts) {
+    if ($yaml -match ('(?m)^\s*-\s*matchName:\s*' + [regex]::Escape($hostName) + '\s*$')) {
+        $failures += "network-policy: reviewed governance host '$hostName' must not gain runtime egress"
     }
 }
 
@@ -52,6 +81,22 @@ $ll2HttpsRule += '\s{6}toPorts:\s*\r?\n\s{8}-\s*ports:\s*\r?\n'
 $ll2HttpsRule += '\s{12}-\s*port:\s*"443"\s*\r?\n\s{14}protocol:\s*TCP\s*$'
 if ($yaml -notmatch $ll2HttpsRule) {
     $failures += 'network-policy: LL2 exact host must be bound only to TCP 443'
+}
+
+$metaculusPattern = '(?m)^\s*-\s*matchName:\s*' + [regex]::Escape($metaculusHost) + '\s*$'
+$metaculusCount = [regex]::Matches($yaml, $metaculusPattern).Count
+if ($metaculusCount -ne 1) {
+    $failures += "network-policy: expected exactly one Metaculus matchName for '$metaculusHost', found $metaculusCount"
+}
+$metaculusHttpsRule = '(?ms)^\s{4}-\s*toFQDNs:\s*\r?\n'
+$metaculusHttpsRule += '\s{8}-\s*matchName:\s*' + [regex]::Escape($metaculusHost) + '\s*\r?\n'
+$metaculusHttpsRule += '\s{6}toPorts:\s*\r?\n\s{8}-\s*ports:\s*\r?\n'
+$metaculusHttpsRule += '\s{12}-\s*port:\s*"443"\s*\r?\n\s{14}protocol:\s*TCP\s*$'
+if ($yaml -notmatch $metaculusHttpsRule) {
+    $failures += 'network-policy: Metaculus exact host must be bound only to TCP 443'
+}
+if ($yaml -match '(?im)^\s*-\s*matchPattern:\s*[^\r\n]*metaculus[^\r\n]*$') {
+    $failures += 'network-policy: wildcard Metaculus egress is forbidden'
 }
 
 $allHosts = [regex]::Matches($yaml, '(?m)^\s*-\s*matchName:\s*(\S+)\s*$') |
@@ -94,6 +139,25 @@ if ($deploy -notmatch '(?s)name:\s*TRACKER_LL2_CRON\s*\r?\n\s*value:\s*"0 17 3 8
     $failures += 'deployment: TRACKER_LL2_CRON must remain the monthly UTC schedule'
 }
 
+$officialIndexDefaults = @{
+    TRACKER_OFFICIAL_INDEX_ENABLED = 'false'
+    TRACKER_OFFICIAL_INDEX_CRON = '0 23 4 * * WED'
+    TRACKER_OFFICIAL_INDEX_MAX_LINKS = '40'
+}
+foreach ($entry in $officialIndexDefaults.GetEnumerator()) {
+    $namePattern = '(?m)^\s*-\s*name:\s*' + [regex]::Escape($entry.Key) + '\s*$'
+    $count = [regex]::Matches($deploy, $namePattern).Count
+    if ($count -ne 1) {
+        $failures += "deployment: expected exactly one '$($entry.Key)', found $count"
+        continue
+    }
+    $pairPattern = '(?s)-\s*name:\s*' + [regex]::Escape($entry.Key)
+    $pairPattern += '\s*\r?\n\s*value:\s*"' + [regex]::Escape($entry.Value) + '"'
+    if ($deploy -notmatch $pairPattern) {
+        $failures += "deployment: '$($entry.Key)' must equal '$($entry.Value)'"
+    }
+}
+
 # WP3.3 reuses the immutable local reference resource and the already-approved
 # LL2 path. Its jobs must ship dark, with versioned scenario values explicit in
 # GitOps and no transport-specific egress or secret.
@@ -117,6 +181,31 @@ foreach ($entry in $transportDefaults.GetEnumerator()) {
     if ($deploy -notmatch $pairPattern) {
         $failures += "deployment: '$($entry.Key)' must equal '$($entry.Value)'"
     }
+}
+
+# WP3.4 crowd collection is a dark launch. Egress may ship now, but both
+# authorization gates remain false and no token name or secret mapping exists.
+$metaculusDefaults = @{
+    TRACKER_METACULUS_ENABLED = 'false'
+    TRACKER_METACULUS_TERMS_APPROVED = 'false'
+    TRACKER_METACULUS_CRON = '0 17 5 * * MON'
+    TRACKER_METACULUS_MAX_POSTS = '2'
+}
+foreach ($entry in $metaculusDefaults.GetEnumerator()) {
+    $namePattern = '(?m)^\s*-\s*name:\s*' + [regex]::Escape($entry.Key) + '\s*$'
+    $count = [regex]::Matches($deploy, $namePattern).Count
+    if ($count -ne 1) {
+        $failures += "deployment: expected exactly one '$($entry.Key)', found $count"
+        continue
+    }
+    $pairPattern = '(?s)-\s*name:\s*' + [regex]::Escape($entry.Key)
+    $pairPattern += '\s*\r?\n\s*value:\s*"' + [regex]::Escape($entry.Value) + '"'
+    if ($deploy -notmatch $pairPattern) {
+        $failures += "deployment: '$($entry.Key)' must equal '$($entry.Value)'"
+    }
+}
+if ($deploy -match '(?i)TRACKER_METACULUS_TOKEN|metaculus[_-]?token') {
+    $failures += 'deployment: Metaculus token must not be referenced before Vault and terms approval'
 }
 
 foreach ($file in @($NetworkPolicy, $Deployment)) {

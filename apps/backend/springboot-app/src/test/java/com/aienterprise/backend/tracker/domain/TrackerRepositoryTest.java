@@ -46,6 +46,26 @@ class TrackerRepositoryTest {
     }
 
     @Test
+    void quarantinedIndexCandidatesStayInvisibleToTheGateQueue() {
+        long sourceId = id("source_registry", "code", "NASA");
+        repository.insertArticleIfNew(
+                "https://www.nasa.gov/normal", "1".repeat(64), sourceId,
+                "Normal", Instant.parse("2026-07-15T00:00:00Z"), "Normal body");
+        long candidateId = repository.insertArticleCandidateIfNew(
+                "https://www.nasa.gov/candidate", "2".repeat(64), sourceId,
+                "Candidate", Instant.parse("2026-07-15T00:00:00Z")).orElseThrow();
+
+        assertEquals(List.of("Normal"), repository.findByStatus("INGESTED", 10)
+                .stream().map(ArticleRow::title).toList());
+        assertEquals("N", jdbc.sql("""
+                SELECT evaluation_allowed FROM article WHERE id = :id
+                """).param("id", candidateId).query(String.class).single());
+        assertEquals("SKIPPED", jdbc.sql("""
+                SELECT body_extraction_status FROM article WHERE id = :id
+                """).param("id", candidateId).query(String.class).single());
+    }
+
+    @Test
     void eventUpsertReturnsExistingIdForTheSameNaturalKey() {
         long nodeId = id("capability_node", "code", "P1-ORBIT-REFUEL");
         long rubricId = id("rubric_version", "version_label", "r1.0");
