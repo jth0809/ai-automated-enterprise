@@ -190,9 +190,12 @@ class TrackerNodesV1Test {
                        edge.or_group,
                        edge.delta_e
                   FROM capability_edge edge
+                  JOIN capability_graph_version graph_version
+                    ON graph_version.version_label = edge.graph_version_label
                   JOIN capability_node source ON source.id = edge.from_node_id
                   JOIN capability_node target ON target.id = edge.to_node_id
                  WHERE target.node_set_version = 'nodes-v1.0'
+                   AND graph_version.active = 'Y'
                 """).query((rs, rowNum) -> new Edge(
                         rs.getString("from_code"),
                         rs.getString("to_code"),
@@ -201,13 +204,19 @@ class TrackerNodesV1Test {
                 .list();
 
         assertEquals(29, edges.size());
-        assertTrue(edges.stream().allMatch(edge -> edge.orGroup() == 1));
         assertTrue(edges.stream().allMatch(edge -> Math.abs(edge.deltaE() - 0.150) < 0.0001));
 
         Map<String, Set<String>> actual = edges.stream().collect(Collectors.groupingBy(
                 Edge::toCode,
                 Collectors.mapping(Edge::fromCode, Collectors.toSet())));
         assertEquals(EXPECTED_DEPENDENCIES, actual);
+
+        Map<String, Set<Integer>> groups = edges.stream().collect(Collectors.groupingBy(
+                Edge::toCode,
+                Collectors.mapping(Edge::orGroup, Collectors.toSet())));
+        EXPECTED_DEPENDENCIES.forEach((toCode, dependencies) ->
+                assertEquals(dependencies.size(), groups.get(toCode).size(),
+                        toCode + " mandatory inputs must use singleton AND groups"));
     }
 
     @Test
