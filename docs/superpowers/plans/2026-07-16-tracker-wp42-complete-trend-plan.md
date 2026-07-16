@@ -94,12 +94,12 @@ Oracle-compatible SQL, JUnit 5, Maven 3.9.9, Git.
   WP4.3.
 - Preserve all snapshots and existing parameter history.
 
-- [ ] Write schema RED tests for V17 tables, constraints, one active parameter,
+- [x] Write schema RED tests for V17 tables, constraints, one active parameter,
   zero seeded regime breaks, and no 2010 auto-break.
-- [ ] Run `TrackerPhase4V17SchemaTest,TrackerSchemaTest` and record RED.
-- [ ] Add Oracle-compatible V17 and explicit uncertainty seeds.
-- [ ] Run focused schema tests and record GREEN.
-- [ ] Commit as `feat(tracker): version complete trend parameters`.
+- [x] Run `TrackerPhase4V17SchemaTest,TrackerSchemaTest` and record RED.
+- [x] Add Oracle-compatible V17 and explicit uncertainty seeds.
+- [x] Run focused schema tests and record GREEN.
+- [x] Commit as `feat(tracker): version complete trend parameters`.
 
 ---
 
@@ -124,13 +124,13 @@ Oracle-compatible SQL, JUnit 5, Maven 3.9.9, Git.
   dormancy, invalid windows/clamps/damping, invalid uncertainty ranges, and
   missing/duplicate uncertainty names.
 
-- [ ] Write validator tests for every approved bound and map invariant.
-- [ ] Write repository tests for `params-v2`, zero/multiple active versions, and
+- [x] Write validator tests for every approved bound and map invariant.
+- [x] Write repository tests for `params-v2`, zero/multiple active versions, and
   malformed persisted JSON.
-- [ ] Confirm focused RED.
-- [ ] Implement immutable records, validation, and repository loading.
-- [ ] Confirm focused GREEN and existing `ReadinessTest` compatibility.
-- [ ] Commit as `feat(tracker): load validated model parameters`.
+- [x] Confirm focused RED.
+- [x] Implement immutable records, validation, and repository loading.
+- [x] Confirm focused GREEN and existing `ReadinessTest` compatibility.
+- [x] Commit as `feat(tracker): load validated model parameters`.
 
 ---
 
@@ -154,12 +154,12 @@ Oracle-compatible SQL, JUnit 5, Maven 3.9.9, Git.
   parameter version so old bare history rebuilds transactionally.
 - Existing operational snapshots remain conflict-protected.
 
-- [ ] Add RED tests where a high downstream replay level is capped by a low
+- [x] Add RED tests where a high downstream replay level is capped by a low
   predecessor and raw/effective values differ exactly.
-- [ ] Add graph/version/params marker and immutability assertions.
-- [ ] Implement historical node materialization and one-graph replay.
-- [ ] Run projector/loader integration tests and record GREEN.
-- [ ] Commit as `feat(tracker): replay historical DAG readiness`.
+- [x] Add graph/version/params marker and immutability assertions.
+- [x] Implement historical node materialization and one-graph replay.
+- [x] Run projector/loader integration tests and record GREEN.
+- [x] Commit as `feat(tracker): replay historical DAG readiness`.
 
 ---
 
@@ -191,14 +191,14 @@ Oracle-compatible SQL, JUnit 5, Maven 3.9.9, Git.
 - `MomentumService` returns only `ACCELERATING`, `STEADY`, `DECELERATING`, or
   `INSUFFICIENT_DATA`; no ETA method accepts it.
 
-- [ ] Write adaptive-window tests for median, 4/15 clamps, sparse 10-year
+- [x] Write adaptive-window tests for median, 4/15 clamps, sparse 10-year
   fallback, duplicate dates, regime reset, and future-row rejection.
-- [ ] Write shrinkage tests for `n=0`, `n>>k`, and negative prior.
-- [ ] Write step-regression tests proving a one-time rollback changes the dummy
+- [x] Write shrinkage tests for `n=0`, `n>>k`, and negative prior.
+- [x] Write step-regression tests proving a one-time rollback changes the dummy
   coefficient without manufacturing a permanent negative slope.
-- [ ] Write six-pillar and momentum-separation tests.
-- [ ] Confirm RED, implement the pure model, and confirm GREEN.
-- [ ] Commit as `feat(tracker): calculate complete pillar trends`.
+- [x] Write six-pillar and momentum-separation tests.
+- [x] Confirm RED, implement the pure model, and confirm GREEN.
+- [x] Commit as `feat(tracker): calculate complete pillar trends`.
 
 ---
 
@@ -207,7 +207,7 @@ Oracle-compatible SQL, JUnit 5, Maven 3.9.9, Git.
 **Files**
 
 - Modify `apps/backend/springboot-app/src/main/java/com/aienterprise/backend/tracker/math/SnapshotJob.java`
-- Modify `apps/backend/springboot-app/src/main/java/com/aienterprise/backend/tracker/domain/TrackerRepository.java`
+- Reuse `apps/backend/springboot-app/src/main/java/com/aienterprise/backend/tracker/domain/TrackerRepository.java` audit persistence contract
 - Modify `apps/backend/springboot-app/src/test/java/com/aienterprise/backend/tracker/math/SnapshotJobTest.java`
 - Modify API tests only where the now-audited `trend_used` value changes.
 
@@ -222,13 +222,13 @@ Oracle-compatible SQL, JUnit 5, Maven 3.9.9, Git.
 - Parameter, graph, regime, or feature validation failure rolls back the whole
   current-date snapshot and preserves the previous completed result.
 
-- [ ] Write snapshot RED tests for active params-v2 audit fields, sparse
+- [x] Write snapshot RED tests for active params-v2 audit fields, sparse
   shrinkage, rollback dummy, and approved break reset.
-- [ ] Replace `Params.defaults()` in operational snapshot code.
-- [ ] Persist complete-model audit values and retain freeze/display damping.
-- [ ] Run snapshot/repository/controller focused tests.
-- [ ] Run complete backend and frontend regressions.
-- [ ] Commit as `feat(tracker): apply complete trend model to snapshots`.
+- [x] Replace `Params.defaults()` in operational snapshot code.
+- [x] Persist complete-model audit values and retain freeze/display damping.
+- [x] Run snapshot/repository/controller focused tests.
+- [x] Run complete backend and frontend regressions.
+- [x] Commit as `feat(tracker): apply complete trend model to snapshots`.
 
 ---
 
@@ -240,11 +240,11 @@ Oracle-compatible SQL, JUnit 5, Maven 3.9.9, Git.
 - Modify this plan's checkboxes
 - Modify `docs/plans/multiplanetary-tracker-execution-plan.md` for WP4.2 only
 
-- [ ] Run `git diff --check` and an egress scan of the new math package.
-- [ ] Record exact schema, parameter, replay, trend, runtime, focused, and full
+- [x] Run `git diff --check` and an egress scan of the new math package.
+- [x] Record exact schema, parameter, replay, trend, runtime, focused, and full
   regression evidence; record protected untracked files.
-- [ ] Mark WP4.2 complete while leaving WP4.3–WP4.6 and G4 pending.
-- [ ] Commit as `docs(tracker): record WP4.2 trend verification`.
+- [x] Mark WP4.2 complete while leaving WP4.3–WP4.6 and G4 pending.
+- [x] Commit as `docs(tracker): record WP4.2 trend verification`.
 
 ## Completion gate
 
@@ -255,4 +255,3 @@ regime resets pass exact tests, sparse slopes use the specified shrinkage withou
 positive floors, ETA consumes `trend_used` only, all audit fields are persisted,
 and the complete backend/frontend suites pass. This does not complete WP4.3,
 Phase 4, or G4.
-
