@@ -77,13 +77,13 @@ one source.
 - Modify `tracker/api.ts`, `TrackerPage.tsx`, and `App.css`.
 - Create `MethodologyCredibility.tsx` and focused tests.
 
-- [ ] Show all four exact honesty statements unconditionally.
-- [ ] Show current model interval/censorship, DAG caps, active formulas and
+- [x] Show all four exact honesty statements unconditionally.
+- [x] Show current model interval/censorship, DAG caps, active formulas and
   versions, calibration/holdout metrics, predictions/outcomes/Brier, Layer B
   and external comparison status, data freshness, and dark live flags.
-- [ ] Cover loading, partial, empty, error, censored, keyboard, heading, and
+- [x] Cover loading, partial, empty, error, censored, keyboard, heading, and
   375 px table-overflow behavior.
-- [ ] Commit as `feat(tracker): add methodology credibility view`.
+- [x] Commit as `feat(tracker): add methodology credibility view`.
 
 ## Task 4: Phase 4 software gate and handoff
 

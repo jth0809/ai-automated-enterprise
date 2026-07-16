@@ -18,6 +18,92 @@ function stubTrackerRoutes(options: { failForecast?: boolean } = {}) {
       ) {
         return { ok: false, status: 503, json: async () => ({}) } as Response;
       }
+      if (url.includes("/api/tracker/methodology")) {
+        return ok({
+          methodologyVersion: "tracker-methodology-v1",
+          asOf: "2026-07-16",
+          modelParameters: { params: { version: "params-v2" }, uncertainty: {} },
+          hazardParameters: {
+            version: "hazard-v1",
+            kappaNodeYears: 4,
+            probabilityFloor: 0.02,
+            probabilityCeiling: 0.98,
+            horizonsMonths: [6, 12, 18, 24],
+            cohortLimit: 12,
+            pillarLimit: 2,
+            calibrationMinOutcomes: 30,
+            calibrationMinQuarters: 4,
+          },
+          graph: {
+            version: "graph-v1.0",
+            nodeSetVersion: "nodes-v1.0",
+            edgeSha256: "a".repeat(64),
+            edgeCount: 29,
+          },
+          dataset: null,
+          currentCalibration: null,
+          predictionOperations: {
+            completedCohorts: 0,
+            pendingPredictions: 0,
+            duePredictions: 0,
+            resolvedPredictions: 0,
+            voidPredictions: 0,
+            openResolutionConflicts: 0,
+            openDriftAlerts: 0,
+            currentCalibrationVersion: null,
+            currentCalibrationStatus: null,
+            issuanceFrozen: false,
+          },
+          formulas: {},
+          honestyLabels: [
+            "ETA는 예보가 아니라 현 추세 지속을 가정한 시나리오 투영이며 구간은 모델 내부의 80%다. 모형족 오류와 미지의 구조 단절 확률은 포함하지 않는다.",
+            "수송 $ / kg은 실제 원가가 아니라 공개된 가격을 바탕으로 한 추정치다.",
+            "관측 사건은 측정값이고 TRL/EGL 사상·가중치·DAG 집계는 구성 지수다.",
+            "수송 경제성 임계값은 자연상수가 아니라 공개된 모델 가정이다.",
+          ],
+          automaticFeatures: {},
+          transportAssumptions: {
+            centralUsdPerKg: 200,
+            easyUsdPerKg: 500,
+            hardUsdPerKg: 100,
+            priceBasis: "PUBLISHED_PRICE",
+            intervalKind: "ASSUMPTION_SENSITIVITY",
+          },
+        });
+      }
+      if (url.includes("/api/tracker/dag")) {
+        return ok({
+          graphVersion: "graph-v1.0",
+          nodeSetVersion: "nodes-v1.0",
+          edgeSha256: "a".repeat(64),
+          edgeCount: 29,
+          asOf: "2026-07-16",
+          edges: [],
+          nodes: [],
+        });
+      }
+      if (url.includes("/api/tracker/projections/current")) {
+        return ok({ status: "NOT_RUN" });
+      }
+      if (url.includes("/api/tracker/backtests/latest")) {
+        return ok({ status: "NOT_RUN" });
+      }
+      if (url.includes("/api/tracker/predictions/scorecard")) {
+        return ok({
+          groups: [
+            {
+              type: "OVERALL",
+              key: "ALL",
+              sampleCount: 0,
+              meanBrier: null,
+              status: "INSUFFICIENT_DATA",
+            },
+          ],
+        });
+      }
+      if (url.includes("/api/tracker/predictions")) {
+        return ok({ status: "EMPTY", cohorts: [] });
+      }
       const body = url.includes("/api/tracker/summary")
         ? {
             displayedEtaYear: 2048.3,
@@ -146,6 +232,7 @@ describe("TrackerPage", () => {
     expect(screen.getByText(/중앙 가정 \$200\/kg/)).toBeInTheDocument();
     expect(screen.getByText("인류 문명 지수 K = 0.7305")).toBeInTheDocument();
     expect(await screen.findByText("화성 예측 비교")).toBeInTheDocument();
+    expect(await screen.findByText("방법론과 신뢰도")).toBeInTheDocument();
     // The admin review queue is collapsed below the public dashboard and
     // fetches nothing until a token is submitted.
     expect(screen.getByText(/검수 큐/)).toBeInTheDocument();
@@ -180,6 +267,10 @@ function unavailableEstimate() {
     accessedOn: null,
     legacy: false,
   };
+}
+
+function ok(body: unknown): Response {
+  return { ok: true, status: 200, json: async () => body } as Response;
 }
 
 describe("EventTimeline evidence", () => {

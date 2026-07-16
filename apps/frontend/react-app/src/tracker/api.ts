@@ -112,6 +112,227 @@ export interface ForecastComparison {
   rows: ForecastComparisonRow[];
 }
 
+export interface TrackerModelParameters {
+  version: string;
+  epsilon?: number;
+  kShrink?: number;
+  windowM?: number;
+  windowMinYears?: number;
+  windowMaxYears?: number;
+  defaultDeltaE?: number;
+  [key: string]: unknown;
+}
+
+export interface TrackerHazardParameters {
+  version: string;
+  kappaNodeYears: number;
+  probabilityFloor: number;
+  probabilityCeiling: number;
+  horizonsMonths: number[];
+  cohortLimit: number;
+  pillarLimit: number;
+  calibrationMinOutcomes: number;
+  calibrationMinQuarters: number;
+}
+
+export interface TrackerCalibration {
+  calibrationVersion: string;
+  method: string;
+  status: string;
+  sampleCount: number;
+  quarterCount: number;
+  [key: string]: unknown;
+}
+
+export interface PredictionOperations {
+  completedCohorts: number;
+  pendingPredictions: number;
+  duePredictions: number;
+  resolvedPredictions: number;
+  voidPredictions: number;
+  openResolutionConflicts: number;
+  openDriftAlerts: number;
+  currentCalibrationVersion: string | null;
+  currentCalibrationStatus: string | null;
+  issuanceFrozen: boolean;
+}
+
+export interface MethodologyResponse {
+  methodologyVersion: string;
+  asOf: string;
+  modelParameters: {
+    params: TrackerModelParameters;
+    uncertainty: Record<string, unknown>;
+  };
+  hazardParameters: TrackerHazardParameters;
+  graph: {
+    version: string;
+    nodeSetVersion: string;
+    edgeSha256: string;
+    edgeCount: number;
+  };
+  dataset: {
+    version: string;
+    sha256: string;
+    nodeSetVersion: string;
+    recordCount: number;
+    importedAt: string;
+  } | null;
+  currentCalibration: TrackerCalibration | null;
+  predictionOperations: PredictionOperations;
+  formulas: Record<string, string>;
+  honestyLabels: string[];
+  automaticFeatures: Record<string, boolean>;
+  transportAssumptions: {
+    centralUsdPerKg: number;
+    easyUsdPerKg: number;
+    hardUsdPerKg: number;
+    priceBasis: string;
+    intervalKind: string;
+  };
+}
+
+export interface DagNode {
+  nodeCode: string;
+  nodeName: string;
+  pillar: number;
+  rawReadiness: number;
+  effectiveReadiness: number;
+  dependencyCap: number | null;
+  capped: boolean;
+  limitingGroups: number[];
+  limitingDependencies: string[];
+}
+
+export interface DagResponse {
+  graphVersion: string;
+  nodeSetVersion: string;
+  edgeSha256: string;
+  edgeCount: number;
+  asOf: string;
+  edges: unknown[];
+  nodes: DagNode[];
+}
+
+export interface ProjectionPillarResult {
+  pillar: number;
+  readiness: number;
+  etaP10: number | null;
+  etaP50: number | null;
+  etaP90: number | null;
+  censoredFraction: number;
+  momentum: string;
+}
+
+export interface ProjectionResponse {
+  status: "NOT_RUN" | "COMPLETED";
+  runId?: number | null;
+  inputSha256?: string | null;
+  seed?: string | null;
+  requestedSamples?: number | null;
+  validSamples?: number | null;
+  invalidSamples?: number | null;
+  paramsVersion?: string | null;
+  graphVersion?: string | null;
+  nodeSetVersion?: string | null;
+  datasetSha256?: string | null;
+  startedAt?: string | null;
+  completedAt?: string | null;
+  output?: {
+    inputSha256: string;
+    seed: number;
+    requestedSamples: number;
+    validSamples: number;
+    invalidSamples: number;
+    diagnostics: unknown;
+    results: Record<string, ProjectionPillarResult>;
+  } | null;
+}
+
+export interface BacktestMetric {
+  code: string;
+  pillar: number;
+  calibrationValue: number | null;
+  holdoutValue: number | null;
+  calibrationSamples: number;
+  holdoutSamples: number;
+  calibrationStatus: string;
+  holdoutStatus: string;
+}
+
+export interface BacktestResponse {
+  status: "NOT_RUN" | "COMPLETED";
+  runId?: number | null;
+  inputSha256?: string | null;
+  reportSha256?: string | null;
+  seed?: string | null;
+  startedAt?: string | null;
+  completedAt?: string | null;
+  report?: {
+    reportVersion: string;
+    candidateRegistryVersion: string;
+    calibrationCutoffCount: number;
+    holdoutCutoffCount: number;
+    sampleCount: number;
+    selectedCandidate: {
+      windowM: number;
+      kShrink: number;
+      deltaScale: number;
+    };
+    objectiveScore: number;
+    metrics: BacktestMetric[];
+  } | null;
+}
+
+export interface PublishedPrediction {
+  id: number;
+  cohortRank: number;
+  statement: string;
+  nodeCode: string;
+  pillar: number;
+  targetLevel: number;
+  dueOn: string;
+  horizonMonths: number;
+  issuedProbability: number;
+  informationStatus: string;
+  outcome: string;
+  brier: number | null;
+  resolutionStatus: string;
+  statementSha256: string;
+  [key: string]: unknown;
+}
+
+export interface PublishedCohort {
+  id: number;
+  cohortKey: string;
+  inputSha256: string;
+  datasetSha256: string;
+  nodeSetVersion: string;
+  rubricVersion: string;
+  hazardParamsVersion: string;
+  calibrationVersion: string;
+  asOf: string;
+  issuedOn: string;
+  predictions: PublishedPrediction[];
+  createdAt: string;
+  completedAt: string;
+}
+
+export interface PredictionsResponse {
+  status: "EMPTY" | "PUBLISHED";
+  cohorts: PublishedCohort[];
+}
+
+export interface PredictionScorecardResponse {
+  groups: Array<{
+    type: string;
+    key: string;
+    sampleCount: number;
+    meanBrier: number | null;
+    status: string;
+  }>;
+}
+
 export type EvidenceKind = "VERBATIM" | "HISTORICAL_REFERENCE";
 export type OccurredOnPrecision = "DAY" | "MONTH" | "YEAR";
 
@@ -175,6 +396,156 @@ export async function getForecastComparison(): Promise<ForecastComparison> {
     throw new Error("tracker forecast comparison returned an invalid contract");
   }
   return body;
+}
+
+export async function getMethodology(): Promise<MethodologyResponse> {
+  return getCredibilityContract<MethodologyResponse>(
+    "/api/tracker/methodology",
+    "methodology",
+    isMethodologyResponse,
+  );
+}
+
+export async function getDag(): Promise<DagResponse> {
+  return getCredibilityContract<DagResponse>(
+    "/api/tracker/dag",
+    "DAG",
+    isDagResponse,
+  );
+}
+
+export async function getProjection(): Promise<ProjectionResponse> {
+  return getCredibilityContract<ProjectionResponse>(
+    "/api/tracker/projections/current",
+    "projection",
+    isProjectionResponse,
+  );
+}
+
+export async function getBacktest(): Promise<BacktestResponse> {
+  return getCredibilityContract<BacktestResponse>(
+    "/api/tracker/backtests/latest",
+    "backtest",
+    isBacktestResponse,
+  );
+}
+
+export async function getPredictions(): Promise<PredictionsResponse> {
+  return getCredibilityContract<PredictionsResponse>(
+    "/api/tracker/predictions",
+    "predictions",
+    isPredictionsResponse,
+  );
+}
+
+export async function getPredictionScorecard(): Promise<PredictionScorecardResponse> {
+  return getCredibilityContract<PredictionScorecardResponse>(
+    "/api/tracker/predictions/scorecard",
+    "prediction scorecard",
+    isPredictionScorecardResponse,
+  );
+}
+
+async function getCredibilityContract<T>(
+  path: string,
+  label: string,
+  validate: (value: unknown) => value is T,
+): Promise<T> {
+  const res = await fetch(path);
+  if (!res.ok) throw new Error(`tracker ${label} failed: HTTP ${res.status}`);
+  const body: unknown = await res.json();
+  if (!validate(body)) {
+    throw new Error(`tracker ${label} returned an invalid contract`);
+  }
+  return body;
+}
+
+function isMethodologyResponse(value: unknown): value is MethodologyResponse {
+  return (
+    isRecord(value) &&
+    typeof value.methodologyVersion === "string" &&
+    typeof value.asOf === "string" &&
+    isRecord(value.modelParameters) &&
+    isRecord(value.modelParameters.params) &&
+    typeof value.modelParameters.params.version === "string" &&
+    isRecord(value.hazardParameters) &&
+    typeof value.hazardParameters.version === "string" &&
+    isRecord(value.graph) &&
+    typeof value.graph.version === "string" &&
+    isRecord(value.predictionOperations) &&
+    isRecord(value.formulas) &&
+    Array.isArray(value.honestyLabels) &&
+    value.honestyLabels.every((label) => typeof label === "string") &&
+    isRecord(value.automaticFeatures) &&
+    isRecord(value.transportAssumptions)
+  );
+}
+
+function isDagResponse(value: unknown): value is DagResponse {
+  return (
+    isRecord(value) &&
+    typeof value.graphVersion === "string" &&
+    typeof value.edgeSha256 === "string" &&
+    typeof value.edgeCount === "number" &&
+    Array.isArray(value.nodes) &&
+    value.nodes.every(
+      (node) =>
+        isRecord(node) &&
+        typeof node.nodeCode === "string" &&
+        typeof node.capped === "boolean" &&
+        Array.isArray(node.limitingDependencies),
+    )
+  );
+}
+
+function isProjectionResponse(value: unknown): value is ProjectionResponse {
+  if (!isRecord(value) || !["NOT_RUN", "COMPLETED"].includes(String(value.status))) {
+    return false;
+  }
+  return (
+    value.status === "NOT_RUN" ||
+    (isRecord(value.output) && isRecord(value.output.results))
+  );
+}
+
+function isBacktestResponse(value: unknown): value is BacktestResponse {
+  if (!isRecord(value) || !["NOT_RUN", "COMPLETED"].includes(String(value.status))) {
+    return false;
+  }
+  return (
+    value.status === "NOT_RUN" ||
+    (isRecord(value.report) &&
+      isRecord(value.report.selectedCandidate) &&
+      Array.isArray(value.report.metrics))
+  );
+}
+
+function isPredictionsResponse(value: unknown): value is PredictionsResponse {
+  return (
+    isRecord(value) &&
+    ["EMPTY", "PUBLISHED"].includes(String(value.status)) &&
+    Array.isArray(value.cohorts) &&
+    value.cohorts.every(
+      (cohort) => isRecord(cohort) && Array.isArray(cohort.predictions),
+    )
+  );
+}
+
+function isPredictionScorecardResponse(
+  value: unknown,
+): value is PredictionScorecardResponse {
+  return (
+    isRecord(value) &&
+    Array.isArray(value.groups) &&
+    value.groups.every(
+      (group) =>
+        isRecord(group) &&
+        typeof group.type === "string" &&
+        typeof group.key === "string" &&
+        typeof group.sampleCount === "number" &&
+        typeof group.status === "string",
+    )
+  );
 }
 
 function isForecastComparison(value: unknown): value is ForecastComparison {
