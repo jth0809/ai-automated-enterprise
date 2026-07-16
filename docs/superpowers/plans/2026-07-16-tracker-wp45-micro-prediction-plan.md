@@ -69,11 +69,11 @@ published calibration is identity with an explicit insufficiency status.
 - Create `apps/backend/springboot-app/src/main/resources/db/migration/V19__tracker_phase4_prediction.sql`.
 - Create `TrackerPhase4V19SchemaTest.java`.
 
-- [ ] Write RED migration, constraint, uniqueness, and compatibility tests.
-- [ ] Add versioned hazard parameters, cohort, prediction extensions,
+- [x] Write RED migration, constraint, uniqueness, and compatibility tests.
+- [x] Add versioned hazard parameters, cohort, prediction extensions,
   resolution evidence/conflict, calibration, and drift-alert storage.
-- [ ] Prove V1–V19 migration compatibility without altering prior migrations.
-- [ ] Commit as `feat(tracker): add micro-prediction audit schema`.
+- [x] Prove V1–V19 migration compatibility without altering prior migrations.
+- [x] Commit as `feat(tracker): add micro-prediction audit schema`.
 
 ## Task 2: Cutoff-safe hazard model and candidate policy
 
