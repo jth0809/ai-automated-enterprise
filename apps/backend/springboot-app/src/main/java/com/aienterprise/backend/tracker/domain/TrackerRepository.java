@@ -1154,8 +1154,12 @@ public class TrackerRepository {
     public void insertPillarSnapshot(
             int pillar, LocalDate snapshotDate, double readiness, double logitClipped, String paramsVersion) {
         jdbc.sql("""
-                INSERT INTO pillar_snapshot (pillar, snapshot_date, readiness, logit_clipped, params_version)
-                VALUES (:pillar, :snapshotDate, :readiness, :logitClipped, :paramsVersion)
+                INSERT INTO pillar_snapshot
+                  (pillar, snapshot_date, readiness, raw_readiness,
+                   logit_clipped, params_version)
+                VALUES
+                  (:pillar, :snapshotDate, :readiness, :readiness,
+                   :logitClipped, :paramsVersion)
                 """)
                 .param("pillar", pillar)
                 .param("snapshotDate", date(snapshotDate))
@@ -1213,14 +1217,18 @@ public class TrackerRepository {
         }
         jdbcTemplate.batchUpdate("""
                 INSERT INTO pillar_snapshot
-                  (pillar, snapshot_date, readiness, logit_clipped, params_version)
-                VALUES (?, ?, ?, ?, ?)
+                  (pillar, snapshot_date, readiness, raw_readiness,
+                   logit_clipped, params_version)
+                VALUES (?, ?, ?, ?, ?, ?)
                 """, snapshots, 1000, (statement, snapshot) -> {
                     statement.setInt(1, snapshot.pillar());
                     statement.setDate(2, date(snapshot.snapshotDate()));
                     statement.setDouble(3, snapshot.readiness());
-                    statement.setDouble(4, snapshot.logitClipped());
-                    statement.setString(5, snapshot.paramsVersion());
+                    statement.setDouble(4, snapshot.rawReadiness() == null
+                            ? snapshot.readiness()
+                            : snapshot.rawReadiness());
+                    statement.setDouble(5, snapshot.logitClipped());
+                    statement.setString(6, snapshot.paramsVersion());
                 });
     }
 
@@ -1232,12 +1240,12 @@ public class TrackerRepository {
         jdbc.sql("""
                 INSERT INTO pillar_snapshot
                   (pillar, snapshot_date, readiness, logit_clipped, trend_fit, trend_used,
-                   n_events_window, window_years, eta_year, eta_low, eta_high,
-                   displayed_eta_year, params_version)
+                    n_events_window, window_years, eta_year, eta_low, eta_high,
+                    displayed_eta_year, params_version, raw_readiness, graph_version)
                 VALUES
                   (:pillar, :snapshotDate, :readiness, :logitClipped, :trendFit, :trendUsed,
-                   :eventsInWindow, :windowYears, :etaYear, :etaLow, :etaHigh,
-                   :displayedEtaYear, :paramsVersion)
+                    :eventsInWindow, :windowYears, :etaYear, :etaLow, :etaHigh,
+                    :displayedEtaYear, :paramsVersion, :rawReadiness, :graphVersion)
                 """)
                 .param("pillar", snapshot.pillar())
                 .param("snapshotDate", date(snapshot.snapshotDate()))
@@ -1252,6 +1260,8 @@ public class TrackerRepository {
                 .param("etaHigh", snapshot.etaHigh())
                 .param("displayedEtaYear", snapshot.displayedEtaYear())
                 .param("paramsVersion", snapshot.paramsVersion())
+                .param("rawReadiness", snapshot.rawReadiness())
+                .param("graphVersion", snapshot.graphVersion())
                 .update();
     }
 
@@ -2183,7 +2193,9 @@ public class TrackerRepository {
                 nullableDouble(rs, "eta_low"),
                 nullableDouble(rs, "eta_high"),
                 nullableDouble(rs, "displayed_eta_year"),
-                rs.getString("params_version"));
+                rs.getString("params_version"),
+                nullableDouble(rs, "raw_readiness"),
+                rs.getString("graph_version"));
     }
 
     private static Double nullableDouble(ResultSet rs, String column) throws SQLException {
@@ -2263,8 +2275,8 @@ public class TrackerRepository {
 
     private static final String SNAPSHOT_SELECT = """
             SELECT id, pillar, snapshot_date, readiness, logit_clipped, trend_fit, trend_used,
-                   n_events_window, window_years, eta_year, eta_low, eta_high,
-                   displayed_eta_year, params_version
+                    n_events_window, window_years, eta_year, eta_low, eta_high,
+                    displayed_eta_year, params_version, raw_readiness, graph_version
               FROM pillar_snapshot
             """;
 

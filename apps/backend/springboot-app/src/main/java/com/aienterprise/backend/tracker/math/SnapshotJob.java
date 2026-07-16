@@ -19,6 +19,8 @@ import com.aienterprise.backend.tracker.domain.NodeRow;
 import com.aienterprise.backend.tracker.domain.OpsState;
 import com.aienterprise.backend.tracker.domain.SnapshotRow;
 import com.aienterprise.backend.tracker.domain.TrackerRepository;
+import com.aienterprise.backend.tracker.graph.CapabilityReadinessService;
+import com.aienterprise.backend.tracker.graph.ReadinessResult;
 import com.aienterprise.backend.tracker.ops.StateFreezeService;
 
 import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
@@ -38,16 +40,20 @@ public class SnapshotJob {
 
     private final TrackerRepository repository;
     private final StateFreezeService freezeService;
+    private final CapabilityReadinessService readinessService;
 
     public SnapshotJob(
             TrackerRepository repository,
-            StateFreezeService freezeService) {
+            StateFreezeService freezeService,
+            CapabilityReadinessService readinessService) {
         this.repository = repository;
         this.freezeService = freezeService;
+        this.readinessService = readinessService;
     }
 
     @Scheduled(cron = "${tracker.snapshot-cron:0 30 0 * * MON}")
     @SchedulerLock(name = "tracker-snapshot", lockAtLeastFor = "PT1M")
+    @Transactional
     public void runOnce() {
         snapshotNow();
     }
@@ -59,19 +65,30 @@ public class SnapshotJob {
         double nowYear = toRealYear(today);
         double logitTarget = LogitEta.logitClipped(TARGET_READINESS, params.epsilon());
         List<NodeRow> nodes = repository.findAllNodes();
+        ReadinessResult readiness = readinessService.calculate(nodes, params, today);
 
         List<PillarFit> fits = new ArrayList<>();
         for (int pillar = 1; pillar <= 6; pillar++) {
-            PillarFit fit = fitPillar(pillar, nodes, params, today, nowYear, logitTarget);
+            double effectivePillar = readiness.effectivePillarReadiness()
+                    .getOrDefault(pillar, 0.0);
+            double rawPillar = readiness.rawPillarReadiness()
+                    .getOrDefault(pillar, 0.0);
+            PillarFit fit = fitPillar(
+                    pillar, effectivePillar, params, today, nowYear, logitTarget);
             fits.add(fit);
             repository.replaceSnapshot(new SnapshotRow(
                     0, pillar, today, fit.readiness(),
                     LogitEta.logitClipped(fit.readiness(), params.epsilon()),
                     fit.slope(), fit.slope(), null, params.windowFixedYears(),
-                    fit.etaYear(), fit.etaLow(), fit.etaHigh(), null, params.version()));
+                    fit.etaYear(), fit.etaLow(), fit.etaHigh(), null, params.version(),
+                    rawPillar, readiness.graphVersion()));
         }
 
         double overallReadiness = fits.stream().mapToDouble(PillarFit::readiness).min().orElse(0);
+        double overallRawReadiness = readiness.rawPillarReadiness().values().stream()
+                .mapToDouble(Double::doubleValue)
+                .min()
+                .orElse(0);
         // The overall ETA is the latest pillar ETA; any unresolved pillar makes
         // the overall ETA unknown (rendered as "beyond the clamp horizon").
         PillarFit bottleneck = null;
@@ -92,7 +109,8 @@ public class SnapshotJob {
                 overallEta,
                 bottleneck == null ? null : bottleneck.etaLow(),
                 bottleneck == null ? null : bottleneck.etaHigh(),
-                displayed, params.version()));
+                displayed, params.version(), overallRawReadiness,
+                readiness.graphVersion()));
         log.info("tracker snapshot for {}: overall readiness {}, eta {}", today, overallReadiness, overallEta);
     }
 
@@ -103,10 +121,8 @@ public class SnapshotJob {
     }
 
     private PillarFit fitPillar(
-            int pillar, List<NodeRow> nodes, Params params,
+            int pillar, double readiness, Params params,
             LocalDate today, double nowYear, double logitTarget) {
-        List<NodeRow> pillarNodes = nodes.stream().filter(node -> node.pillar() == pillar).toList();
-        double readiness = Readiness.pillarReadiness(pillarNodes, params);
         double logitNow = LogitEta.logitClipped(readiness, params.epsilon());
 
         List<SnapshotRow> history = repository.findPillarSnapshots(pillar);

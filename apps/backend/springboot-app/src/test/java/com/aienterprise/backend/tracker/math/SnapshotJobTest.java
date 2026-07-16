@@ -2,10 +2,13 @@ package com.aienterprise.backend.tracker.math;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.LocalDate;
 import java.time.ZoneOffset;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -94,5 +97,62 @@ class SnapshotJobTest {
         var after = repository.findOpsState("LAST_DISPLAYED_ETA").orElseThrow();
         assertEquals(before.value(), after.value());
         assertEquals(before.updatedAt(), after.updatedAt());
+    }
+
+    @Test
+    void snapshotPersistsRawEffectiveAndGraphVersionWithoutMutatingNodeLevels() {
+        loader.loadIfEmpty();
+        jdbc.sql("""
+                UPDATE capability_node
+                   SET current_level = 9
+                 WHERE code = 'P1-TRANSPORT-INTEGRATION'
+                """).update();
+        jdbc.sql("""
+                UPDATE capability_node
+                   SET current_level = 1
+                 WHERE code = 'P1-DEEP-PROP'
+                """).update();
+        Map<String, Integer> before = nodeLevels();
+
+        job.snapshotNow();
+
+        SnapshotRow pillarOne = repository.findLatestSnapshot(1).orElseThrow();
+        assertEquals("graph-v1.0", pillarOne.graphVersion());
+        assertNotNull(pillarOne.rawReadiness());
+        assertTrue(pillarOne.readiness() < pillarOne.rawReadiness());
+        assertEquals(before, nodeLevels(), "DAG evaluation must not mutate observed levels");
+
+        SnapshotRow overall = repository.findLatestSnapshot(0).orElseThrow();
+        assertEquals("graph-v1.0", overall.graphVersion());
+        assertNotNull(overall.rawReadiness());
+        assertTrue(overall.readiness() <= overall.rawReadiness());
+    }
+
+    @Test
+    void invalidGraphPreservesTheLastCompletedSnapshot() {
+        loader.loadIfEmpty();
+        job.snapshotNow();
+        SnapshotRow before = repository.findLatestSnapshot(1).orElseThrow();
+
+        jdbc.sql("""
+                UPDATE capability_graph_version
+                   SET edge_sha256 = :invalidHash
+                 WHERE version_label = 'graph-v1.0'
+                """)
+                .param("invalidHash", "0".repeat(64))
+                .update();
+
+        assertThrows(IllegalStateException.class, job::snapshotNow);
+
+        SnapshotRow after = repository.findLatestSnapshot(1).orElseThrow();
+        assertEquals(before, after);
+    }
+
+    private Map<String, Integer> nodeLevels() {
+        return jdbc.sql("SELECT code, current_level FROM capability_node ORDER BY code")
+                .query((rs, rowNum) -> Map.entry(
+                        rs.getString("code"), rs.getInt("current_level")))
+                .list().stream()
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 }
