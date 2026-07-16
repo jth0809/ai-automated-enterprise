@@ -57,6 +57,8 @@ class CompleteTrendModelTest {
             assertEquals(4, fit.eventsInWindow());
             assertEquals(12, fit.windowYears());
             assertTrue(Double.isFinite(fit.trendUsed()));
+            assertTrue(Double.isFinite(fit.slopeStandardError()));
+            assertTrue(fit.slopeStandardError() >= 0);
         });
     }
 

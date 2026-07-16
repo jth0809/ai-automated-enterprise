@@ -84,6 +84,7 @@ public class CompleteTrendModel {
                     regime == null ? null : regime.id(),
                     draft.selection().regimeStart(),
                     eta, interval.low(), interval.high(), draft.residualSe(),
+                    draft.slopeStandardError(),
                     draft.levelShifts(), draft.observations()));
         });
         return new Result(prior, results);
@@ -136,7 +137,7 @@ public class CompleteTrendModel {
 
         if (observations.size() < 2) {
             return new Draft(currentReadiness, selection, null,
-                    0.0, Map.of(), observations.size());
+                    0.0, 0.0, Map.of(), observations.size());
         }
         try {
             WeightedStepRegression.Fit fit = regression.fit(
@@ -144,10 +145,11 @@ public class CompleteTrendModel {
                     selection.windowYears(), selection.rollbackDates());
             return new Draft(
                     currentReadiness, selection, fit.trend().slopePerYear(),
-                    fit.trend().residualSe(), fit.levelShifts(), fit.observations());
+                    fit.trend().residualSe(), fit.slopeStandardError(),
+                    fit.levelShifts(), fit.observations());
         } catch (IllegalArgumentException insufficientOrRankDeficient) {
             return new Draft(currentReadiness, selection, null,
-                    0.0, Map.of(), observations.size());
+                    0.0, 0.0, Map.of(), observations.size());
         }
     }
 
@@ -201,6 +203,7 @@ public class CompleteTrendModel {
             AdaptiveWindow.Selection selection,
             Double trendFit,
             double residualSe,
+            double slopeStandardError,
             Map<LocalDate, Double> levelShifts,
             int observations) {
     }

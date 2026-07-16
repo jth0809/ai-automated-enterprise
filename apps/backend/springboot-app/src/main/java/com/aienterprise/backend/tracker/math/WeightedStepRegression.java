@@ -113,6 +113,14 @@ public class WeightedStepRegression {
         }
         double residualSe = Math.sqrt(weightedSse
                 / Math.max(1, observations.size() - columns));
+        double[] slopeUnit = new double[columns];
+        slopeUnit[1] = 1.0;
+        double inverseSlopeDiagonal = solve(normal, slopeUnit)[1];
+        if (inverseSlopeDiagonal < -SINGULAR_TOLERANCE) {
+            throw new SingularFit();
+        }
+        double slopeStandardError = residualSe
+                * Math.sqrt(Math.max(0.0, inverseSlopeDiagonal));
         double slope = coefficients[1];
         double intercept = coefficients[0] - slope * latestYear;
 
@@ -123,7 +131,8 @@ public class WeightedStepRegression {
         return new Fit(
                 new Trend(slope, intercept, residualSe),
                 shifts,
-                observations.size());
+                observations.size(),
+                slopeStandardError);
     }
 
     private static double[] row(
@@ -201,11 +210,16 @@ public class WeightedStepRegression {
     public record Fit(
             Trend trend,
             Map<LocalDate, Double> levelShifts,
-            int observations) {
+            int observations,
+            double slopeStandardError) {
 
         public Fit {
             trend = Objects.requireNonNull(trend, "trend");
             levelShifts = Collections.unmodifiableMap(new LinkedHashMap<>(levelShifts));
+            if (observations < 2 || !Double.isFinite(slopeStandardError)
+                    || slopeStandardError < 0) {
+                throw new IllegalArgumentException("invalid regression covariance audit");
+            }
         }
     }
 

@@ -31,6 +31,7 @@ class WeightedStepRegressionTest {
 
         assertEquals(0.10, fit.trend().slopePerYear(), 0.001);
         assertEquals(-0.50, fit.levelShifts().get(LocalDate.of(2015, 1, 1)), 0.01);
+        assertEquals(0.0, fit.slopeStandardError(), 1e-10);
         assertTrue(fit.trend().slopePerYear() > 0);
     }
 
@@ -53,6 +54,8 @@ class WeightedStepRegressionTest {
 
         assertEquals(first.trend().slopePerYear(), second.trend().slopePerYear(), 1e-12);
         assertEquals(first.levelShifts(), second.levelShifts());
+        assertEquals(first.slopeStandardError(), second.slopeStandardError(), 1e-12);
+        assertTrue(first.slopeStandardError() > 0);
     }
 
     private static WeightedStepRegression.Observation observation(String date, double logit) {

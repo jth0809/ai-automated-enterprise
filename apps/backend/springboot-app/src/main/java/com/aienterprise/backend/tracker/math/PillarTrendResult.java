@@ -20,6 +20,7 @@ public record PillarTrendResult(
         Double etaLow,
         Double etaHigh,
         double residualSe,
+        double slopeStandardError,
         Map<LocalDate, Double> levelShifts,
         int observations) {
 
@@ -30,7 +31,8 @@ public record PillarTrendResult(
                 || !Double.isFinite(trendUsed)
                 || eventsInWindow < 0 || windowYears <= 0
                 || observations < 0
-                || !Double.isFinite(residualSe) || residualSe < 0) {
+                || !Double.isFinite(residualSe) || residualSe < 0
+                || !Double.isFinite(slopeStandardError) || slopeStandardError < 0) {
             throw new IllegalArgumentException("invalid pillar trend result");
         }
         requireFiniteOrNull(trendFit, "trendFit");
