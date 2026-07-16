@@ -84,12 +84,12 @@ published calibration is identity with an explicit insufficiency status.
 - Create `tracker/prediction/PredictionCandidateSelector.java`.
 - Create focused pure tests.
 
-- [ ] Write RED exposure, dormancy, rollback, jump, sparse-prior, clamp, and
+- [x] Write RED exposure, dormancy, rollback, jump, sparse-prior, clamp, and
   horizon tests.
-- [ ] Write RED 12/cohort, two/pillar, integration, information-band, and stable
+- [x] Write RED 12/cohort, two/pillar, integration, information-band, and stable
   tie-order tests.
-- [ ] Implement deterministic statement and candidate generation without LLMs.
-- [ ] Commit as `feat(tracker): derive bounded hazard predictions`.
+- [x] Implement deterministic statement and candidate generation without LLMs.
+- [x] Commit as `feat(tracker): derive bounded hazard predictions`.
 
 ## Task 3: Atomic cohort issuance
 
