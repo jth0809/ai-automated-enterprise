@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -60,12 +61,18 @@ public final class HindcastPredictor {
         DeterministicRandom random = new DeterministicRandom(seed);
         ProjectionSampler.SamplingSession sampling = sampler.prepare(
                 nodes, graph, model);
+        Map<CapabilityGraph, EffectiveReadinessEngine.Prepared> readinessSessions =
+                new IdentityHashMap<>();
         int invalid = 0;
         for (int index = 0; index < sampleCount; index++) {
             try {
                 ProjectionSampler.SampledInputs sampled = sampling.sample(random);
-                ReadinessResult sampledReadiness = readinessEngine.calculate(
-                        sampled.nodes(), sampled.graph(), sampled.params(), cutoff);
+                EffectiveReadinessEngine.Prepared prepared = readinessSessions
+                        .computeIfAbsent(sampled.graph(), sampledGraph ->
+                                readinessEngine.prepare(
+                                        sampled.nodes(), sampledGraph));
+                ReadinessResult sampledReadiness = prepared.calculate(
+                        sampled.nodes(), sampled.params(), cutoff);
                 appendSample(
                         trends, sampled, sampledReadiness, horizonYears,
                         random, draws);

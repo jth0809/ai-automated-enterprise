@@ -138,6 +138,27 @@ class EffectiveReadinessEngineTest {
         assertEquals(ordered, reversed);
     }
 
+    @Test
+    void preparedGraphReusesValidationForDynamicNodeLevelsAndWeights() {
+        List<NodeRow> nodes = List.of(
+                node("A", 1, 0.2),
+                node("B", 2, 0.3),
+                node("TARGET", 3, 0.5));
+        CapabilityGraph graph = graph(List.of(
+                edge("A", "TARGET", 1, 0.15),
+                edge("B", "TARGET", 2, 0.15)));
+        EffectiveReadinessEngine.Prepared prepared = engine.prepare(nodes, graph);
+        List<NodeRow> changed = List.of(
+                node("A", 2, 0.4),
+                node("B", 2, 0.2),
+                node("TARGET", 3, 0.4));
+
+        assertEquals(engine.calculate(changed, graph, params, AS_OF),
+                prepared.calculate(changed, params, AS_OF));
+        assertThrows(IllegalArgumentException.class, () -> prepared.calculate(
+                List.of(node("UNKNOWN", 1, 1.0)), params, AS_OF));
+    }
+
     private static NodeRow node(String code, int level, double weight) {
         return new NodeRow(
                 Math.abs(code.hashCode()), code, 1, code, "TRL", level,

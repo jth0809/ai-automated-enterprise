@@ -4,10 +4,13 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.PriorityQueue;
+import java.util.Set;
 import java.util.TreeMap;
 
 import com.aienterprise.backend.tracker.domain.NodeRow;
@@ -33,7 +36,26 @@ public class EffectiveReadinessEngine {
             CapabilityGraph graph,
             Params params,
             LocalDate asOf) {
+        return prepare(nodeRows, graph).calculate(nodeRows, params, asOf);
+    }
+
+    public Prepared prepare(
+            List<NodeRow> nodeRows,
+            CapabilityGraph graph) {
+        Objects.requireNonNull(graph, "graph");
         validator.validate(graph, nodeRows);
+        Set<String> expectedCodes = new HashSet<>();
+        nodeRows.forEach(node -> expectedCodes.add(node.code()));
+        return new Prepared(graph, Set.copyOf(expectedCodes));
+    }
+
+    private ReadinessResult calculateValidated(
+            List<NodeRow> nodeRows,
+            CapabilityGraph graph,
+            Params params,
+            LocalDate asOf) {
+        Objects.requireNonNull(params, "params");
+        Objects.requireNonNull(asOf, "asOf");
 
         List<NodeRow> sortedNodes = nodeRows.stream()
                 .sorted(Comparator.comparing(NodeRow::code))
@@ -107,6 +129,42 @@ public class EffectiveReadinessEngine {
 
         return new ReadinessResult(
                 graph.version(), results, rawPillars, effectivePillars);
+    }
+
+    public final class Prepared {
+
+        private final CapabilityGraph graph;
+        private final Set<String> expectedCodes;
+
+        private Prepared(CapabilityGraph graph, Set<String> expectedCodes) {
+            this.graph = graph;
+            this.expectedCodes = expectedCodes;
+        }
+
+        public ReadinessResult calculate(
+                List<NodeRow> nodeRows,
+                Params params,
+                LocalDate asOf) {
+            requireMatchingRegistry(nodeRows);
+            return calculateValidated(nodeRows, graph, params, asOf);
+        }
+
+        private void requireMatchingRegistry(List<NodeRow> nodeRows) {
+            if (nodeRows == null || nodeRows.size() != expectedCodes.size()) {
+                throw new IllegalArgumentException(
+                        "prepared readiness node registry changed");
+            }
+            Set<String> actualCodes = new HashSet<>();
+            for (NodeRow node : nodeRows) {
+                if (node == null
+                        || !graph.nodeSetVersion().equals(node.nodeSetVersion())
+                        || !expectedCodes.contains(node.code())
+                        || !actualCodes.add(node.code())) {
+                    throw new IllegalArgumentException(
+                            "prepared readiness node registry changed");
+                }
+            }
+        }
     }
 
     private static NodeReadinessResult evaluateNode(

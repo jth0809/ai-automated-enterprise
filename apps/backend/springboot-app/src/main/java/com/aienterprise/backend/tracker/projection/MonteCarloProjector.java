@@ -2,11 +2,13 @@ package com.aienterprise.backend.tracker.projection;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import com.aienterprise.backend.tracker.graph.CapabilityGraph;
 import com.aienterprise.backend.tracker.graph.EffectiveReadinessEngine;
 import com.aienterprise.backend.tracker.graph.ReadinessResult;
 import com.aienterprise.backend.tracker.math.CompleteTrendModel;
@@ -46,12 +48,17 @@ public class MonteCarloProjector {
 
         ProjectionSampler.SamplingSession sampling = sampler.prepare(
                 input.nodes(), input.graph(), input.model());
+        Map<CapabilityGraph, EffectiveReadinessEngine.Prepared> readinessSessions =
+                new IdentityHashMap<>();
         int invalid = 0;
         for (int index = 0; index < input.sampleCount(); index++) {
             try {
                 ProjectionSampler.SampledInputs sampled = sampling.sample(random);
-                ReadinessResult readiness = readinessEngine.calculate(
-                        sampled.nodes(), sampled.graph(), sampled.params(), input.asOf());
+                EffectiveReadinessEngine.Prepared prepared = readinessSessions
+                        .computeIfAbsent(sampled.graph(), graph ->
+                                readinessEngine.prepare(sampled.nodes(), graph));
+                ReadinessResult readiness = prepared.calculate(
+                        sampled.nodes(), sampled.params(), input.asOf());
                 Double[] etas = projectSample(input, sampled, readiness, random);
                 appendValidSample(etas, finiteEtas, censored);
             } catch (RuntimeException invalidSample) {
