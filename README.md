@@ -1,5 +1,7 @@
 # AI Automated Enterprise
 
+**https://ai-auto.kro.kr**
+
 Oracle Cloud **Always Free Tier**(ARM A1 2 OCPU / 12GB) 위에 Zero-Trust DevSecOps · GitOps · 프로그레시브 딜리버리 파이프라인 전체를 구축한 레퍼런스 프로젝트입니다. `main` 브랜치에 코드를 푸시하면 CI가 이미지를 빌드·스캔·서명하고, FluxCD가 클러스터를 동기화하며, Flagger가 카나리 분석을 거쳐 자동으로 프로덕션에 승격합니다.
 
 > 상세 설계 문서: [ARCHITECTURE_PLAN.md](ARCHITECTURE_PLAN.md) ([한국어](ARCHITECTURE_PLAN_KO.md)) · 필수 자격증명: [REQUIRED_SECRETS.md](REQUIRED_SECRETS.md)
