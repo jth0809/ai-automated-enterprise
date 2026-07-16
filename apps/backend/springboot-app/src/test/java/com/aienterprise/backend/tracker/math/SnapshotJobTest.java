@@ -2,6 +2,7 @@ package com.aienterprise.backend.tracker.math;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -15,6 +16,7 @@ import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.test.context.ActiveProfiles;
@@ -25,6 +27,7 @@ import com.aienterprise.backend.tracker.domain.TrackerRepository;
 import com.aienterprise.backend.tracker.ingest.BackfillLoader;
 import com.aienterprise.backend.tracker.ops.StateFreezeService;
 import com.aienterprise.backend.tracker.ops.StateFreezeService.Trigger;
+import com.aienterprise.backend.tracker.projection.ProjectionService;
 
 @SpringBootTest(
         webEnvironment = SpringBootTest.WebEnvironment.NONE,
@@ -53,6 +56,9 @@ class SnapshotJobTest {
     @Autowired
     private StateFreezeService freezeService;
 
+    @Autowired
+    private ObjectProvider<ProjectionService> projectionService;
+
     @Test
     void weeklySnapshotProducesAllPillarsWithOrderedEtaInterval() {
         loader.loadIfEmpty();
@@ -80,6 +86,11 @@ class SnapshotJobTest {
         SnapshotRow overall = repository.findLatestSnapshot(0).orElseThrow();
         assertEquals(0.0, overall.readiness(), 1e-9);
         assertEquals("params-v2", overall.paramsVersion());
+        assertEquals(0, jdbc.sql("SELECT COUNT(*) FROM projection_run")
+                .query(Integer.class).single(),
+                "the default-off snapshot path must not create a projection run");
+        assertNull(projectionService.getIfAvailable(),
+                "the projection service must be absent while its flag is off");
     }
 
     @Test

@@ -1,5 +1,6 @@
 package com.aienterprise.backend.tracker.projection;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -63,5 +64,28 @@ class ProjectionFingerprintTest {
 
         assertNotEquals(first.sha256(), second.sha256());
         assertNotEquals(first.seed(), second.seed());
+    }
+
+    @Test
+    void canonicalizesNullableObservedNodeMetadata() {
+        ProjectionInput original = ProjectionTestFixtures.input();
+        var nodes = new ArrayList<>(original.nodes());
+        NodeRow node = nodes.get(0);
+        nodes.set(0, new NodeRow(
+                node.id(), node.code(), node.pillar(), node.nameKo(),
+                node.scaleType(), node.currentLevel(), null,
+                node.nodeStatus(), node.dormantSince(), node.programEndDate(),
+                node.weight(), node.integrationNode(), null,
+                node.nodeSetVersion()));
+        var readiness = new EffectiveReadinessEngine().calculate(
+                nodes, original.graph(), original.model().params(), original.asOf());
+        ProjectionInput nullableMetadata = new ProjectionInput(
+                original.asOf(), original.datasetSha256(), original.nodeSetVersion(),
+                nodes, original.graph(), original.model(), readiness,
+                ProjectionTestFixtures.trends(readiness, java.util.Map.of(
+                        1, .10, 2, .10, 3, .10, 4, .10, 5, .10, 6, .10)),
+                original.momentum(), original.sampleCount(), original.targetReadiness());
+
+        assertDoesNotThrow(() -> ProjectionFingerprint.of(nullableMetadata));
     }
 }

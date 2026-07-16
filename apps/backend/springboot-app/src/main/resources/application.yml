@@ -69,6 +69,9 @@ anthropic:
 tracker:
   enabled: ${TRACKER_ENABLED:false}
   feeds: ${TRACKER_FEEDS:}
+  # Phase 4 Monte Carlo projection is local-only but remains independently dark.
+  # When enabled it stores summary quantiles only; no samples or network calls.
+  phase4-projection-enabled: ${TRACKER_PHASE4_PROJECTION_ENABLED:false}
   # Launch Library 2 remains independently dark until GitOps egress review.
   # It imports only the previous completed year's Layer B cadence metrics;
   # it never promotes launches into Layer C capability events.

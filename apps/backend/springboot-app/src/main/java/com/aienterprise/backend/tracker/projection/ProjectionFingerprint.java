@@ -79,7 +79,7 @@ public final class ProjectionFingerprint {
             writeString(out, node.nameKo());
             writeString(out, node.scaleType());
             out.writeInt(node.currentLevel());
-            writeString(out, node.verificationLevel());
+            writeNullableString(out, node.verificationLevel());
             writeString(out, node.nodeStatus());
             writeNullableString(out, node.dormantSince() == null
                     ? null : node.dormantSince().toString());
@@ -87,7 +87,7 @@ public final class ProjectionFingerprint {
                     ? null : node.programEndDate().toString());
             out.writeDouble(node.weight());
             out.writeBoolean(node.integrationNode());
-            writeString(out, node.description());
+            writeNullableString(out, node.description());
             writeString(out, node.nodeSetVersion());
         }
     }
