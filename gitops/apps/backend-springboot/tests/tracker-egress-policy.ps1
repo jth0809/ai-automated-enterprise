@@ -208,6 +208,28 @@ if ($deploy -match '(?i)TRACKER_METACULUS_TOKEN|metaculus[_-]?token') {
     $failures += 'deployment: Metaculus token must not be referenced before Vault and terms approval'
 }
 
+# Phase 4 calculations and prediction operations are independently dark even
+# when the parent tracker is later enabled through a reviewed GitOps change.
+$phase4DarkDefaults = @(
+    'TRACKER_PHASE4_PROJECTION_ENABLED',
+    'TRACKER_PHASE4_BACKTEST_ENABLED',
+    'TRACKER_PHASE4_PREDICTION_ISSUANCE_ENABLED',
+    'TRACKER_PHASE4_PREDICTION_RESOLUTION_ENABLED'
+)
+foreach ($envName in $phase4DarkDefaults) {
+    $namePattern = '(?m)^\s*-\s*name:\s*' + [regex]::Escape($envName) + '\s*$'
+    $count = [regex]::Matches($deploy, $namePattern).Count
+    if ($count -ne 1) {
+        $failures += "deployment: expected exactly one '$envName', found $count"
+        continue
+    }
+    $pairPattern = '(?s)-\s*name:\s*' + [regex]::Escape($envName)
+    $pairPattern += '\s*\r?\n\s*value:\s*"false"'
+    if ($deploy -notmatch $pairPattern) {
+        $failures += "deployment: '$envName' must default to 'false'"
+    }
+}
+
 foreach ($file in @($NetworkPolicy, $Deployment)) {
     $text = Get-Content -Raw $file
     if ($text -match 'sk-ant-|x-api-key\s*:\s*\S|(?i)token\s*:\s*[A-Za-z0-9+/]{16,}') {

@@ -117,6 +117,17 @@ spec:
               value: "0 17 5 * * MON"
             - name: TRACKER_METACULUS_MAX_POSTS
               value: "2"
+            # Phase 4 credibility calculations and prediction operations ship
+            # dark. Each automatic path requires a separate reviewed GitOps
+            # activation after the G4 observation prerequisites are met.
+            - name: TRACKER_PHASE4_PROJECTION_ENABLED
+              value: "false"
+            - name: TRACKER_PHASE4_BACKTEST_ENABLED
+              value: "false"
+            - name: TRACKER_PHASE4_PREDICTION_ISSUANCE_ENABLED
+              value: "false"
+            - name: TRACKER_PHASE4_PREDICTION_RESOLUTION_ENABLED
+              value: "false"
           envFrom:
             - secretRef:
                 name: backend-springboot-secrets
