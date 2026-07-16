@@ -95,11 +95,11 @@ Oracle-compatible V17 schema, JUnit 5, Maven 3.9.9, Git.
   for exact noiseless fits or unavailable fits.
 - Preserve all existing point estimates and ETA behavior exactly.
 
-- [ ] Write RED tests for noisy slope uncertainty, exact-fit zero uncertainty,
+- [x] Write RED tests for noisy slope uncertainty, exact-fit zero uncertainty,
   and step-dummy covariance determinism.
-- [ ] Implement and propagate slope standard error.
-- [ ] Run WP4.2 math/snapshot regression tests.
-- [ ] Commit as `feat(tracker): expose trend covariance for projection`.
+- [x] Implement and propagate slope standard error.
+- [x] Run WP4.2 math/snapshot regression tests.
+- [x] Commit as `feat(tracker): expose trend covariance for projection`.
 
 ---
 
@@ -120,12 +120,12 @@ Oracle-compatible V17 schema, JUnit 5, Maven 3.9.9, Git.
 - Validate every sample before model evaluation; do not silently keep NaN,
   negative weights, non-monotone maps, or invalid dormancy curves.
 
-- [ ] Write RED tests for deterministic sequences and distribution boundaries.
-- [ ] Write property tests for 1,000 sampled maps, weights, DAG margins, `k`, and
+- [x] Write RED tests for deterministic sequences and distribution boundaries.
+- [x] Write property tests for 1,000 sampled maps, weights, DAG margins, `k`, and
   dormancy curves.
-- [ ] Implement samplers and immutable sampled inputs.
-- [ ] Run focused tests and existing graph/readiness tests.
-- [ ] Commit as `feat(tracker): sample constrained projection inputs`.
+- [x] Implement samplers and immutable sampled inputs.
+- [x] Run focused tests and existing graph/readiness tests.
+- [x] Commit as `feat(tracker): sample constrained projection inputs`.
 
 ---
 
@@ -151,13 +151,13 @@ Oracle-compatible V17 schema, JUnit 5, Maven 3.9.9, Git.
 - Fail when the invalid fraction is greater than 1%; return diagnostics when it
   is within tolerance.
 
-- [ ] Write RED tests for canonical hash/seed stability and input sensitivity.
-- [ ] Write exact censoring-rank tests where p50 or p90 becomes null.
-- [ ] Write tests for overall=max, any-pillar censoring, negative slopes, and
+- [x] Write RED tests for canonical hash/seed stability and input sensitivity.
+- [x] Write exact censoring-rank tests where p50 or p90 becomes null.
+- [x] Write tests for overall=max, any-pillar censoring, negative slopes, and
   deterministic 1,000-sample byte-stable output.
-- [ ] Implement the pure projector and diagnostics.
-- [ ] Run focused and WP4.1/WP4.2 math tests.
-- [ ] Commit as `feat(tracker): project right-censored ETA distribution`.
+- [x] Implement the pure projector and diagnostics.
+- [x] Run focused and WP4.1/WP4.2 math tests.
+- [x] Commit as `feat(tracker): project right-censored ETA distribution`.
 
 ---
 
@@ -178,11 +178,11 @@ Oracle-compatible V17 schema, JUnit 5, Maven 3.9.9, Git.
   deactivate the prior current run only after all new rows are valid.
 - Read APIs later consume only `COMPLETED` plus `current_result='Y'`.
 
-- [ ] Write RED tests for seven-row persistence, unique reuse, quantile nulls,
+- [x] Write RED tests for seven-row persistence, unique reuse, quantile nulls,
   and prior-current preservation on invalid output.
-- [ ] Implement repository and orchestration service.
-- [ ] Run V17 schema and projection persistence tests.
-- [ ] Commit as `feat(tracker): persist atomic projection summaries`.
+- [x] Implement repository and orchestration service.
+- [x] Run V17 schema and projection persistence tests.
+- [x] Commit as `feat(tracker): persist atomic projection summaries`.
 
 ---
 
@@ -206,12 +206,12 @@ Oracle-compatible V17 schema, JUnit 5, Maven 3.9.9, Git.
 - If a requested quantile is censored, persist null rather than substituting a
   clamp year. Preserve display damping and snapshot rollback semantics.
 
-- [ ] Write RED tests for default-off, enabled 1,000-sample integration,
+- [x] Write RED tests for default-off, enabled 1,000-sample integration,
   p10/p50/p90 replacement, reuse, and prior-result preservation.
-- [ ] Add the dark config flag and optional snapshot integration.
-- [ ] Run snapshot/controller focused tests.
-- [ ] Run complete backend/frontend regressions and production build.
-- [ ] Commit as `feat(tracker): apply Monte Carlo projection to snapshots`.
+- [x] Add the dark config flag and optional snapshot integration.
+- [x] Run snapshot/controller focused tests.
+- [x] Run complete backend/frontend regressions and production build.
+- [x] Commit as `feat(tracker): apply Monte Carlo projection to snapshots`.
 
 ---
 
@@ -223,14 +223,14 @@ Oracle-compatible V17 schema, JUnit 5, Maven 3.9.9, Git.
 - Modify this plan's checkboxes
 - Modify `docs/plans/multiplanetary-tracker-execution-plan.md` for WP4.3 only
 
-- [ ] Run `git diff --check`, projection-package egress scan, full tests, and
+- [x] Run `git diff --check`, projection-package egress scan, full tests, and
   build.
-- [ ] Run the real 147-claim local corpus with projection explicitly enabled;
+- [x] Run the real 147-claim local corpus with projection explicitly enabled;
   record seed, input hash, invalid/censored fractions, seven rows, API, browser,
   responsive state, and console.
-- [ ] Verify all live/polling flags remain false and protected files untracked.
-- [ ] Mark WP4.3 complete while leaving WP4.4–WP4.6 and G4 pending.
-- [ ] Commit as `docs(tracker): record WP4.3 projection verification`.
+- [x] Verify all live/polling flags remain false and protected files untracked.
+- [x] Mark WP4.3 complete while leaving WP4.4–WP4.6 and G4 pending.
+- [x] Commit as `docs(tracker): record WP4.3 projection verification`.
 
 ## Completion gate
 
