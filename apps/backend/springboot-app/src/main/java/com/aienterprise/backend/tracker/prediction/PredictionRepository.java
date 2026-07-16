@@ -1329,7 +1329,25 @@ public class PredictionRepository {
                     && calibrationVersion.equals(draft.calibrationVersion())
                     && asOf.equals(draft.asOf())
                     && issuedOn.equals(draft.issuedOn())
-                    && predictions.equals(draft.predictions());
+                    && publishedHashesEqual(predictions, draft.predictions());
+        }
+
+        private static boolean publishedHashesEqual(
+                List<PublishedCandidate> stored,
+                List<PublishedCandidate> proposed) {
+            if (stored.size() != proposed.size()) {
+                return false;
+            }
+            for (int index = 0; index < stored.size(); index++) {
+                PublishedCandidate left = stored.get(index);
+                PublishedCandidate right = proposed.get(index);
+                if (!left.inputSha256().equals(right.inputSha256())
+                        || !left.statementSha256().equals(
+                                right.statementSha256())) {
+                    return false;
+                }
+            }
+            return true;
         }
     }
 

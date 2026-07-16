@@ -125,13 +125,14 @@ class PredictionRepositoryTest {
             String statementHash) {
         var candidate = new PredictionCandidateSelector.Candidate(
                 nodeId, nodeCode, nodeName, pillar,
-                false, 0.18, 5, 6,
+                false, 0.180123456789, 5, 6,
                 LocalDate.of(2026, 7, 16), LocalDate.of(2028, 1, 16),
-                18, 0.35, 0.35, 0.35, 0.2275,
+                18, 0.351234567891, 0.351234567891, 0.351234567891,
+                0.227512345678,
                 PredictionCandidateSelector.InformationStatus.INFORMATIVE,
                 calibrationVersion,
                 nodeName + "이 2028-01-16까지 검증된 수준 L6 이상에 도달한다.",
-                3, 42.5, 0.08, 0.07);
+                3, 42.512345678901, 0.0812345678912, 0.0712345678912);
         return new PredictionRepository.PublishedCandidate(
                 candidate, inputHash, statementHash);
     }
