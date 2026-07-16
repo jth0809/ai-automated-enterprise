@@ -49,4 +49,27 @@ class LayerBDatasetValidatorTest {
         assertTrue(result.errors().isEmpty(), () -> String.join("\n", result.errors()));
         assertEquals(2, result.metrics().size());
     }
+
+    @Test
+    void acceptsHumanPresenceMetricCodesAsMeasuredPillarTwoFacts() {
+        var result = new LayerBDatasetValidator().validateJson("""
+                [
+                  {"metricCode":"ANNUAL_ORBITAL_HUMAN_PERSON_DAYS","pillar":2,
+                   "observedOn":"2025-12-31","value":3922.2028,"unit":"PERSON_DAYS",
+                   "basis":"MEASURED","sourceLabel":"Reviewed orbital history",
+                   "sourceUrl":"https://planet4589.org/space/astro/web/pop.html",
+                   "accessedOn":"2026-07-16","contentSha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                   "factSummary":"Integrated worldwide orbital population time history."},
+                  {"metricCode":"MAX_SIMULTANEOUS_HUMANS_IN_ORBIT","pillar":2,
+                   "observedOn":"2025-12-31","value":14,"unit":"PEOPLE",
+                   "basis":"MEASURED","sourceLabel":"Reviewed orbital history",
+                   "sourceUrl":"https://planet4589.org/space/astro/web/pop.html",
+                   "accessedOn":"2026-07-16","contentSha256":"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                   "factSummary":"Maximum simultaneous humans in orbit during the year."}
+                ]
+                """);
+
+        assertTrue(result.errors().isEmpty(), () -> String.join("\n", result.errors()));
+        assertEquals(2, result.metrics().size());
+    }
 }

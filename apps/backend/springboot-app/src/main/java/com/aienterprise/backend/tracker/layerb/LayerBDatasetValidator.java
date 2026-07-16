@@ -32,7 +32,9 @@ public class LayerBDatasetValidator {
             "ANNUAL_LAUNCH_COUNT",
             "ANNUAL_UPMASS_TONNES",
             "LEO_PUBLISHED_PRICE_FRONTIER_REAL_2025",
-            "ANNUAL_FALCON_FAMILY_LAUNCH_COUNT");
+            "ANNUAL_FALCON_FAMILY_LAUNCH_COUNT",
+            "ANNUAL_ORBITAL_HUMAN_PERSON_DAYS",
+            "MAX_SIMULTANEOUS_HUMANS_IN_ORBIT");
     private static final Set<String> BASES = Set.of("MEASURED", "PUBLISHED_PRICE", "CONSTRUCTED");
     private static final Set<String> PROHIBITED = Set.of(
             "quote", "body", "bodyhtml", "bodytext", "html", "pdf", "image",

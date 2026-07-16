@@ -3,10 +3,12 @@ package com.aienterprise.backend.tracker;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.ApplicationContext;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.test.context.ActiveProfiles;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.HashSet;
@@ -24,6 +26,14 @@ class TrackerSchemaTest {
 
     @Autowired
     private JdbcClient jdbcClient;
+
+    @Autowired
+    private ApplicationContext applicationContext;
+
+    @Test
+    void forecastComparisonServiceStaysAbsentWhenTrackerIsDisabled() {
+        assertFalse(applicationContext.containsBean("forecastComparisonService"));
+    }
 
     @Test
     void capabilityNodeHasExactlyThirtyFiveVersionedRows() {
@@ -52,11 +62,11 @@ class TrackerSchemaTest {
     }
 
     @Test
-    void sourceRegistryHasExactlyTwentySeededAndHistoricalRows() {
+    void sourceRegistryHasTheTwentyThreePhaseThreeRows() {
         Integer count = jdbcClient.sql("SELECT COUNT(*) FROM source_registry")
                 .query(Integer.class)
                 .single();
-        assertEquals(20, count);
+        assertEquals(23, count);
     }
 
     @Test
@@ -111,5 +121,23 @@ class TrackerSchemaTest {
                 .query(Integer.class)
                 .single();
         assertEquals(1, count);
+    }
+
+    @Test
+    void kIndexHasAuditableProvenanceAndImportLedger() {
+        Set<String> columns = new HashSet<>(jdbcClient.sql("""
+                SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
+                 WHERE TABLE_NAME = 'K_INDEX'
+                """).query(String.class).list());
+
+        assertTrue(columns.containsAll(Set.of(
+                "PRIMARY_ENERGY_TWH", "SOURCE_URL", "ACCESSED_ON",
+                "DATASET_VERSION")));
+
+        Integer importTables = jdbcClient.sql("""
+                SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES
+                 WHERE TABLE_NAME = 'K_INDEX_IMPORT'
+                """).query(Integer.class).single();
+        assertEquals(1, importTables);
     }
 }

@@ -82,6 +82,41 @@ public class TrackerRepository {
         }
     }
 
+    /**
+     * Stores metadata discovered from a bounded HTML index without admitting it
+     * to body extraction, the relevance gate, classification, or scoring.
+     */
+    public Optional<Long> insertArticleCandidateIfNew(
+            String url,
+            String urlHash,
+            long sourceId,
+            String title,
+            Instant publishedAt) {
+        if (articleIdByHash(urlHash).isPresent()) {
+            return Optional.empty();
+        }
+        try {
+            jdbc.sql("""
+                    INSERT INTO article
+                      (source_id, url, url_hash, title, published_at, body,
+                       body_extracted, pipeline_status, body_extraction_status,
+                       evaluation_allowed)
+                    VALUES
+                      (:sourceId, :url, :urlHash, :title, :publishedAt, NULL,
+                       'N', 'INGESTED', 'SKIPPED', 'N')
+                    """)
+                    .param("sourceId", sourceId)
+                    .param("url", url)
+                    .param("urlHash", urlHash)
+                    .param("title", title)
+                    .param("publishedAt", publishedAt == null ? null : Timestamp.from(publishedAt))
+                    .update();
+            return articleIdByHash(urlHash);
+        } catch (DuplicateKeyException concurrentDuplicate) {
+            return Optional.empty();
+        }
+    }
+
     public List<ArticleRow> findByStatus(String status, int limit) {
         if (limit <= 0) {
             return List.of();
@@ -90,7 +125,7 @@ public class TrackerRepository {
         // INGESTED rows stay invisible to the gate until extraction reaches a
         // terminal state; other pipeline statuses are unaffected.
         String pendingFilter = "INGESTED".equals(status)
-                ? " AND body_extraction_status <> 'PENDING'"
+                ? " AND body_extraction_status <> 'PENDING' AND evaluation_allowed = 'Y'"
                 : "";
         return jdbc.sql("""
                 SELECT id, source_id, url, url_hash, title, published_at, fetched_at,

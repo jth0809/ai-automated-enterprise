@@ -7,11 +7,17 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-function stubTrackerRoutes() {
+function stubTrackerRoutes(options: { failForecast?: boolean } = {}) {
   vi.stubGlobal(
     "fetch",
     vi.fn(async (input: RequestInfo | URL) => {
       const url = String(input);
+      if (
+        options.failForecast === true &&
+        url.includes("/api/tracker/forecast-comparison")
+      ) {
+        return { ok: false, status: 503, json: async () => ({}) } as Response;
+      }
       const body = url.includes("/api/tracker/summary")
         ? {
             displayedEtaYear: 2048.3,
@@ -79,6 +85,43 @@ function stubTrackerRoutes() {
                     coherenceState: "COHERENT",
                     coherenceAlertActive: false,
                   }
+                : url.includes("/api/tracker/forecast-comparison")
+                  ? {
+                      status: "PARTIAL",
+                      asOfDate: "2026-07-15",
+                      smoothingWindowDays: 90,
+                      crowdLiveStatus: "AUTHORIZATION_REQUIRED",
+                      rows: ["LANDING", "RETURN", "SETTLEMENT"].map(
+                        (trackCode) => ({
+                          trackCode,
+                          trackLabel: `${trackCode} 목표`,
+                          definition: `${trackCode} 비교 정의`,
+                          model: unavailableEstimate(),
+                          transport: unavailableEstimate(),
+                          crowd: unavailableEstimate(),
+                          institutional: [],
+                        }),
+                      ),
+                    }
+                  : url.includes("/api/tracker/k-index")
+                  ? {
+                      status: "CURRENT",
+                      latestYear: 2024,
+                      primaryEnergyTwh: 176737.1,
+                      powerWatts: 20175468036530,
+                      kValue: 0.7305,
+                      annualDelta: 0.0011,
+                      typeOneGap: 0.2695,
+                      typeOneMultiplier: 495.7,
+                      accountingBasis: "SUBSTITUTION",
+                      sourceName: "Reviewed energy source",
+                      sourceUrl: "https://example.test/energy",
+                      accessedOn: "2026-07-15",
+                      series: [
+                        { year: 2023, kValue: 0.7294 },
+                        { year: 2024, kValue: 0.7305 },
+                      ],
+                    }
               : { error: "unexpected" };
       return { ok: true, status: 200, json: async () => body } as Response;
     }),
@@ -101,11 +144,43 @@ describe("TrackerPage", () => {
     expect(screen.getByText("FLIGHT_TEST")).toBeInTheDocument();
     expect(screen.getByText("수송 경제성 시나리오")).toBeInTheDocument();
     expect(screen.getByText(/중앙 가정 \$200\/kg/)).toBeInTheDocument();
+    expect(screen.getByText("인류 문명 지수 K = 0.7305")).toBeInTheDocument();
+    expect(await screen.findByText("화성 예측 비교")).toBeInTheDocument();
     // The admin review queue is collapsed below the public dashboard and
     // fetches nothing until a token is submitted.
     expect(screen.getByText(/검수 큐/)).toBeInTheDocument();
   });
+
+  it("keeps the core dashboard available when forecast comparison fails", async () => {
+    stubTrackerRoutes({ failForecast: true });
+    render(<TrackerPage />);
+
+    expect(await screen.findByText("2048")).toBeInTheDocument();
+    expect(
+      await screen.findByText("예측 비교 데이터를 불러오지 못했습니다."),
+    ).toBeInTheDocument();
+    expect(screen.getByText("수송 경제성 시나리오")).toBeInTheDocument();
+  });
 });
+
+function unavailableEstimate() {
+  return {
+    status: "NOT_APPLICABLE",
+    year: null,
+    rawYear: null,
+    yearLow: null,
+    yearHigh: null,
+    relationKind: "NONE",
+    label: "적용 범위 밖",
+    detail: "직접 비교할 수 없습니다.",
+    sourceName: null,
+    sourceUrl: null,
+    sourceLocator: null,
+    observedOn: null,
+    accessedOn: null,
+    legacy: false,
+  };
+}
 
 describe("EventTimeline evidence", () => {
   it("renders reviewed historical facts without quotation styling", () => {

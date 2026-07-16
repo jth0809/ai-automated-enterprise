@@ -56,6 +56,62 @@ export interface TransportProjection {
   coherenceAlertActive: boolean;
 }
 
+export interface KIndexPoint {
+  year: number;
+  kValue: number;
+}
+
+export interface KIndexSummary {
+  status: "CURRENT" | "STALE" | "INSUFFICIENT_DATA";
+  latestYear: number | null;
+  primaryEnergyTwh: number | null;
+  powerWatts: number | null;
+  kValue: number | null;
+  annualDelta: number | null;
+  typeOneGap: number | null;
+  typeOneMultiplier: number | null;
+  accountingBasis: "SUBSTITUTION" | "USEFUL" | null;
+  sourceName: string | null;
+  sourceUrl: string | null;
+  accessedOn: string | null;
+  series: KIndexPoint[];
+}
+
+export interface ForecastEstimate {
+  status: string;
+  year: number | null;
+  rawYear: number | null;
+  yearLow: number | null;
+  yearHigh: number | null;
+  relationKind: string;
+  label: string;
+  detail: string;
+  sourceName: string | null;
+  sourceUrl: string | null;
+  sourceLocator: string | null;
+  observedOn: string | null;
+  accessedOn: string | null;
+  legacy: boolean;
+}
+
+export interface ForecastComparisonRow {
+  trackCode: "LANDING" | "RETURN" | "SETTLEMENT";
+  trackLabel: string;
+  definition: string;
+  model: ForecastEstimate;
+  transport: ForecastEstimate;
+  crowd: ForecastEstimate;
+  institutional: ForecastEstimate[];
+}
+
+export interface ForecastComparison {
+  status: "INSUFFICIENT_DATA" | "PARTIAL" | "STALE" | "CURRENT";
+  asOfDate: string;
+  smoothingWindowDays: number;
+  crowdLiveStatus: string;
+  rows: ForecastComparisonRow[];
+}
+
 export type EvidenceKind = "VERBATIM" | "HISTORICAL_REFERENCE";
 export type OccurredOnPrecision = "DAY" | "MONTH" | "YEAR";
 
@@ -103,6 +159,84 @@ export async function getTransportEconomics(): Promise<TransportProjection> {
   return (await res.json()) as TransportProjection;
 }
 
+export async function getKIndex(): Promise<KIndexSummary> {
+  const res = await fetch("/api/tracker/k-index");
+  if (!res.ok) throw new Error(`tracker K-index failed: HTTP ${res.status}`);
+  return (await res.json()) as KIndexSummary;
+}
+
+export async function getForecastComparison(): Promise<ForecastComparison> {
+  const res = await fetch("/api/tracker/forecast-comparison");
+  if (!res.ok) {
+    throw new Error(`tracker forecast comparison failed: HTTP ${res.status}`);
+  }
+  const body: unknown = await res.json();
+  if (!isForecastComparison(body)) {
+    throw new Error("tracker forecast comparison returned an invalid contract");
+  }
+  return body;
+}
+
+function isForecastComparison(value: unknown): value is ForecastComparison {
+  if (!isRecord(value)) return false;
+  const statuses = new Set(["INSUFFICIENT_DATA", "PARTIAL", "STALE", "CURRENT"]);
+  if (
+    typeof value.status !== "string" ||
+    !statuses.has(value.status) ||
+    typeof value.asOfDate !== "string" ||
+    typeof value.smoothingWindowDays !== "number" ||
+    typeof value.crowdLiveStatus !== "string" ||
+    !Array.isArray(value.rows) ||
+    value.rows.length !== 3
+  ) {
+    return false;
+  }
+  const tracks = new Set<string>();
+  for (const row of value.rows) {
+    if (
+      !isRecord(row) ||
+      !["LANDING", "RETURN", "SETTLEMENT"].includes(String(row.trackCode)) ||
+      typeof row.trackLabel !== "string" ||
+      typeof row.definition !== "string" ||
+      !isForecastEstimate(row.model) ||
+      !isForecastEstimate(row.transport) ||
+      !isForecastEstimate(row.crowd) ||
+      !Array.isArray(row.institutional) ||
+      !row.institutional.every(isForecastEstimate)
+    ) {
+      return false;
+    }
+    tracks.add(String(row.trackCode));
+  }
+  return tracks.size === 3;
+}
+
+function isForecastEstimate(value: unknown): value is ForecastEstimate {
+  if (!isRecord(value)) return false;
+  const nullableNumber = (item: unknown) => item === null || typeof item === "number";
+  const nullableString = (item: unknown) => item === null || typeof item === "string";
+  return (
+    typeof value.status === "string" &&
+    nullableNumber(value.year) &&
+    nullableNumber(value.rawYear) &&
+    nullableNumber(value.yearLow) &&
+    nullableNumber(value.yearHigh) &&
+    typeof value.relationKind === "string" &&
+    typeof value.label === "string" &&
+    typeof value.detail === "string" &&
+    nullableString(value.sourceName) &&
+    nullableString(value.sourceUrl) &&
+    nullableString(value.sourceLocator) &&
+    nullableString(value.observedOn) &&
+    nullableString(value.accessedOn) &&
+    typeof value.legacy === "boolean"
+  );
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
 export async function getEvents(limit = 50): Promise<TimelineEvent[]> {
   const res = await fetch(`/api/tracker/events?limit=${limit}`);
   if (!res.ok) throw new Error(`tracker events failed: HTTP ${res.status}`);
@@ -119,6 +253,7 @@ export interface LayerBMetric {
   basis: string;
   sourceLabel: string;
   sourceUrl: string;
+  accessedOn: string;
   factSummary: string;
 }
 

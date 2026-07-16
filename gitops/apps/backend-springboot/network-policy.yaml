@@ -107,6 +107,8 @@ spec:
         - matchName: science.nasa.gov
         - matchName: www.esa.int
         - matchName: global.jaxa.jp
+        - matchName: www.isro.gov.in
+        - matchName: www.cnsa.gov.cn
         - matchName: rss.arxiv.org
         - matchName: arxiv.org
         - matchName: export.arxiv.org
@@ -128,6 +130,15 @@ spec:
     # a reviewed GitOps activation after deployment validation.
     - toFQDNs:
         - matchName: ll.thespacedevs.com
+      toPorts:
+        - ports:
+            - port: "443"
+              protocol: TCP
+    # WP3.4 reviewed crowd-forecast history. Exact HTTPS host only; application
+    # collection also requires two false-by-default authorization gates and a
+    # later Vault-injected token, so this egress alone cannot activate traffic.
+    - toFQDNs:
+        - matchName: www.metaculus.com
       toPorts:
         - ports:
             - port: "443"

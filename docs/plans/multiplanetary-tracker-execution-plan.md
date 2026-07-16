@@ -148,16 +148,32 @@
 
 목표: 비-AI 실측 레이어를 붙여 "1측정 + 1앵커 + 1관측" 구조를 완성한다.
 
-- [ ] **WP3.1 Layer B 수집 + 사건 채널 승격** — Launch Library 2 API(발사 횟수·성공률, 속도 제한 준수) + 월간 수동 ETL 템플릿($/kg, upmass, 체류 인일 — BryceTech 등 PDF 소스), 지표→필라 매핑 레지스트리. **LL2를 Layer C 사건 소스로도 승격** — 뉴스 커버리지와 무관한 발사·시험 전수 포착 (G0 피드백: 커버리지 다변화)
+- [x] **WP3.1 Layer B 수집 + 사건 채널 승격** — Launch Library 2 API(발사 횟수·성공률, 속도 제한 준수) + 월간 수동 ETL 템플릿($/kg, upmass, 체류 인일 — BryceTech 등 PDF 소스), 지표→필라 매핑 레지스트리. **LL2를 Layer C 사건 소스로도 승격** — 뉴스 커버리지와 무관한 발사·시험 전수 포착 (G0 피드백: 커버리지 다변화)
   - **기반 완료(2026-07-15):** V11 `layer_b_metric`·저작권 안전 시드·멱등
     로더·API·정직성 UI와 LL2 2.3 페이지 수집→완료 연도 발사 수/성공률 집계를
     구현했다. LL2는 exact-host 443만 허용하고 `TRACKER_LL2_ENABLED=false`로
     유지한다. 상세: [WP3.1-A](../superpowers/plans/2026-07-14-tracker-wp31a-layer-b-measurement.md) ·
     [WP3.1-B](../superpowers/plans/2026-07-14-tracker-wp31b-launch-library.md).
-  - **잔여:** 체류 인일 수동 ETL과 Layer C 승격. 승격은 과도한 자동 추정을
-    피하기 위해 LIVE_MODEL 활성화 이후로 명시 보류하며, WP3.3은 현재 B쌍
-    데이터(공표 $/kg·연간 발사 수)로 먼저 진행한다.
-- [ ] **WP3.2 K-지수** — 연 1회 CSV 인제스트(대체법 기준 명시), 게이지 UI(소수점 4자리·Type I 거리)
+  - **측정 범위 완료(2026-07-16):** 전 세계 궤도 인구 전이를 결정적으로 적분해
+    2024년 4,241.8711 인일/최대 19명, 2025년 3,922.2028 인일/최대 14명을
+    Pillar 2 Layer B에 멱등 적재했다. 준궤도는 제외하고 준비도·ETA에는 자동
+    효과가 없다. backend 600/600, frontend 79/79, 잠금파일 정확 build,
+    실제 API·browser 검증을 통과했다. 상세:
+    [설계](../superpowers/specs/2026-07-16-tracker-wp31-human-presence-design.md) ·
+    [TDD 계획](../superpowers/plans/2026-07-16-tracker-wp31-human-presence-plan.md) ·
+    [검증 증거](../research/tracker-wp31-human-presence-validation-evidence.md).
+  - **의도적 비활성 경계:** LL2→Layer C 승격은 LIVE_MODEL 비활성 결정에 따라
+    별도 인간 승인 전까지 실행하지 않는다. 이는 오프라인 Phase 3 게이트의
+    미완료가 아니라 승인된 활성화 경계다.
+- [x] **WP3.2 K-지수** — 연 1회 CSV 인제스트(대체법 기준 명시), 게이지 UI(소수점 4자리·Type I 거리)
+  - **완료(2026-07-15):** 검수된 OWID World 연례 1차 에너지 CSV를 V13
+    출처·가져오기 원장에 멱등 적재하고, 대체법 K 계산·`CURRENT/STALE/INSUFFICIENT_DATA`
+    API와 소수점 4자리 게이지를 구현했다. 행 수는 현재 1965–2024 관측치에
+    고정하지 않고 10–200행 계약으로 검증한다. 준비도·ETA에는 자동 효과가 없으며,
+    backend 510/510, frontend 74/74, build·browser 검증을 통과했다. 상세:
+    [WP3.2 설계](../superpowers/specs/2026-07-15-tracker-wp32-k-index-design.md) ·
+    [WP3.2 TDD 계획](../superpowers/plans/2026-07-15-tracker-wp32-k-index-plan.md) ·
+    [검증 증거](../research/tracker-wp32-validation-evidence.md).
 - [x] **WP3.3 수송 경제성 ETA + B쌍 정합 검사** — Wright's law($/kg **공표 가격** vs 누적 발사량) 외삽 — 가격 기반 추정치임과 목표 경제성 임계값이 선언된 가정임을 데이터·UI에 명시(컨셉 v2.10), 분기 정합 잡(B쌍만 경보·구간 확대, A쌍은 연 1회 관측 각주 — v2.8/2.9 규칙)
   - **완료(2026-07-15):** 중앙 `$200/kg`, 민감도 `$100-$500/kg`, 운용
     Falcon 공표가 기반 잠정 허용형 Wright 모델, 비파괴 B↔C 정합 overlay,
@@ -166,15 +182,36 @@
     [WP3.3 설계](../superpowers/specs/2026-07-15-tracker-wp33-transport-economics-design.md) ·
     [WP3.3 TDD 계획](../superpowers/plans/2026-07-15-tracker-wp33-transport-economics-plan.md) ·
     [검증 증거](../research/tracker-wp33-validation-evidence.md).
-- [ ] **WP3.4 예측 대조 패널 + 숫자로 보는 우주 시대** — Metaculus 수집(수개월 이동 평균 평활) + 기관 목표 연도 수동 등록 테이블, 4열 대조 패널, Layer B 지표 대시보드
-- [ ] **WP3.5 수집 채널 확장 (G0 피드백 신설)** — ① 비영어권 보강: ISRO 보도자료·중국 우주 프로그램 영문 전문 소스 등 피드 3~5개 추가(CNP egress 동반), ② 필라 6 구조화 원장: UNOOSA 조약 상태 DB·관보(FAA 발사 면허) 인제스트 — Tier 1 `source_registry` 항목으로 등록해 기존 검증 도출 규칙 그대로 통과 (상세: [tracker-infra-prework.md](wp/tracker-infra-prework.md) 7절)
+- [x] **WP3.4 예측 대조 패널 + 숫자로 보는 우주 시대** — Metaculus 수집(수개월 이동 평균 평활) + 기관 목표 연도 수동 등록 테이블, 4열 대조 패널, Layer B 지표 대시보드
+  - **완료(2026-07-16):** V15 참조·관측 원장, 검수 참조 10건,
+    삼중 비활성 Metaculus 수집 경로, 90일 평활, 세 목표×네 출처 API와 독립
+    실패 React 패널을 구현했다. backend 600/600, 잠금파일 정확 frontend 79/79와
+    build, 실제 Spring API·375px browser·console 0, GitOps verifier와 kustomize
+    렌더를 통과했다. 빈 값은 `INSUFFICIENT_DATA`, 군중은
+    `AUTHORIZATION_REQUIRED`로 정직하게 유지한다. 상세:
+    [설계](../superpowers/specs/2026-07-15-tracker-wp34-forecast-comparison-design.md) ·
+    [TDD 계획](../superpowers/plans/2026-07-15-tracker-wp34-forecast-comparison-plan.md) ·
+    [검증 증거](../research/tracker-wp34-validation-evidence.md).
+- [x] **WP3.5 수집 채널 확장 (G0 피드백 신설)** — ① 비영어권 보강: ISRO 보도자료·중국 우주 프로그램 영문 전문 소스 등 피드 3~5개 추가(CNP egress 동반), ② 필라 6 구조화 원장: UNOOSA 조약 상태 DB·관보(FAA 발사 면허) 인제스트 — Tier 1 `source_registry` 항목으로 등록해 기존 검증 도출 규칙 그대로 통과 (상세: [tracker-infra-prework.md](wp/tracker-infra-prework.md) 7절)
+  - **완료(2026-07-16):** ISRO·CNSA 직접·CNSA hosted-media
+    세 인덱스 채널, 평가 격리 후보, UNOOSA·FAA·GovInfo 검수 원장 9건과 공개
+    읽기 API를 구현했다. exact-host egress와 in-process job은 모두 기본 비활성이고
+    자동 점수·승격 경로는 없다. Maven 600/600, 실제 Spring API, GitOps verifier와
+    kustomize 렌더를 통과했다. 상세: [설계](../superpowers/specs/2026-07-15-tracker-wp35-source-expansion-design.md) ·
+    [TDD 계획](../superpowers/plans/2026-07-15-tracker-wp35-source-expansion-plan.md) ·
+    [검증 증거](../research/tracker-wp35-validation-evidence.md).
 
 **게이트 G3:** 대조 패널 4열(본 모델/수송 경제성/군중/기관) 표시, 첫 분기 정합 리포트 발행.
 
-> **진행 중(2026-07-15):** G2 승인으로 Phase 3에 착수했고 WP3.1 측정 기반,
-> LL2 Layer B 경로와 WP3.3 수송 경제성·B쌍 정합을 완료했다. 실행 순서·
-> egress 사전작업·정직성 표기·사용자 결정 항목은 [Phase 3 실행준비 계획](../superpowers/plans/2026-07-14-tracker-phase3-kickoff-plan.md).
-> 다음은 후보군과 egress 경계를 검토한 WP3.2·WP3.5이며, 이후 WP3.4로 G3를 마무리한다.
+> **G3 승인(2026-07-16):** [2026 Q2 정합 리포트](../research/tracker-phase3-g3-coherence-report-2026-q2.md)는
+> 자료 상태를 `PARTIAL`로 정직하게 유지한다. 세 목표×네 출처 패널, 실제 API,
+> 전체 회귀, 잠금파일 도구체인, 모바일·console, GitOps·kustomize 게이트는 모두
+> 통과했다. `PARTIAL`은 게이트 실패가 아니라 현재 관측 상태다.
+
+> **Phase 3 완료(2026-07-16):** 승인된 비-AI 측정·앵커·관측 범위를 완료했다.
+> LIVE_MODEL·LL2 Layer C·official index live polling·Metaculus polling은 모두
+> 비활성이고, 활성화는 Phase 3 완료와 분리된 후속 인간 승인 작업이다. 상세 상태는
+> [Phase 3 실행계획](../superpowers/plans/2026-07-14-tracker-phase3-kickoff-plan.md)에 둔다.
 
 ---
 

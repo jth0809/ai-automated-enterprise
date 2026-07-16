@@ -94,4 +94,80 @@ class TrackerConfigTest {
                 .run(context -> assertThat(context)
                         .hasBean("trackerTransportEconomicsRunner"));
     }
+
+    @Test
+    void kIndexRunnerStaysOffInTestsButIsAvailableAtRuntime() {
+        runner.withUserConfiguration(TrackerConfig.class)
+                .withPropertyValues(
+                        "tracker.enabled=true",
+                        "tracker.k-index-on-boot=true",
+                        "spring.profiles.active=test")
+                .run(context -> assertThat(context)
+                        .doesNotHaveBean("trackerKIndexRunner"));
+
+        runner.withUserConfiguration(TrackerConfig.class)
+                .withPropertyValues(
+                        "tracker.enabled=true",
+                        "tracker.k-index-on-boot=true",
+                        "spring.profiles.active=test,demo")
+                .run(context -> assertThat(context)
+                        .hasBean("trackerKIndexRunner"));
+    }
+
+    @Test
+    void humanPresenceRunnerStaysOffInTestsButIsAvailableAtRuntime() {
+        runner.withUserConfiguration(TrackerConfig.class)
+                .withPropertyValues(
+                        "tracker.enabled=true",
+                        "tracker.human-presence-on-boot=true",
+                        "spring.profiles.active=test")
+                .run(context -> assertThat(context)
+                        .doesNotHaveBean("trackerHumanPresenceRunner"));
+
+        runner.withUserConfiguration(TrackerConfig.class)
+                .withPropertyValues(
+                        "tracker.enabled=true",
+                        "tracker.human-presence-on-boot=true",
+                        "spring.profiles.active=test,demo")
+                .run(context -> assertThat(context)
+                        .hasBean("trackerHumanPresenceRunner"));
+    }
+
+    @Test
+    void governanceRunnerStaysOffInTestsButIsAvailableAtRuntime() {
+        runner.withUserConfiguration(TrackerConfig.class)
+                .withPropertyValues(
+                        "tracker.enabled=true",
+                        "tracker.governance-on-boot=true",
+                        "spring.profiles.active=test")
+                .run(context -> assertThat(context)
+                        .doesNotHaveBean("trackerGovernanceRunner"));
+
+        runner.withUserConfiguration(TrackerConfig.class)
+                .withPropertyValues(
+                        "tracker.enabled=true",
+                        "tracker.governance-on-boot=true",
+                        "spring.profiles.active=test,demo")
+                .run(context -> assertThat(context)
+                        .hasBean("trackerGovernanceRunner"));
+    }
+
+    @Test
+    void forecastReferenceRunnerStaysOffInTestsButIsAvailableAtRuntime() {
+        runner.withUserConfiguration(TrackerConfig.class)
+                .withPropertyValues(
+                        "tracker.enabled=true",
+                        "tracker.forecast-reference-on-boot=true",
+                        "spring.profiles.active=test")
+                .run(context -> assertThat(context)
+                        .doesNotHaveBean("trackerForecastReferenceRunner"));
+
+        runner.withUserConfiguration(TrackerConfig.class)
+                .withPropertyValues(
+                        "tracker.enabled=true",
+                        "tracker.forecast-reference-on-boot=true",
+                        "spring.profiles.active=test,demo")
+                .run(context -> assertThat(context)
+                        .hasBean("trackerForecastReferenceRunner"));
+    }
 }
