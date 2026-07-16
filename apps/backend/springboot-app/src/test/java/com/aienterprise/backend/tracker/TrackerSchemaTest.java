@@ -113,6 +113,12 @@ class TrackerSchemaTest {
                 .query(Integer.class)
                 .single();
         assertEquals(1, count);
+
+        String version = jdbcClient.sql(
+                "SELECT version_label FROM parameter_set WHERE active = 'Y'")
+                .query(String.class)
+                .single();
+        assertEquals("params-v2", version);
     }
 
     @Test
