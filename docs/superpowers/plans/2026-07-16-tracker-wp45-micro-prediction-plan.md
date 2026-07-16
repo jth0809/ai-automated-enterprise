@@ -111,14 +111,14 @@ published calibration is identity with an explicit insufficiency status.
 - Create `PredictionResolutionService.java`, `PredictionScorecard.java`, and
   focused repository/service tests.
 
-- [ ] Prove first confirmed target transition by due date yields HIT and no
+- [x] Prove first confirmed target transition by due date yields HIT and no
   transition yields MISS.
-- [ ] Prove cancellation/data absence never yields VOID; manual VOID requires an
+- [x] Prove cancellation/data absence never yields VOID; manual VOID requires an
   explicit unadjudicable-predicate audit.
-- [ ] Prove exact Brier boundaries, idempotent repeats, and contradictory-outcome
+- [x] Prove exact Brier boundaries, idempotent repeats, and contradictory-outcome
   conflict isolation.
-- [ ] Aggregate cohort, horizon, pillar, and overall mean Brier with sample size.
-- [ ] Commit as `feat(tracker): resolve and score micro predictions`.
+- [x] Aggregate cohort, horizon, pillar, and overall mean Brier with sample size.
+- [x] Commit as `feat(tracker): resolve and score micro predictions`.
 
 ## Task 5: PAVA calibration and bounded drift diagnostics
 

@@ -3,6 +3,8 @@ package com.aienterprise.backend.tracker.prediction;
 import java.sql.Date;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.sql.Types;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -68,6 +70,165 @@ public class PredictionRepository {
                 """).param("inputHash", inputSha256)
                 .query(PredictionRepository::mapCohort)
                 .optional().map(this::hydrate);
+    }
+
+    public List<PendingPrediction> findPendingDue(LocalDate through) {
+        Objects.requireNonNull(through, "through");
+        return jdbc.sql("""
+                SELECT p.id, p.node_id, p.node_code, p.integration_node,
+                       p.target_level, p.probability, p.issued_on, p.due_on,
+                       p.node_set_version, p.rubric_version
+                  FROM prediction p
+                  JOIN prediction_cohort c ON c.id = p.cohort_id
+                 WHERE c.cohort_status = 'COMPLETED'
+                   AND p.outcome = 'PENDING'
+                   AND p.resolution_status = 'PENDING'
+                   AND p.due_on <= :through
+                 ORDER BY p.due_on, p.id
+                """).param("through", Date.valueOf(through))
+                .query(PredictionRepository::mapPendingPrediction).list();
+    }
+
+    public Optional<PendingPrediction> findForResolution(long predictionId) {
+        return jdbc.sql("""
+                SELECT p.id, p.node_id, p.node_code, p.integration_node,
+                       p.target_level, p.probability, p.issued_on, p.due_on,
+                       p.node_set_version, p.rubric_version
+                  FROM prediction p
+                  JOIN prediction_cohort c ON c.id = p.cohort_id
+                 WHERE p.id = :predictionId
+                   AND c.cohort_status = 'COMPLETED'
+                   AND p.outcome = 'PENDING'
+                """).param("predictionId", predictionId)
+                .query(PredictionRepository::mapPendingPrediction).optional();
+    }
+
+    public Optional<TargetTransition> findFirstTargetTransition(
+            PendingPrediction prediction) {
+        Objects.requireNonNull(prediction, "prediction");
+        return jdbc.sql("""
+                SELECT e.id, e.occurred_on
+                  FROM node_state_history h
+                  JOIN event e ON e.id = h.cause_event_id
+                 WHERE h.node_id = :nodeId
+                   AND e.node_id = :nodeId
+                   AND e.event_status = 'CONFIRMED'
+                   AND e.occurred_on > :issuedOn
+                   AND e.occurred_on <= :dueOn
+                   AND h.prev_level < :targetLevel
+                   AND h.new_level >= :targetLevel
+                 ORDER BY e.occurred_on, e.id, h.id
+                 FETCH FIRST 1 ROWS ONLY
+                """)
+                .param("nodeId", prediction.nodeId())
+                .param("issuedOn", Date.valueOf(prediction.issuedOn()))
+                .param("dueOn", Date.valueOf(prediction.dueOn()))
+                .param("targetLevel", prediction.targetLevel())
+                .query((rs, rowNum) -> new TargetTransition(
+                        rs.getLong("id"),
+                        rs.getDate("occurred_on").toLocalDate()))
+                .optional();
+    }
+
+    @Transactional
+    public ResolutionResult resolve(ResolutionDraft draft) {
+        Objects.requireNonNull(draft, "draft");
+        ResolutionTarget target = jdbc.sql("""
+                SELECT p.id, p.node_id, p.node_code, p.integration_node,
+                       p.target_level, p.probability, p.issued_on, p.due_on,
+                       p.node_set_version, p.rubric_version,
+                       p.outcome, p.brier
+                  FROM prediction p
+                  JOIN prediction_cohort c ON c.id = p.cohort_id
+                 WHERE p.id = :predictionId
+                   AND c.cohort_status = 'COMPLETED'
+                """).param("predictionId", draft.predictionId())
+                .query(PredictionRepository::mapResolutionTarget)
+                .optional().orElseThrow(() -> new IllegalArgumentException(
+                        "unknown completed prediction"));
+        if (target.outcome() != Outcome.PENDING) {
+            if (target.outcome() == draft.outcome()) {
+                return new ResolutionResult(
+                        ResolutionStatus.REUSED, target.id(), target.outcome(),
+                        target.brier(), null);
+            }
+            long conflictId = saveConflict(target, draft);
+            return new ResolutionResult(
+                    ResolutionStatus.CONFLICT, target.id(), target.outcome(),
+                    target.brier(), conflictId);
+        }
+
+        PendingPrediction pending = target.pending();
+        validateResolutionEvidence(pending, draft);
+        Double brier = switch (draft.outcome()) {
+            case HIT -> square(target.probability() - 1);
+            case MISS -> square(target.probability());
+            case VOID -> null;
+            case PENDING -> throw new IllegalArgumentException(
+                    "PENDING is not a resolution outcome");
+        };
+        String resolutionStatus = draft.outcome() == Outcome.VOID
+                ? "VOID" : "RESOLVED";
+        int updated = jdbc.sql("""
+                UPDATE prediction
+                   SET outcome = :outcome,
+                       brier = :brier,
+                       resolution_status = :resolutionStatus,
+                       resolved_at = :resolvedAt
+                 WHERE id = :predictionId AND outcome = 'PENDING'
+                """)
+                .param("outcome", draft.outcome().name())
+                .param("brier", brier, Types.NUMERIC)
+                .param("resolutionStatus", resolutionStatus)
+                .param("resolvedAt", Timestamp.from(draft.resolvedAt()))
+                .param("predictionId", draft.predictionId())
+                .update();
+        if (updated != 1) {
+            throw new IllegalStateException(
+                    "prediction resolution lost its atomic guard");
+        }
+        jdbc.sql("""
+                INSERT INTO prediction_resolution_evidence
+                  (prediction_id, outcome, outcome_binary, outcome_event_id,
+                   evidence_date, resolved_at, resolver_version, reason_code,
+                   evidence_summary)
+                VALUES
+                  (:predictionId, :outcome, :outcomeBinary, :eventId,
+                   :evidenceDate, :resolvedAt, 'resolver-v1', :reasonCode,
+                   :summary)
+                """)
+                .param("predictionId", draft.predictionId())
+                .param("outcome", draft.outcome().name())
+                .param("outcomeBinary", draft.outcomeBinary(), Types.INTEGER)
+                .param("eventId", draft.outcomeEventId(), Types.BIGINT)
+                .param("evidenceDate", Date.valueOf(draft.evidenceDate()))
+                .param("resolvedAt", Timestamp.from(draft.resolvedAt()))
+                .param("reasonCode", draft.reasonCode())
+                .param("summary", draft.evidenceSummary())
+                .update();
+        return new ResolutionResult(
+                ResolutionStatus.APPLIED, target.id(), draft.outcome(),
+                brier, null);
+    }
+
+    public List<ScoredPrediction> findScoredPredictions() {
+        return jdbc.sql("""
+                SELECT p.id, c.cohort_key, p.pillar, p.horizon_months,
+                       p.outcome, p.probability, p.brier, p.due_on
+                  FROM prediction p
+                  JOIN prediction_cohort c ON c.id = p.cohort_id
+                 WHERE c.cohort_status = 'COMPLETED'
+                   AND p.outcome IN ('HIT','MISS')
+                   AND p.resolution_status = 'RESOLVED'
+                   AND p.brier IS NOT NULL
+                 ORDER BY p.resolved_at, p.id
+                """).query((rs, rowNum) -> new ScoredPrediction(
+                        rs.getLong("id"), rs.getString("cohort_key"),
+                        rs.getInt("pillar"), rs.getInt("horizon_months"),
+                        Outcome.valueOf(rs.getString("outcome")),
+                        rs.getDouble("probability"), rs.getDouble("brier"),
+                        rs.getDate("due_on").toLocalDate()))
+                .list();
     }
 
     @Transactional
@@ -138,6 +299,95 @@ public class PredictionRepository {
         return findCompletedByInputHash(draft.inputSha256()).orElseThrow(
                 () -> new IllegalStateException(
                         "completed prediction cohort disappeared"));
+    }
+
+    private void validateResolutionEvidence(
+            PendingPrediction prediction,
+            ResolutionDraft draft) {
+        if (draft.outcome() == Outcome.HIT || draft.outcome() == Outcome.MISS) {
+            if (!prediction.dueOn().equals(draft.evidenceDate())) {
+                throw new IllegalArgumentException(
+                        "mature prediction evidence date must equal its due date");
+            }
+            Optional<TargetTransition> transition =
+                    findFirstTargetTransition(prediction);
+            if (draft.outcome() == Outcome.HIT) {
+                if (transition.isEmpty()
+                        || !Objects.equals(draft.outcomeEventId(),
+                                transition.get().eventId())) {
+                    throw new IllegalStateException(
+                            "HIT requires the first confirmed target transition");
+                }
+            } else if (transition.isPresent()) {
+                throw new IllegalStateException(
+                        "confirmed target transition prevents MISS resolution");
+            }
+        }
+    }
+
+    private long saveConflict(
+            ResolutionTarget target,
+            ResolutionDraft proposed) {
+        String conflictHash = PredictionFingerprint.sha256(String.join("|",
+                "prediction-resolution-conflict-v1",
+                Long.toString(target.id()), target.outcome().name(),
+                proposed.outcome().name(),
+                String.valueOf(proposed.outcomeEventId()),
+                proposed.evidenceDate().toString(), proposed.reasonCode()));
+        Optional<Long> existing = jdbc.sql("""
+                SELECT id FROM prediction_resolution_conflict
+                 WHERE conflict_sha256 = :conflictHash
+                """).param("conflictHash", conflictHash)
+                .query(Long.class).optional();
+        if (existing.isPresent()) {
+            return existing.get();
+        }
+        jdbc.sql("""
+                INSERT INTO prediction_resolution_conflict
+                  (prediction_id, conflict_sha256, existing_outcome,
+                   proposed_outcome, conflict_status, details)
+                VALUES
+                  (:predictionId, :conflictHash, :existing,
+                   :proposed, 'OPEN', :details)
+                """)
+                .param("predictionId", target.id())
+                .param("conflictHash", conflictHash)
+                .param("existing", target.outcome().name())
+                .param("proposed", proposed.outcome().name())
+                .param("details", "Immutable outcome conflict: existing="
+                        + target.outcome() + ";proposed=" + proposed.outcome())
+                .update();
+        return jdbc.sql("""
+                SELECT id FROM prediction_resolution_conflict
+                 WHERE conflict_sha256 = :conflictHash
+                """).param("conflictHash", conflictHash)
+                .query(Long.class).single();
+    }
+
+    private static PendingPrediction mapPendingPrediction(
+            ResultSet rs, int rowNum) throws SQLException {
+        return new PendingPrediction(
+                rs.getLong("id"), rs.getLong("node_id"),
+                rs.getString("node_code"),
+                "Y".equals(rs.getString("integration_node")),
+                rs.getInt("target_level"), rs.getDouble("probability"),
+                rs.getDate("issued_on").toLocalDate(),
+                rs.getDate("due_on").toLocalDate(),
+                rs.getString("node_set_version"),
+                rs.getString("rubric_version"));
+    }
+
+    private static ResolutionTarget mapResolutionTarget(
+            ResultSet rs, int rowNum) throws SQLException {
+        Number brier = (Number) rs.getObject("brier");
+        PendingPrediction pending = mapPendingPrediction(rs, rowNum);
+        return new ResolutionTarget(
+                pending, Outcome.valueOf(rs.getString("outcome")),
+                brier == null ? null : brier.doubleValue());
+    }
+
+    private static double square(double value) {
+        return value * value;
     }
 
     private void insertPrediction(
@@ -283,6 +533,179 @@ public class PredictionRepository {
         return "predictions=" + draft.predictions().size()
                 + ";informative=" + informative
                 + ";low_information=" + (draft.predictions().size() - informative);
+    }
+
+    public enum Outcome {
+        PENDING,
+        HIT,
+        MISS,
+        VOID
+    }
+
+    public enum ResolutionStatus {
+        APPLIED,
+        REUSED,
+        CONFLICT
+    }
+
+    public record PendingPrediction(
+            long id,
+            long nodeId,
+            String nodeCode,
+            boolean integrationNode,
+            int targetLevel,
+            double issuedProbability,
+            LocalDate issuedOn,
+            LocalDate dueOn,
+            String nodeSetVersion,
+            String rubricVersion) {
+
+        public PendingPrediction {
+            if (id <= 0 || nodeId <= 0 || blank(nodeCode)
+                    || targetLevel < 1 || targetLevel > 8
+                    || !Double.isFinite(issuedProbability)
+                    || issuedProbability < 0.02 || issuedProbability > 0.98
+                    || issuedOn == null || dueOn == null || !dueOn.isAfter(issuedOn)
+                    || blank(nodeSetVersion) || blank(rubricVersion)) {
+                throw new IllegalArgumentException("invalid pending prediction");
+            }
+        }
+    }
+
+    public record TargetTransition(long eventId, LocalDate occurredOn) {
+
+        public TargetTransition {
+            if (eventId <= 0 || occurredOn == null) {
+                throw new IllegalArgumentException("invalid target transition");
+            }
+        }
+    }
+
+    public record ResolutionDraft(
+            long predictionId,
+            Outcome outcome,
+            Long outcomeEventId,
+            LocalDate evidenceDate,
+            Instant resolvedAt,
+            String reasonCode,
+            String evidenceSummary) {
+
+        public ResolutionDraft {
+            if (predictionId <= 0 || outcome == null || outcome == Outcome.PENDING
+                    || evidenceDate == null || resolvedAt == null
+                    || blank(reasonCode) || blank(evidenceSummary)
+                    || evidenceSummary.length() > 1000) {
+                throw new IllegalArgumentException("invalid prediction resolution draft");
+            }
+            boolean invalid = switch (outcome) {
+                case HIT -> outcomeEventId == null || outcomeEventId <= 0
+                        || !"TARGET_REACHED".equals(reasonCode);
+                case MISS -> outcomeEventId != null
+                        || !"DUE_NO_TARGET".equals(reasonCode);
+                case VOID -> outcomeEventId != null
+                        || !"PREDICATE_UNADJUDICABLE".equals(reasonCode);
+                case PENDING -> true;
+            };
+            if (invalid) {
+                throw new IllegalArgumentException(
+                        "resolution evidence does not match its outcome");
+            }
+            evidenceSummary = evidenceSummary.trim();
+        }
+
+        public static ResolutionDraft hit(
+                long predictionId,
+                long eventId,
+                LocalDate dueOn,
+                Instant resolvedAt) {
+            return new ResolutionDraft(
+                    predictionId, Outcome.HIT, eventId, dueOn, resolvedAt,
+                    "TARGET_REACHED",
+                    "The first confirmed target transition occurred by the immutable due date.");
+        }
+
+        public static ResolutionDraft miss(
+                long predictionId,
+                LocalDate dueOn,
+                Instant resolvedAt) {
+            return new ResolutionDraft(
+                    predictionId, Outcome.MISS, null, dueOn, resolvedAt,
+                    "DUE_NO_TARGET",
+                    "No confirmed target transition occurred by the immutable due date.");
+        }
+
+        public static ResolutionDraft voided(
+                long predictionId,
+                LocalDate evidenceDate,
+                Instant resolvedAt,
+                String evidenceSummary) {
+            return new ResolutionDraft(
+                    predictionId, Outcome.VOID, null, evidenceDate, resolvedAt,
+                    "PREDICATE_UNADJUDICABLE", evidenceSummary);
+        }
+
+        Integer outcomeBinary() {
+            return switch (outcome) {
+                case HIT -> 1;
+                case MISS -> 0;
+                case VOID, PENDING -> null;
+            };
+        }
+    }
+
+    public record ResolutionResult(
+            ResolutionStatus status,
+            long predictionId,
+            Outcome outcome,
+            Double brier,
+            Long conflictId) {
+
+        public ResolutionResult {
+            if (status == null || predictionId <= 0 || outcome == null
+                    || brier != null && (!Double.isFinite(brier)
+                            || brier < 0 || brier > 1)
+                    || status == ResolutionStatus.CONFLICT && conflictId == null
+                    || status != ResolutionStatus.CONFLICT && conflictId != null) {
+                throw new IllegalArgumentException("invalid resolution result");
+            }
+        }
+    }
+
+    public record ScoredPrediction(
+            long id,
+            String cohortKey,
+            int pillar,
+            int horizonMonths,
+            Outcome outcome,
+            double issuedProbability,
+            double brier,
+            LocalDate dueOn) {
+
+        public ScoredPrediction {
+            if (id <= 0 || blank(cohortKey) || pillar < 1 || pillar > 6
+                    || !List.of(6, 12, 18, 24).contains(horizonMonths)
+                    || outcome != Outcome.HIT && outcome != Outcome.MISS
+                    || !Double.isFinite(issuedProbability)
+                    || issuedProbability < 0 || issuedProbability > 1
+                    || !Double.isFinite(brier) || brier < 0 || brier > 1
+                    || dueOn == null) {
+                throw new IllegalArgumentException("invalid scored prediction");
+            }
+        }
+    }
+
+    private record ResolutionTarget(
+            PendingPrediction pending,
+            Outcome outcome,
+            Double brier) {
+
+        private long id() {
+            return pending.id();
+        }
+
+        private double probability() {
+            return pending.issuedProbability();
+        }
     }
 
     public record CohortDraft(
