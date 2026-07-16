@@ -159,11 +159,11 @@ published calibration is identity with an explicit insufficiency status.
 
 - [ ] Run focused/full Maven, Vitest, production build, diff/security/GitOps
   checks, and a network-egress scan.
-- [ ] Manually issue the first audited cohort from the 147-claim corpus and
+- [x] Manually issue the first audited cohort from the 147-claim corpus and
   publish all probabilities, horizons, exposure/rate diagnostics, hashes, and
   insufficiency state.
-- [ ] Re-run identical issuance and prove cohort reuse.
-- [ ] Verify live/polling flags remain false and protected fixtures untracked.
+- [x] Re-run identical issuance and prove cohort reuse.
+- [x] Verify live/polling flags remain false and protected fixtures untracked.
 - [ ] Mark WP4.5 complete while leaving WP4.6 and G4 observation pending.
 - [ ] Commit as `docs(tracker): publish first micro predictions`.
 

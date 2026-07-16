@@ -100,10 +100,10 @@ Oracle-compatible V18 schema, Jackson, JUnit 5, Maven 3.9.9, Git.
 - Constrain fold cohort/status and metric code/status; preserve nullable values
   only for explicitly insufficient observations.
 
-- [ ] Write RED schema and constraint tests.
-- [ ] Add Oracle/H2-compatible V18 migration.
-- [ ] Run V1–V18 migration tests.
-- [ ] Commit as `feat(tracker): add backtest audit schema`.
+- [x] Write RED schema and constraint tests.
+- [x] Add Oracle/H2-compatible V18 migration.
+- [x] Run V1–V18 migration tests.
+- [x] Commit as `feat(tracker): add backtest audit schema`.
 
 ---
 
@@ -125,11 +125,11 @@ Oracle-compatible V18 schema, Jackson, JUnit 5, Maven 3.9.9, Git.
 - Canonicalize dataset, node/rubric/parameter/graph versions, graph hash,
   candidate registry, cutoff schedule, sample count, and code/report version.
 
-- [ ] Write RED candidate-count/order/default-distance tests.
-- [ ] Write RED 2010-boundary and latest-completed-target tests.
-- [ ] Write hash stability and sensitivity tests.
-- [ ] Implement immutable registry, split types, and fingerprint.
-- [ ] Commit as `feat(tracker): define leak-proof backtest inputs`.
+- [x] Write RED candidate-count/order/default-distance tests.
+- [x] Write RED 2010-boundary and latest-completed-target tests.
+- [x] Write hash stability and sensitivity tests.
+- [x] Implement immutable registry, split types, and fingerprint.
+- [x] Commit as `feat(tracker): define leak-proof backtest inputs`.
 
 ---
 
@@ -152,11 +152,11 @@ Oracle-compatible V18 schema, Jackson, JUnit 5, Maven 3.9.9, Git.
   samples; retain null/censored ETA rather than inventing a year.
 - Fail if more than 1% of fold samples violate numeric/model constraints.
 
-- [ ] Write RED state replay and future-claim tripwire tests.
-- [ ] Write RED deterministic p10/p90, central forecast, and invalid-limit tests.
-- [ ] Implement replay and hindcast predictor.
-- [ ] Run WP4.1–WP4.3 graph/math/projection regression tests.
-- [ ] Commit as `feat(tracker): replay cutoff-safe hindcasts`.
+- [x] Write RED state replay and future-claim tripwire tests.
+- [x] Write RED deterministic p10/p90, central forecast, and invalid-limit tests.
+- [x] Implement replay and hindcast predictor.
+- [x] Run WP4.1–WP4.3 graph/math/projection regression tests.
+- [x] Commit as `feat(tracker): replay cutoff-safe hindcasts`.
 
 ---
 
@@ -180,11 +180,11 @@ Oracle-compatible V18 schema, Jackson, JUnit 5, Maven 3.9.9, Git.
 - Produce stable JSON-ready ordering and diagnostics for all 27 calibration
   candidates plus selected calibration/holdout folds.
 
-- [ ] Write RED exact-objective, sparse-data, and default-distance tie tests.
-- [ ] Write a holdout tripwire proving selection cannot inspect post-2010 data.
-- [ ] Implement metrics, candidate selection, and one-pass holdout evaluation.
-- [ ] Run deterministic synthetic recovery and report-order tests.
-- [ ] Commit as `feat(tracker): calibrate on pre-2010 hindcasts`.
+- [x] Write RED exact-objective, sparse-data, and default-distance tie tests.
+- [x] Write a holdout tripwire proving selection cannot inspect post-2010 data.
+- [x] Implement metrics, candidate selection, and one-pass holdout evaluation.
+- [x] Run deterministic synthetic recovery and report-order tests.
+- [x] Commit as `feat(tracker): calibrate on pre-2010 hindcasts`.
 
 ---
 
@@ -209,11 +209,11 @@ Oracle-compatible V18 schema, Jackson, JUnit 5, Maven 3.9.9, Git.
 - Run only when `tracker.phase4-backtest-enabled=true`, after the backfill boot
   runner; do not run on a public read request.
 
-- [ ] Write RED idempotency, report-hash, row-count, and prior-current tests.
-- [ ] Write default-off and explicit-on context/runner tests.
-- [ ] Implement repository, service, flag, and ordered runner.
-- [ ] Run V18 and service integration tests.
-- [ ] Commit as `feat(tracker): persist calibrated backtest reports`.
+- [x] Write RED idempotency, report-hash, row-count, and prior-current tests.
+- [x] Write default-off and explicit-on context/runner tests.
+- [x] Implement repository, service, flag, and ordered runner.
+- [x] Run V18 and service integration tests.
+- [x] Commit as `feat(tracker): persist calibrated backtest reports`.
 
 ---
 
@@ -229,11 +229,11 @@ Oracle-compatible V18 schema, Jackson, JUnit 5, Maven 3.9.9, Git.
 
 - [ ] Run focused and full Maven tests, full Vitest, production build,
   `git diff --check`, and backtest-package egress scan.
-- [ ] Run the real 147-claim corpus with backtest explicitly enabled and record
+- [x] Run the real 147-claim corpus with backtest explicitly enabled and record
   all 27 calibration scores, the selected candidate, locked holdout metrics,
   insufficiency states, input/report hashes, and row counts.
-- [ ] Re-run identical input and prove idempotent run/report reuse.
-- [ ] Verify live/polling flags remain false and protected files remain untracked.
+- [x] Re-run identical input and prove idempotent run/report reuse.
+- [x] Verify live/polling flags remain false and protected files remain untracked.
 - [ ] Mark WP4.4 complete while leaving WP4.5–WP4.6 and G4 pending.
 - [ ] Commit as `docs(tracker): publish WP4.4 backtest evidence`.
 

@@ -61,14 +61,14 @@ one source.
 - Create/update WP4.4 report and validation evidence JSON/Markdown.
 - Update the WP4.4/WP4.5 plans and master roadmap.
 
-- [ ] Run the approved local projection and backtest with runtime-only flags;
+- [x] Run the approved local projection and backtest with runtime-only flags;
   leave repository defaults false.
-- [ ] Reissue the 147-claim first cohort twice and prove identical cohort ID,
+- [x] Reissue the 147-claim first cohort twice and prove identical cohort ID,
   key, input hash, calibration version, and one-row cohort cardinality.
-- [ ] Export all 12 statements, probabilities, horizons, exposure/rate
+- [x] Export all 12 statements, probabilities, horizons, exposure/rate
   diagnostics, hashes, and explicit zero-outcome calibration state.
-- [ ] Export the complete selected backtest report and comparison metrics.
-- [ ] Commit as `docs(tracker): publish Phase 4 runtime evidence`.
+- [x] Export the complete selected backtest report and comparison metrics.
+- [x] Commit as `docs(tracker): publish Phase 4 runtime evidence`.
 
 ## Task 3: React methodology and credibility section
 
