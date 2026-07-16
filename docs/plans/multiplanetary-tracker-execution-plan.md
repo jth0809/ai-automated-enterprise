@@ -219,7 +219,7 @@
 
 목표: 수학을 컨셉 v2.9 완전판으로 올리고, 신뢰도 장치를 공개한다.
 
-- [ ] **WP4.1 의존성 DAG** — `capability_edge` 활성화, 위상 정렬 유효 준비도 `r_eff = min(r, D+δ_e)`, AND/OR 집계
+- [x] **WP4.1 의존성 DAG** — `capability_edge` 활성화, 위상 정렬 유효 준비도 `r_eff = min(r, D+δ_e)`, AND/OR 집계 ([상세 계획](../superpowers/plans/2026-07-16-tracker-wp41-dag-plan.md), [검증 증거](../research/tracker-wp41-validation-evidence.md))
   - 완료 기준: 컨셉 8.1 수치 예시(0.30+0.15=0.45)가 테스트로 재현
 - [ ] **WP4.2 수학 정교화** — 사건 수 기반 수축(k=4), 필라별 W_p 규칙(m=6, 4~15년), 개입 분석(수준 이동 더미), 구조 단절(윈도우 리셋), Holt는 UI 모멘텀 전용으로 분리
   - 완료 기준: 계단형 합성 데이터에서 가짜 모멘텀 부재 확인(점프 직후 ETA 요동 < 지정 임계)

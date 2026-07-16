@@ -108,7 +108,7 @@ Oracle-compatible SQL, JUnit 5, Maven 3.9.9, Git.
   `f5f948b35aa60ce4c72e3550ad188cc4a1e63595096bf64a9da022e7e5313e4e`,
   and nullable `pillar_snapshot.raw_readiness`/`graph_version`.
 
-- [ ] **Step 1: Write the failing V16 schema test**
+- [x] **Step 1: Write the failing V16 schema test**
 
 Create a Spring/H2 schema test containing these exact assertions:
 
@@ -148,7 +148,7 @@ Add tests that inserting `delta_e=-0.001`, `delta_e=0.501`, `or_group=0`, a
 self-edge, or a duplicate `(graph_version_label,to_node_id,from_node_id)` fails
 with `DataIntegrityViolationException`.
 
-- [ ] **Step 2: Run the schema test and confirm RED**
+- [x] **Step 2: Run the schema test and confirm RED**
 
 Run:
 
@@ -160,7 +160,7 @@ Run:
 Expected: test compilation or context startup fails because V16 tables/columns
 do not exist.
 
-- [ ] **Step 3: Add the Oracle-compatible V16 migration**
+- [x] **Step 3: Add the Oracle-compatible V16 migration**
 
 The migration must use this schema and preserve the legacy rows:
 
@@ -229,7 +229,7 @@ ALTER TABLE pillar_snapshot ADD CONSTRAINT fk_snapshot_graph_version
 The two SHA values are the exact Task 2 canonical hashes for the preserved
 legacy and corrected active graphs. Repository tests recompute both values.
 
-- [ ] **Step 4: Update the V6 registry test to select the active graph**
+- [x] **Step 4: Update the V6 registry test to select the active graph**
 
 Join `capability_graph_version` and filter `active='Y'`. Replace the legacy
 assertion that every `or_group` equals 1 with:
@@ -245,7 +245,7 @@ Map<String, Long> groupCount = edges.stream().collect(Collectors.groupingBy(
 assertEquals(edgeCount, groupCount, "every mandatory input must be its own AND group");
 ```
 
-- [ ] **Step 5: Run focused schema tests and confirm GREEN**
+- [x] **Step 5: Run focused schema tests and confirm GREEN**
 
 Run:
 
@@ -256,7 +256,7 @@ Run:
 
 Expected: all tests PASS and Flyway reports schema version 16.
 
-- [ ] **Step 6: Commit Task 1**
+- [x] **Step 6: Commit Task 1**
 
 ```powershell
 git add -- `
@@ -287,7 +287,7 @@ git commit -m "feat(tracker): version capability dependency graph"
   `nodeSetVersion`, followed by edges sorted by `toCode`, `orGroup`, `fromCode`
   and formatted `to|%02d|from|%.3f` with `Locale.ROOT`.
 
-- [ ] **Step 1: Write failing validator tests**
+- [x] **Step 1: Write failing validator tests**
 
 Create fixtures with `NodeRow` codes `A`, `B`, `C` and assert acceptance of
 `A -> B -> C`. Assert `IllegalStateException` for an unknown node, self-edge,
@@ -308,12 +308,12 @@ public record CapabilityGraph(
 }
 ```
 
-- [ ] **Step 2: Run validator tests and confirm RED**
+- [x] **Step 2: Run validator tests and confirm RED**
 
 Run `-Dtest=CapabilityGraphValidatorTest test` and expect missing-type
 compilation failures.
 
-- [ ] **Step 3: Implement canonicalization and graph validation**
+- [x] **Step 3: Implement canonicalization and graph validation**
 
 `CapabilityGraph.canonicalText()` must be equivalent to:
 
@@ -333,7 +333,7 @@ return version + "\n" + nodeSetVersion
 topological sort and compare lowercase SHA-256 hex of `canonicalText()` to the
 declared hash using `MessageDigest.isEqual`.
 
-- [ ] **Step 4: Write failing repository integration tests**
+- [x] **Step 4: Write failing repository integration tests**
 
 Autowire `CapabilityGraphRepository` in an H2 Spring test and assert:
 
@@ -348,7 +348,7 @@ assertEquals(graph.declaredSha256(), graph.computedSha256());
 Set both graph rows active inside a rolled-back test transaction and assert
 `loadActive()` throws `IllegalStateException` instead of choosing one.
 
-- [ ] **Step 5: Implement the focused JdbcClient repository**
+- [x] **Step 5: Implement the focused JdbcClient repository**
 
 Annotate it with the parent feature gate:
 
@@ -399,7 +399,7 @@ public class CapabilityGraphRepository {
 }
 ```
 
-- [ ] **Step 6: Run Task 2 tests and confirm GREEN**
+- [x] **Step 6: Run Task 2 tests and confirm GREEN**
 
 Run:
 
@@ -410,7 +410,7 @@ Run:
 
 Expected: all tests PASS.
 
-- [ ] **Step 7: Commit Task 2**
+- [x] **Step 7: Commit Task 2**
 
 Stage only the six graph files and commit:
 
@@ -448,7 +448,7 @@ public record ReadinessResult(
         Map<Integer, Double> effectivePillarReadiness) {}
 ```
 
-- [ ] **Step 1: Write exact numeric RED tests**
+- [x] **Step 1: Write exact numeric RED tests**
 
 Cover these cases with levels/readiness values chosen through a test `Params`
 mapping or package-visible raw-value helper:
@@ -468,11 +468,11 @@ Also assert raw/effective pillar sums use node weights, every effective value is
 `<= raw + 1e-12`, input collections are not mutated, and results are deterministic
 under shuffled node/edge order.
 
-- [ ] **Step 2: Run the engine test and confirm RED**
+- [x] **Step 2: Run the engine test and confirm RED**
 
 Run `-Dtest=EffectiveReadinessEngineTest test`; expect missing classes.
 
-- [ ] **Step 3: Implement one-pass topological evaluation**
+- [x] **Step 3: Implement one-pass topological evaluation**
 
 The engine entry point is exact:
 
@@ -495,7 +495,7 @@ double effective = Math.min(raw, dependencyCap);
 Use a tolerance of `1e-12` when selecting tied limiting groups/dependencies.
 Return unmodifiable, insertion-ordered maps. Never update `capability_node`.
 
-- [ ] **Step 4: Run engine and math regression tests**
+- [x] **Step 4: Run engine and math regression tests**
 
 Run:
 
@@ -506,7 +506,7 @@ Run:
 
 Expected: all tests PASS.
 
-- [ ] **Step 5: Commit Task 3**
+- [x] **Step 5: Commit Task 3**
 
 Stage only the four engine files and commit:
 
@@ -536,7 +536,7 @@ git commit -m "feat(tracker): compute effective DAG readiness"
 - Legacy snapshot writers continue using the 14-argument `SnapshotRow`
   constructor, which sets `rawReadiness=readiness` and `graphVersion=null`.
 
-- [ ] **Step 1: Write failing snapshot audit tests**
+- [x] **Step 1: Write failing snapshot audit tests**
 
 After loading the sample backfill and running `snapshotNow()`, assert all seven
 rows contain:
@@ -557,12 +557,12 @@ Corrupt the active graph hash inside a rolled-back transaction, call
 `snapshotNow()`, assert `IllegalStateException`, and assert no row for today's
 date was replaced.
 
-- [ ] **Step 2: Run SnapshotJobTest and confirm RED**
+- [x] **Step 2: Run SnapshotJobTest and confirm RED**
 
 Run `-Dtest=SnapshotJobTest test`; expect missing accessors/columns or unchanged
 readiness behavior.
 
-- [ ] **Step 3: Extend SnapshotRow without breaking legacy callers**
+- [x] **Step 3: Extend SnapshotRow without breaking legacy callers**
 
 Use this canonical shape and compatibility constructor:
 
@@ -588,14 +588,14 @@ public record SnapshotRow(
 }
 ```
 
-- [ ] **Step 4: Persist and map both audit fields**
+- [x] **Step 4: Persist and map both audit fields**
 
 Add `raw_readiness` and `graph_version` to `SNAPSHOT_SELECT`,
 `replaceSnapshot` columns/parameters, and `mapSnapshot`. Bare historical inserts
 may leave `graph_version` null but must write `raw_readiness=readiness` when they
 are newly generated.
 
-- [ ] **Step 5: Switch SnapshotJob to effective readiness**
+- [x] **Step 5: Switch SnapshotJob to effective readiness**
 
 Inject `CapabilityReadinessService`. At the start of `snapshotNow()` after nodes
 load, calculate exactly once:
@@ -609,7 +609,7 @@ graph version, and use the minimum effective pillar for the overall row. The
 overall raw value is the minimum raw pillar value. Keep existing ETA aggregation,
 damping, freeze behavior, and transaction boundary unchanged.
 
-- [ ] **Step 6: Run focused integration tests and confirm GREEN**
+- [x] **Step 6: Run focused integration tests and confirm GREEN**
 
 Run:
 
@@ -620,7 +620,7 @@ Run:
 
 Expected: all tests PASS; no node state changes occur.
 
-- [ ] **Step 7: Run complete backend regression**
+- [x] **Step 7: Run complete backend regression**
 
 Run:
 
@@ -630,7 +630,7 @@ Run:
 
 Expected: every backend test passes with zero failures and zero errors.
 
-- [ ] **Step 8: Commit Task 4**
+- [x] **Step 8: Commit Task 4**
 
 Stage only the five listed source/test files and commit:
 
@@ -654,7 +654,7 @@ git commit -m "feat(tracker): apply DAG readiness to snapshots"
   completion marker. WP4.2 consumes the persisted raw/effective readiness and
   `graphVersion`; no WP4.2 code belongs in this task.
 
-- [ ] **Step 1: Run non-test repository checks**
+- [x] **Step 1: Run non-test repository checks**
 
 ```powershell
 git diff --check
@@ -664,19 +664,19 @@ rg -n "https?://|WebClient|HttpClient" `
 
 Expected: `git diff --check` exits 0 and the egress search returns no matches.
 
-- [ ] **Step 2: Record exact evidence**
+- [x] **Step 2: Record exact evidence**
 
 The evidence document must include the V16 active/legacy counts, active hash,
 focused test totals, complete Maven total, changed snapshot raw/effective values,
 node-state before/after equality, feature-flag state, and protected untracked
 file status. Do not claim G4; mark it `PENDING_SOFTWARE_AND_OBSERVATION`.
 
-- [ ] **Step 3: Update plan checkboxes and master summary**
+- [x] **Step 3: Update plan checkboxes and master summary**
 
 Mark only completed steps `[x]`. Change WP4.1 in the master plan to completed
 with links to this plan/evidence. Leave WP4.2–WP4.6 unchecked.
 
-- [ ] **Step 4: Commit documentation**
+- [x] **Step 4: Commit documentation**
 
 ```powershell
 git add -- `
