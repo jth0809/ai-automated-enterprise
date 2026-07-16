@@ -33,6 +33,15 @@ public class PredictionRepository {
               FROM prediction_cohort
             """;
 
+    private static final String CALIBRATION_SELECT = """
+            SELECT id, calibration_version, input_sha256, method,
+                   calibration_status, sample_count, quarter_count,
+                   knots_json, oos_brier_raw, oos_brier_calibrated,
+                   calibration_in_large, diagnostics, current_result,
+                   completed_at
+              FROM prediction_calibration_run
+            """;
+
     private final JdbcClient jdbc;
 
     @Autowired
@@ -61,6 +70,193 @@ public class PredictionRepository {
                         rs.getInt("calibration_min_outcomes"),
                         rs.getInt("calibration_min_quarters")))
                 .single();
+    }
+
+    public List<CalibrationObservation> findCalibrationObservations() {
+        return jdbc.sql("""
+                SELECT p.id, p.raw_probability, p.probability, p.outcome,
+                       p.due_on, p.resolved_at
+                  FROM prediction p
+                  JOIN prediction_cohort c ON c.id = p.cohort_id
+                 WHERE c.cohort_status = 'COMPLETED'
+                   AND p.outcome IN ('HIT','MISS')
+                   AND p.resolution_status = 'RESOLVED'
+                   AND p.raw_probability IS NOT NULL
+                   AND p.probability IS NOT NULL
+                   AND p.resolved_at IS NOT NULL
+                 ORDER BY p.resolved_at, p.id
+                """).query((rs, rowNum) -> new CalibrationObservation(
+                        rs.getLong("id"), rs.getDouble("raw_probability"),
+                        rs.getDouble("probability"),
+                        Outcome.valueOf(rs.getString("outcome")),
+                        rs.getDate("due_on").toLocalDate(),
+                        rs.getTimestamp("resolved_at").toInstant()))
+                .list();
+    }
+
+    public Optional<StoredCalibration> findCalibrationByInputHash(
+            String inputSha256) {
+        if (!sha(inputSha256)) {
+            throw new IllegalArgumentException("invalid calibration input hash");
+        }
+        return jdbc.sql(CALIBRATION_SELECT + """
+                 WHERE input_sha256 = :inputHash
+                """).param("inputHash", inputSha256)
+                .query(PredictionRepository::mapCalibration).optional();
+    }
+
+    public Optional<StoredCalibration> findCurrentCalibration() {
+        return jdbc.sql(CALIBRATION_SELECT + """
+                 WHERE current_result = 'Y'
+                 ORDER BY completed_at DESC, id DESC
+                 FETCH FIRST 1 ROWS ONLY
+                """).query(PredictionRepository::mapCalibration).optional();
+    }
+
+    @Transactional
+    public CalibrationSaveResult saveCalibration(CalibrationDraft draft) {
+        Objects.requireNonNull(draft, "draft");
+        Optional<StoredCalibration> existing = findCalibrationByInputHash(
+                draft.inputSha256());
+        if (existing.isPresent()) {
+            if (!existing.get().sameIdentity(draft)) {
+                throw new IllegalStateException(
+                        "calibration input hash belongs to another result");
+            }
+            activateCalibration(existing.get().id());
+            return new CalibrationSaveResult(
+                    findCalibrationByInputHash(draft.inputSha256()).orElseThrow(),
+                    true);
+        }
+        int versionCollision = jdbc.sql("""
+                SELECT COUNT(*) FROM prediction_calibration_run
+                 WHERE calibration_version = :version
+                """).param("version", draft.calibrationVersion())
+                .query(Integer.class).single();
+        if (versionCollision != 0) {
+            throw new IllegalStateException("calibration version collision");
+        }
+        jdbc.sql("""
+                UPDATE prediction_calibration_run SET current_result = 'N'
+                 WHERE current_result = 'Y'
+                """).update();
+        jdbc.sql("""
+                INSERT INTO prediction_calibration_run
+                  (calibration_version, input_sha256, method,
+                   calibration_status, sample_count, quarter_count,
+                   knots_json, oos_brier_raw, oos_brier_calibrated,
+                   calibration_in_large, diagnostics, current_result)
+                VALUES
+                  (:version, :inputHash, :method,
+                   :status, :samples, :quarters,
+                   :knots, :rawBrier, :calibratedBrier,
+                   :calibrationInLarge, :diagnostics, 'Y')
+                """)
+                .param("version", draft.calibrationVersion())
+                .param("inputHash", draft.inputSha256())
+                .param("method", draft.method().name())
+                .param("status", draft.status().name())
+                .param("samples", draft.sampleCount())
+                .param("quarters", draft.quarterCount())
+                .param("knots", draft.knotsJson())
+                .param("rawBrier", draft.oosBrierRaw(), Types.NUMERIC)
+                .param("calibratedBrier", draft.oosBrierCalibrated(),
+                        Types.NUMERIC)
+                .param("calibrationInLarge", draft.calibrationInLarge(),
+                        Types.NUMERIC)
+                .param("diagnostics", draft.diagnostics())
+                .update();
+        StoredCalibration saved = findCalibrationByInputHash(draft.inputSha256())
+                .orElseThrow(() -> new IllegalStateException(
+                        "saved calibration disappeared"));
+        return new CalibrationSaveResult(saved, false);
+    }
+
+    @Transactional
+    public List<StoredDriftAlert> saveDriftAlerts(
+            String calibrationVersion,
+            List<DriftAlertDraft> drafts) {
+        if (blank(calibrationVersion)) {
+            throw new IllegalArgumentException("calibration version is required");
+        }
+        List<DriftAlertDraft> values = List.copyOf(
+                Objects.requireNonNull(drafts, "drafts"));
+        List<StoredDriftAlert> stored = new ArrayList<>();
+        for (DriftAlertDraft draft : values) {
+            Optional<StoredDriftAlert> existing = findDriftAlertByInputHash(
+                    draft.inputSha256());
+            if (existing.isPresent()) {
+                if (!existing.get().sameIdentity(calibrationVersion, draft)) {
+                    throw new IllegalStateException(
+                            "drift input hash belongs to another alert");
+                }
+                stored.add(existing.get());
+                continue;
+            }
+            int codeCollision = jdbc.sql("""
+                    SELECT COUNT(*) FROM prediction_drift_alert
+                     WHERE calibration_version = :version
+                       AND alert_code = :code
+                    """).param("version", calibrationVersion)
+                    .param("code", draft.code().name())
+                    .query(Integer.class).single();
+            if (codeCollision != 0) {
+                throw new IllegalStateException(
+                        "drift alert code collision for immutable calibration");
+            }
+            jdbc.sql("""
+                    INSERT INTO prediction_drift_alert
+                      (calibration_version, alert_code, observed_value,
+                       warning_threshold, freeze_threshold, severity,
+                       freeze_issuance, alert_status, input_sha256)
+                    VALUES
+                      (:version, :code, :observed,
+                       :warning, :freezeThreshold, :severity,
+                       :freeze, 'OPEN', :inputHash)
+                    """).param("version", calibrationVersion)
+                    .param("code", draft.code().name())
+                    .param("observed", draft.observedValue())
+                    .param("warning", draft.warningThreshold())
+                    .param("freezeThreshold", draft.freezeThreshold(),
+                            Types.NUMERIC)
+                    .param("severity", draft.severity().name())
+                    .param("freeze", draft.freezeIssuance() ? "Y" : "N")
+                    .param("inputHash", draft.inputSha256()).update();
+            stored.add(findDriftAlertByInputHash(draft.inputSha256())
+                    .orElseThrow(() -> new IllegalStateException(
+                            "saved drift alert disappeared")));
+        }
+        return List.copyOf(stored);
+    }
+
+    public boolean isIssuanceFrozen(String calibrationVersion) {
+        if (blank(calibrationVersion)) {
+            throw new IllegalArgumentException("calibration version is required");
+        }
+        return jdbc.sql("""
+                SELECT COUNT(*) FROM prediction_drift_alert
+                 WHERE calibration_version = :version
+                   AND alert_status = 'OPEN'
+                   AND freeze_issuance = 'Y'
+                """).param("version", calibrationVersion)
+                .query(Integer.class).single() > 0;
+    }
+
+    public List<StoredDriftAlert> findOpenDriftAlerts(
+            String calibrationVersion) {
+        if (blank(calibrationVersion)) {
+            throw new IllegalArgumentException("calibration version is required");
+        }
+        return jdbc.sql("""
+                SELECT id, calibration_version, alert_code, observed_value,
+                       warning_threshold, freeze_threshold, severity,
+                       freeze_issuance, input_sha256, created_at
+                  FROM prediction_drift_alert
+                 WHERE calibration_version = :version
+                   AND alert_status = 'OPEN'
+                 ORDER BY id
+                """).param("version", calibrationVersion)
+                .query(PredictionRepository::mapDriftAlert).list();
     }
 
     public Optional<StoredCohort> findCompletedByInputHash(String inputSha256) {
@@ -364,6 +560,77 @@ public class PredictionRepository {
                 .query(Long.class).single();
     }
 
+    private void activateCalibration(long calibrationId) {
+        jdbc.sql("""
+                UPDATE prediction_calibration_run SET current_result = 'N'
+                 WHERE current_result = 'Y' AND id <> :id
+                """).param("id", calibrationId).update();
+        int activated = jdbc.sql("""
+                UPDATE prediction_calibration_run SET current_result = 'Y'
+                 WHERE id = :id
+                """).param("id", calibrationId).update();
+        if (activated != 1) {
+            throw new IllegalStateException("calibration activation failed");
+        }
+    }
+
+    private Optional<StoredDriftAlert> findDriftAlertByInputHash(
+            String inputSha256) {
+        if (!sha(inputSha256)) {
+            throw new IllegalArgumentException("invalid drift input hash");
+        }
+        return jdbc.sql("""
+                SELECT id, calibration_version, alert_code, observed_value,
+                       warning_threshold, freeze_threshold, severity,
+                       freeze_issuance, input_sha256, created_at
+                  FROM prediction_drift_alert
+                 WHERE input_sha256 = :inputHash
+                """).param("inputHash", inputSha256)
+                .query(PredictionRepository::mapDriftAlert).optional();
+    }
+
+    private static StoredCalibration mapCalibration(
+            ResultSet rs, int rowNum) throws SQLException {
+        Number rawBrier = (Number) rs.getObject("oos_brier_raw");
+        Number calibratedBrier = (Number) rs.getObject(
+                "oos_brier_calibrated");
+        Number calibrationInLarge = (Number) rs.getObject(
+                "calibration_in_large");
+        return new StoredCalibration(
+                rs.getLong("id"), rs.getString("calibration_version"),
+                rs.getString("input_sha256"),
+                CalibrationMethod.valueOf(rs.getString("method")),
+                CalibrationStatus.valueOf(rs.getString("calibration_status")),
+                rs.getInt("sample_count"), rs.getInt("quarter_count"),
+                rs.getString("knots_json"),
+                rawBrier == null ? null : rawBrier.doubleValue(),
+                calibratedBrier == null ? null
+                        : calibratedBrier.doubleValue(),
+                calibrationInLarge == null ? null
+                        : calibrationInLarge.doubleValue(),
+                rs.getString("diagnostics"),
+                "Y".equals(rs.getString("current_result")),
+                rs.getTimestamp("completed_at").toInstant());
+    }
+
+    private static StoredDriftAlert mapDriftAlert(
+            ResultSet rs, int rowNum) throws SQLException {
+        Number freezeThreshold = (Number) rs.getObject("freeze_threshold");
+        return new StoredDriftAlert(
+                rs.getLong("id"), rs.getString("calibration_version"),
+                PredictionDriftDetector.AlertCode.valueOf(
+                        rs.getString("alert_code")),
+                rs.getDouble("observed_value"),
+                rs.getDouble("warning_threshold"),
+                freezeThreshold == null ? null
+                        : freezeThreshold.doubleValue(),
+                PredictionDriftDetector.Severity.valueOf(
+                        rs.getString("severity")),
+                "Y".equals(rs.getString("freeze_issuance")),
+                rs.getString("input_sha256"),
+                rs.getTimestamp("created_at").toInstant());
+    }
+
     private static PendingPrediction mapPendingPrediction(
             ResultSet rs, int rowNum) throws SQLException {
         return new PendingPrediction(
@@ -533,6 +800,194 @@ public class PredictionRepository {
         return "predictions=" + draft.predictions().size()
                 + ";informative=" + informative
                 + ";low_information=" + (draft.predictions().size() - informative);
+    }
+
+    public enum CalibrationMethod {
+        IDENTITY,
+        PAVA
+    }
+
+    public enum CalibrationStatus {
+        OK,
+        INSUFFICIENT_CALIBRATION_DATA
+    }
+
+    public record CalibrationObservation(
+            long id,
+            double rawProbability,
+            double issuedProbability,
+            Outcome outcome,
+            LocalDate dueOn,
+            Instant resolvedAt) {
+
+        public CalibrationObservation {
+            if (id <= 0 || !unit(rawProbability)
+                    || !Double.isFinite(issuedProbability)
+                    || issuedProbability < 0.02 || issuedProbability > 0.98
+                    || outcome != Outcome.HIT && outcome != Outcome.MISS
+                    || dueOn == null || resolvedAt == null
+                    || resolvedAt.atZone(java.time.ZoneOffset.UTC).toLocalDate()
+                            .isBefore(dueOn)) {
+                throw new IllegalArgumentException(
+                        "invalid calibration observation");
+            }
+        }
+
+        public int outcomeBinary() {
+            return outcome == Outcome.HIT ? 1 : 0;
+        }
+    }
+
+    public record CalibrationDraft(
+            String calibrationVersion,
+            String inputSha256,
+            CalibrationMethod method,
+            CalibrationStatus status,
+            int sampleCount,
+            int quarterCount,
+            String knotsJson,
+            Double oosBrierRaw,
+            Double oosBrierCalibrated,
+            Double calibrationInLarge,
+            String diagnostics) {
+
+        public CalibrationDraft {
+            boolean identity = method == CalibrationMethod.IDENTITY
+                    && status == CalibrationStatus
+                            .INSUFFICIENT_CALIBRATION_DATA
+                    && "[]".equals(knotsJson)
+                    && oosBrierRaw == null && oosBrierCalibrated == null
+                    && calibrationInLarge == null;
+            boolean pava = method == CalibrationMethod.PAVA
+                    && status == CalibrationStatus.OK
+                    && sampleCount >= 30 && quarterCount >= 4
+                    && knotsJson != null && !"[]".equals(knotsJson)
+                    && metric(oosBrierRaw) && metric(oosBrierCalibrated)
+                    && signedMetric(calibrationInLarge);
+            if (blank(calibrationVersion) || calibrationVersion.length() > 80
+                    || !sha(inputSha256) || method == null || status == null
+                    || sampleCount < 0 || quarterCount < 0
+                    || blank(knotsJson) || blank(diagnostics)
+                    || diagnostics.length() > 2000 || !identity && !pava) {
+                throw new IllegalArgumentException("invalid calibration draft");
+            }
+        }
+    }
+
+    public record StoredCalibration(
+            long id,
+            String calibrationVersion,
+            String inputSha256,
+            CalibrationMethod method,
+            CalibrationStatus status,
+            int sampleCount,
+            int quarterCount,
+            String knotsJson,
+            Double oosBrierRaw,
+            Double oosBrierCalibrated,
+            Double calibrationInLarge,
+            String diagnostics,
+            boolean current,
+            Instant completedAt) {
+
+        public StoredCalibration {
+            if (id <= 0 || completedAt == null) {
+                throw new IllegalArgumentException("invalid stored calibration");
+            }
+            new CalibrationDraft(
+                    calibrationVersion, inputSha256, method, status,
+                    sampleCount, quarterCount, knotsJson, oosBrierRaw,
+                    oosBrierCalibrated, calibrationInLarge, diagnostics);
+        }
+
+        private boolean sameIdentity(CalibrationDraft draft) {
+            return calibrationVersion.equals(draft.calibrationVersion())
+                    && inputSha256.equals(draft.inputSha256())
+                    && method == draft.method() && status == draft.status()
+                    && sampleCount == draft.sampleCount()
+                    && quarterCount == draft.quarterCount()
+                    && knotsJson.equals(draft.knotsJson())
+                    && diagnostics.equals(draft.diagnostics())
+                    && close(oosBrierRaw, draft.oosBrierRaw())
+                    && close(oosBrierCalibrated,
+                            draft.oosBrierCalibrated())
+                    && close(calibrationInLarge,
+                            draft.calibrationInLarge());
+        }
+    }
+
+    public record CalibrationSaveResult(
+            StoredCalibration calibration,
+            boolean reused) {
+
+        public CalibrationSaveResult {
+            calibration = Objects.requireNonNull(calibration, "calibration");
+        }
+    }
+
+    public record DriftAlertDraft(
+            PredictionDriftDetector.AlertCode code,
+            double observedValue,
+            double warningThreshold,
+            Double freezeThreshold,
+            PredictionDriftDetector.Severity severity,
+            boolean freezeIssuance,
+            String inputSha256) {
+
+        public DriftAlertDraft {
+            boolean concentration = code == PredictionDriftDetector.AlertCode
+                    .PROBABILITY_CONCENTRATION;
+            if (code == null || !Double.isFinite(observedValue)
+                    || code != PredictionDriftDetector.AlertCode
+                            .CALIBRATION_IN_LARGE && observedValue < 0
+                    || !Double.isFinite(warningThreshold)
+                    || warningThreshold <= 0
+                    || concentration != (freezeThreshold == null)
+                    || freezeThreshold != null
+                            && (!Double.isFinite(freezeThreshold)
+                                    || freezeThreshold <= warningThreshold)
+                    || severity == null
+                    || freezeIssuance != (severity
+                            == PredictionDriftDetector.Severity.FREEZE)
+                    || concentration && freezeIssuance
+                    || !sha(inputSha256)) {
+                throw new IllegalArgumentException("invalid drift alert draft");
+            }
+        }
+    }
+
+    public record StoredDriftAlert(
+            long id,
+            String calibrationVersion,
+            PredictionDriftDetector.AlertCode code,
+            double observedValue,
+            double warningThreshold,
+            Double freezeThreshold,
+            PredictionDriftDetector.Severity severity,
+            boolean freezeIssuance,
+            String inputSha256,
+            Instant createdAt) {
+
+        public StoredDriftAlert {
+            if (id <= 0 || blank(calibrationVersion) || createdAt == null) {
+                throw new IllegalArgumentException("invalid stored drift alert");
+            }
+            new DriftAlertDraft(code, observedValue, warningThreshold,
+                    freezeThreshold, severity, freezeIssuance, inputSha256);
+        }
+
+        private boolean sameIdentity(
+                String expectedCalibration,
+                DriftAlertDraft draft) {
+            return calibrationVersion.equals(expectedCalibration)
+                    && code == draft.code()
+                    && close(observedValue, draft.observedValue())
+                    && close(warningThreshold, draft.warningThreshold())
+                    && close(freezeThreshold, draft.freezeThreshold())
+                    && severity == draft.severity()
+                    && freezeIssuance == draft.freezeIssuance()
+                    && inputSha256.equals(draft.inputSha256());
+        }
     }
 
     public enum Outcome {
@@ -817,6 +1272,26 @@ public class PredictionRepository {
 
     private static boolean sha(String value) {
         return value != null && value.matches("[0-9a-f]{64}");
+    }
+
+    private static boolean unit(double value) {
+        return Double.isFinite(value) && value >= 0 && value <= 1;
+    }
+
+    private static boolean metric(Double value) {
+        return value != null && unit(value);
+    }
+
+    private static boolean signedMetric(Double value) {
+        return value != null && Double.isFinite(value)
+                && value >= -1 && value <= 1;
+    }
+
+    private static boolean close(Double left, Double right) {
+        if (left == null || right == null) {
+            return left == right;
+        }
+        return Math.abs(left - right) <= 1e-9;
     }
 
     private static boolean blank(String value) {

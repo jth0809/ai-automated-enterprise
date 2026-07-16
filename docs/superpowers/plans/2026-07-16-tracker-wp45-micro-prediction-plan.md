@@ -127,12 +127,12 @@ published calibration is identity with an explicit insufficiency status.
 - Create `PavaCalibrator.java`, `PredictionCalibrationService.java`,
   `PredictionDriftDetector.java`, and focused tests.
 
-- [ ] Prove identity behavior below both minimum gates.
-- [ ] Prove monotonic PAVA knots, expanding-time out-of-sample diagnostics, and
+- [x] Prove identity behavior below both minimum gates.
+- [x] Prove monotonic PAVA knots, expanding-time out-of-sample diagnostics, and
   preservation of raw/calibrated/issued probability.
-- [ ] Prove alerts and freeze thresholds do not mutate structural parameters.
-- [ ] Persist and reuse byte-stable calibration input/version records.
-- [ ] Commit as `feat(tracker): calibrate prediction probabilities`.
+- [x] Prove alerts and freeze thresholds do not mutate structural parameters.
+- [x] Persist and reuse byte-stable calibration input/version records.
+- [x] Commit as `feat(tracker): calibrate prediction probabilities`.
 
 ## Task 6: Dark jobs and token-gated manual controls
 
