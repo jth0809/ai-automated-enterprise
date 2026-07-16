@@ -310,6 +310,15 @@ public class PredictionRepository {
                         current.get().calibrationVersion()));
     }
 
+    public List<PublishedCohort> findPublishedCohorts() {
+        return jdbc.sql(COHORT_SELECT + """
+                 WHERE cohort_status = 'COMPLETED'
+                 ORDER BY issued_on DESC, id DESC
+                 FETCH FIRST 20 ROWS ONLY
+                """).query(PredictionRepository::mapCohort).list().stream()
+                .map(this::hydratePublished).toList();
+    }
+
     public Optional<StoredCohort> findCompletedByInputHash(String inputSha256) {
         return jdbc.sql(COHORT_SELECT + """
                  WHERE input_sha256 = :inputHash
@@ -795,6 +804,36 @@ public class PredictionRepository {
                 row.createdAt(), row.completedAt());
     }
 
+    private PublishedCohort hydratePublished(CohortRow row) {
+        List<PublishedPrediction> predictions = jdbc.sql("""
+                SELECT p.id, p.cohort_rank, p.statement, p.node_id,
+                       p.node_code, p.node_name, p.pillar, p.node_weight,
+                       p.integration_node, p.current_level, p.target_level,
+                       p.issued_on, p.due_on, p.horizon_months,
+                       p.raw_probability, p.calibrated_probability,
+                       p.probability, p.information_score,
+                       p.information_status, p.calibration_version,
+                       p.advance_count, p.exposure_years, p.pillar_rate,
+                       p.node_rate, p.outcome, p.brier,
+                       p.resolution_status, p.resolved_at,
+                       p.input_sha256, p.statement_sha256
+                  FROM prediction p
+                 WHERE p.cohort_id = :cohortId
+                 ORDER BY p.cohort_rank
+                """).param("cohortId", row.id())
+                .query(PredictionRepository::mapPublishedPrediction).list();
+        if (predictions.size() != row.predictionCount()) {
+            throw new IllegalStateException(
+                    "published cohort count does not match stored rows");
+        }
+        return new PublishedCohort(
+                row.id(), row.cohortKey(), row.inputSha256(),
+                row.datasetSha256(), row.nodeSetVersion(),
+                row.rubricVersion(), row.hazardParamsVersion(),
+                row.calibrationVersion(), row.asOf(), row.issuedOn(),
+                predictions, row.createdAt(), row.completedAt());
+    }
+
     private static PublishedCandidate mapPublishedCandidate(
             ResultSet rs, int rowNum) throws SQLException {
         PredictionCandidateSelector.Candidate candidate =
@@ -819,6 +858,38 @@ public class PredictionRepository {
                         rs.getDouble("pillar_rate"), rs.getDouble("node_rate"));
         return new PublishedCandidate(
                 candidate, rs.getString("input_sha256").trim(),
+                rs.getString("statement_sha256").trim());
+    }
+
+    private static PublishedPrediction mapPublishedPrediction(
+            ResultSet rs, int rowNum) throws SQLException {
+        Number brier = (Number) rs.getObject("brier");
+        Timestamp resolvedAt = rs.getTimestamp("resolved_at");
+        return new PublishedPrediction(
+                rs.getLong("id"), rs.getInt("cohort_rank"),
+                rs.getString("statement"), rs.getLong("node_id"),
+                rs.getString("node_code"), rs.getString("node_name"),
+                rs.getInt("pillar"), rs.getDouble("node_weight"),
+                "Y".equals(rs.getString("integration_node")),
+                rs.getInt("current_level"), rs.getInt("target_level"),
+                rs.getDate("issued_on").toLocalDate(),
+                rs.getDate("due_on").toLocalDate(),
+                rs.getInt("horizon_months"),
+                rs.getDouble("raw_probability"),
+                rs.getDouble("calibrated_probability"),
+                rs.getDouble("probability"),
+                rs.getDouble("information_score"),
+                PredictionCandidateSelector.InformationStatus.valueOf(
+                        rs.getString("information_status")),
+                rs.getString("calibration_version"),
+                rs.getInt("advance_count"),
+                rs.getDouble("exposure_years"),
+                rs.getDouble("pillar_rate"), rs.getDouble("node_rate"),
+                Outcome.valueOf(rs.getString("outcome")),
+                brier == null ? null : brier.doubleValue(),
+                rs.getString("resolution_status"),
+                resolvedAt == null ? null : resolvedAt.toInstant(),
+                rs.getString("input_sha256").trim(),
                 rs.getString("statement_sha256").trim());
     }
 
@@ -1351,6 +1422,100 @@ public class PredictionRepository {
         }
     }
 
+    public record PublishedCohort(
+            long id,
+            String cohortKey,
+            String inputSha256,
+            String datasetSha256,
+            String nodeSetVersion,
+            String rubricVersion,
+            String hazardParamsVersion,
+            String calibrationVersion,
+            LocalDate asOf,
+            LocalDate issuedOn,
+            List<PublishedPrediction> predictions,
+            Instant createdAt,
+            Instant completedAt) {
+
+        public PublishedCohort {
+            predictions = List.copyOf(Objects.requireNonNull(
+                    predictions, "predictions"));
+            if (id <= 0 || blank(cohortKey) || !sha(inputSha256)
+                    || !sha(datasetSha256) || blank(nodeSetVersion)
+                    || blank(rubricVersion) || blank(hazardParamsVersion)
+                    || blank(calibrationVersion) || asOf == null
+                    || issuedOn == null || issuedOn.isBefore(asOf)
+                    || predictions.isEmpty() || predictions.size() > 12
+                    || createdAt == null || completedAt == null) {
+                throw new IllegalArgumentException("invalid published cohort");
+            }
+        }
+    }
+
+    public record PublishedPrediction(
+            long id,
+            int cohortRank,
+            String statement,
+            long nodeId,
+            String nodeCode,
+            String nodeName,
+            int pillar,
+            double nodeWeight,
+            boolean integrationNode,
+            int currentLevel,
+            int targetLevel,
+            LocalDate issuedOn,
+            LocalDate dueOn,
+            int horizonMonths,
+            double rawProbability,
+            double calibratedProbability,
+            double issuedProbability,
+            double informationScore,
+            PredictionCandidateSelector.InformationStatus informationStatus,
+            String calibrationVersion,
+            int advanceCount,
+            double exposureYears,
+            double pillarRate,
+            double nodeRate,
+            Outcome outcome,
+            Double brier,
+            String resolutionStatus,
+            Instant resolvedAt,
+            String inputSha256,
+            String statementSha256) {
+
+        public PublishedPrediction {
+            boolean pending = outcome == Outcome.PENDING && brier == null
+                    && resolvedAt == null && "PENDING".equals(resolutionStatus);
+            boolean scored = (outcome == Outcome.HIT || outcome == Outcome.MISS)
+                    && metric(brier) && resolvedAt != null
+                    && "RESOLVED".equals(resolutionStatus);
+            boolean voided = outcome == Outcome.VOID && brier == null
+                    && resolvedAt != null && "VOID".equals(resolutionStatus);
+            if (id <= 0 || cohortRank < 1 || cohortRank > 12
+                    || blank(statement) || nodeId <= 0 || blank(nodeCode)
+                    || blank(nodeName) || pillar < 1 || pillar > 6
+                    || !Double.isFinite(nodeWeight) || nodeWeight <= 0
+                    || currentLevel < 0 || currentLevel > 7
+                    || targetLevel != currentLevel + 1 || issuedOn == null
+                    || dueOn == null || !dueOn.isAfter(issuedOn)
+                    || !List.of(6, 12, 18, 24).contains(horizonMonths)
+                    || !unit(rawProbability) || !unit(calibratedProbability)
+                    || !Double.isFinite(issuedProbability)
+                    || issuedProbability < 0.02 || issuedProbability > 0.98
+                    || !Double.isFinite(informationScore)
+                    || informationScore < 0 || informationScore > 0.25
+                    || informationStatus == null || blank(calibrationVersion)
+                    || advanceCount < 0 || !nonnegative(exposureYears)
+                    || !nonnegative(pillarRate) || !nonnegative(nodeRate)
+                    || outcome == null || !pending && !scored && !voided
+                    || !sha(inputSha256) || !sha(statementSha256)) {
+                throw new IllegalArgumentException(
+                        "invalid published prediction");
+            }
+        }
+    }
+
     private record CohortRow(
             long id,
             String cohortKey,
@@ -1373,6 +1538,10 @@ public class PredictionRepository {
 
     private static boolean unit(double value) {
         return Double.isFinite(value) && value >= 0 && value <= 1;
+    }
+
+    private static boolean nonnegative(double value) {
+        return Double.isFinite(value) && value >= 0;
     }
 
     private static boolean metric(Double value) {

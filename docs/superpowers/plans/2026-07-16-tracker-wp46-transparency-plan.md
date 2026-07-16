@@ -45,12 +45,12 @@ one source.
 - Extend `PredictionRepository.java` with bounded completed-cohort readers.
 - Add focused prediction-reader tests.
 
-- [ ] Publish `/methodology`, `/dag`, `/projections/current`,
+- [x] Publish `/methodology`, `/dag`, `/projections/current`,
   `/backtests/latest`, `/predictions`, and `/predictions/scorecard`.
-- [ ] Include hashes, versions, as-of dates, sample counts, censorship,
+- [x] Include hashes, versions, as-of dates, sample counts, censorship,
   insufficiency states, outcomes, Brier values, and full hazard diagnostics.
-- [ ] Prove reads cannot start a run and empty state remains explicit.
-- [ ] Commit as `feat(tracker): publish credibility read APIs`.
+- [x] Prove reads cannot start a run and empty state remains explicit.
+- [x] Commit as `feat(tracker): publish credibility read APIs`.
 
 ## Task 2: Runtime evidence and WP4.5 checkpoint
 

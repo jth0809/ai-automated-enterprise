@@ -1,6 +1,7 @@
 package com.aienterprise.backend.tracker.prediction;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.time.LocalDate;
@@ -98,6 +99,32 @@ class PredictionRepositoryTest {
         assertEquals(1, count("SELECT COUNT(*) FROM prediction_cohort"));
         assertEquals(prior, repository.findCompletedByInputHash(
                 prior.inputSha256()).orElseThrow());
+    }
+
+    @Test
+    void publicReaderReturnsOnlyCompletedCohortsWithFullAuditDiagnostics() {
+        String calibration = insertCalibration("f".repeat(64));
+        PredictionRepository.CohortDraft draft = draft(
+                "1".repeat(64), calibration, nodeId("P1-REUSE-LV"));
+        repository.saveCompleted(draft);
+
+        PredictionRepository.PublishedCohort cohort = repository
+                .findPublishedCohorts().getFirst();
+        PredictionRepository.PublishedPrediction prediction = cohort
+                .predictions().getFirst();
+
+        assertEquals(draft.inputSha256(), cohort.inputSha256());
+        assertEquals(1, cohort.predictions().size());
+        assertEquals("P1-REUSE-LV", prediction.nodeCode());
+        assertEquals(0.35123457, prediction.rawProbability(), 1e-12);
+        assertEquals(0.351235, prediction.issuedProbability(), 1e-12);
+        assertEquals(42.5123456789, prediction.exposureYears(), 1e-12);
+        assertEquals("PENDING", prediction.outcome().name());
+        assertEquals("PENDING", prediction.resolutionStatus());
+        assertNull(prediction.brier());
+        assertNull(prediction.resolvedAt());
+        assertEquals("8".repeat(64), prediction.inputSha256());
+        assertEquals("7".repeat(64), prediction.statementSha256());
     }
 
     private PredictionRepository.CohortDraft draft(
