@@ -142,12 +142,12 @@ published calibration is identity with an explicit insufficiency status.
 - Modify `TrackerConfig.java` and `application.yml`.
 - Create flag, ShedLock, authorization, and conflict-response tests.
 
-- [ ] Keep both automatic flags default-off and subordinate to
+- [x] Keep both automatic flags default-off and subordinate to
   `TRACKER_ENABLED`.
-- [ ] Add token-gated manual issue, resolve, calibrate, status, and manual-VOID
+- [x] Add token-gated manual issue, resolve, calibrate, status, and manual-VOID
   operations without adding egress.
-- [ ] Ensure calculation jobs cannot overlap.
-- [ ] Commit as `feat(tracker): gate micro-prediction operations`.
+- [x] Ensure calculation jobs cannot overlap.
+- [x] Commit as `feat(tracker): gate micro-prediction operations`.
 
 ## Task 7: First cohort and WP4.5 checkpoint
 

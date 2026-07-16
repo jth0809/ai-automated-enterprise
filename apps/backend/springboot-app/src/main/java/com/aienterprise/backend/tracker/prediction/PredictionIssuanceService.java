@@ -4,7 +4,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.stereotype.Service;
+
 /** Pure coordinator; automatic and admin execution gates are added separately. */
+@Service
+@ConditionalOnProperty(prefix = "tracker", name = "enabled", havingValue = "true")
 public class PredictionIssuanceService {
 
     private final PredictionInputFactory inputs;
@@ -12,6 +18,7 @@ public class PredictionIssuanceService {
     private final CalibrationSource calibrations;
     private final HazardEstimator estimator;
 
+    @Autowired
     public PredictionIssuanceService(
             PredictionInputFactory inputs,
             PredictionRepository repository,

@@ -6,7 +6,13 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.stereotype.Service;
+
 /** Gated identity/PAVA calibration with chronological out-of-sample audit. */
+@Service
+@ConditionalOnProperty(prefix = "tracker", name = "enabled", havingValue = "true")
 public class PredictionCalibrationService
         implements PredictionIssuanceService.CalibrationSource {
 
@@ -17,6 +23,7 @@ public class PredictionCalibrationService
     private final PavaCalibrator calibrator;
     private final PredictionDriftDetector driftDetector;
 
+    @Autowired
     public PredictionCalibrationService(PredictionRepository repository) {
         this(repository, new PavaCalibrator(), new PredictionDriftDetector());
     }

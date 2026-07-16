@@ -5,13 +5,24 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Objects;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.stereotype.Service;
+
 /** Resolves matured immutable predicates without treating absence as VOID. */
+@Service
+@ConditionalOnProperty(prefix = "tracker", name = "enabled", havingValue = "true")
 public class PredictionResolutionService {
 
     private final PredictionRepository repository;
     private final Clock clock;
 
-    public PredictionResolutionService(
+    @Autowired
+    public PredictionResolutionService(PredictionRepository repository) {
+        this(repository, Clock.systemUTC());
+    }
+
+    PredictionResolutionService(
             PredictionRepository repository,
             Clock clock) {
         this.repository = Objects.requireNonNull(repository, "repository");

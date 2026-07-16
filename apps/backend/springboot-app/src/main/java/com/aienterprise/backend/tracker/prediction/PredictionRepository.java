@@ -259,6 +259,57 @@ public class PredictionRepository {
                 .query(PredictionRepository::mapDriftAlert).list();
     }
 
+    public OperationsStatus operationsStatus(LocalDate asOf) {
+        Objects.requireNonNull(asOf, "asOf");
+        int completedCohorts = jdbc.sql("""
+                SELECT COUNT(*) FROM prediction_cohort
+                 WHERE cohort_status = 'COMPLETED'
+                """).query(Integer.class).single();
+        int pending = jdbc.sql("""
+                SELECT COUNT(*) FROM prediction p
+                  JOIN prediction_cohort c ON c.id = p.cohort_id
+                 WHERE c.cohort_status = 'COMPLETED'
+                   AND p.outcome = 'PENDING'
+                """).query(Integer.class).single();
+        int due = jdbc.sql("""
+                SELECT COUNT(*) FROM prediction p
+                  JOIN prediction_cohort c ON c.id = p.cohort_id
+                 WHERE c.cohort_status = 'COMPLETED'
+                   AND p.outcome = 'PENDING'
+                   AND p.due_on <= :asOf
+                """).param("asOf", Date.valueOf(asOf))
+                .query(Integer.class).single();
+        int resolved = jdbc.sql("""
+                SELECT COUNT(*) FROM prediction p
+                  JOIN prediction_cohort c ON c.id = p.cohort_id
+                 WHERE c.cohort_status = 'COMPLETED'
+                   AND p.outcome IN ('HIT','MISS')
+                   AND p.resolution_status = 'RESOLVED'
+                """).query(Integer.class).single();
+        int voided = jdbc.sql("""
+                SELECT COUNT(*) FROM prediction p
+                  JOIN prediction_cohort c ON c.id = p.cohort_id
+                 WHERE c.cohort_status = 'COMPLETED'
+                   AND p.outcome = 'VOID'
+                """).query(Integer.class).single();
+        int conflicts = jdbc.sql("""
+                SELECT COUNT(*) FROM prediction_resolution_conflict
+                 WHERE conflict_status = 'OPEN'
+                """).query(Integer.class).single();
+        int alerts = jdbc.sql("""
+                SELECT COUNT(*) FROM prediction_drift_alert
+                 WHERE alert_status = 'OPEN'
+                """).query(Integer.class).single();
+        Optional<StoredCalibration> current = findCurrentCalibration();
+        return new OperationsStatus(
+                completedCohorts, pending, due, resolved, voided,
+                conflicts, alerts,
+                current.map(StoredCalibration::calibrationVersion).orElse(null),
+                current.map(StoredCalibration::status).orElse(null),
+                current.isPresent() && isIssuanceFrozen(
+                        current.get().calibrationVersion()));
+    }
+
     public Optional<StoredCohort> findCompletedByInputHash(String inputSha256) {
         return jdbc.sql(COHORT_SELECT + """
                  WHERE input_sha256 = :inputHash
@@ -922,6 +973,34 @@ public class PredictionRepository {
 
         public CalibrationSaveResult {
             calibration = Objects.requireNonNull(calibration, "calibration");
+        }
+    }
+
+    public record OperationsStatus(
+            int completedCohorts,
+            int pendingPredictions,
+            int duePredictions,
+            int resolvedPredictions,
+            int voidPredictions,
+            int openResolutionConflicts,
+            int openDriftAlerts,
+            String currentCalibrationVersion,
+            CalibrationStatus currentCalibrationStatus,
+            boolean issuanceFrozen) {
+
+        public OperationsStatus {
+            if (completedCohorts < 0 || pendingPredictions < 0
+                    || duePredictions < 0 || resolvedPredictions < 0
+                    || voidPredictions < 0 || openResolutionConflicts < 0
+                    || openDriftAlerts < 0 || duePredictions > pendingPredictions
+                    || (currentCalibrationVersion == null)
+                            != (currentCalibrationStatus == null)
+                    || currentCalibrationVersion != null
+                            && currentCalibrationVersion.isBlank()
+                    || issuanceFrozen && currentCalibrationVersion == null) {
+                throw new IllegalArgumentException(
+                        "invalid prediction operations status");
+            }
         }
     }
 

@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
@@ -61,6 +62,23 @@ class PredictionCalibrationRepositoryTest {
         assertTrue(repository.isIssuanceFrozen(
                 calibration.calibrationVersion()));
         assertEquals("hazard-v1", repository.loadActiveParameters().version());
+    }
+
+    @Test
+    void operationsStatusHandlesAnInitializedButEmptyTrackRecord() {
+        var calibration = repository.saveCalibration(draft(
+                "d", PredictionRepository.CalibrationMethod.IDENTITY,
+                PredictionRepository.CalibrationStatus
+                        .INSUFFICIENT_CALIBRATION_DATA, "[]")).calibration();
+
+        PredictionRepository.OperationsStatus status = repository
+                .operationsStatus(LocalDate.of(2026, 7, 16));
+
+        assertEquals(0, status.completedCohorts());
+        assertEquals(0, status.pendingPredictions());
+        assertEquals(calibration.calibrationVersion(),
+                status.currentCalibrationVersion());
+        assertFalse(status.issuanceFrozen());
     }
 
     private static PredictionRepository.CalibrationDraft draft(
