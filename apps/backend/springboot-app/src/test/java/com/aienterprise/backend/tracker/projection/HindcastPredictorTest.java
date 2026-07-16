@@ -70,12 +70,14 @@ class HindcastPredictorTest {
     void failsWhenMoreThanOnePercentOfSamplesAreInvalid() {
         ProjectionSampler invalid = new ProjectionSampler() {
             @Override
-            SampledInputs sample(
+            SamplingSession prepare(
                     java.util.List<com.aienterprise.backend.tracker.domain.NodeRow> nodes,
                     com.aienterprise.backend.tracker.graph.CapabilityGraph graph,
-                    com.aienterprise.backend.tracker.math.ModelParameters model,
-                    DeterministicRandom random) {
-                throw new IllegalArgumentException("synthetic invalid sample");
+                    com.aienterprise.backend.tracker.math.ModelParameters model) {
+                return random -> {
+                    throw new IllegalArgumentException(
+                            "synthetic invalid sample");
+                };
             }
         };
         var nodes = ProjectionTestFixtures.nodes();

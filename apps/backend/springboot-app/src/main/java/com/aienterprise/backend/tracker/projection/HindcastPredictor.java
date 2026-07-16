@@ -58,11 +58,12 @@ public final class HindcastPredictor {
         }
 
         DeterministicRandom random = new DeterministicRandom(seed);
+        ProjectionSampler.SamplingSession sampling = sampler.prepare(
+                nodes, graph, model);
         int invalid = 0;
         for (int index = 0; index < sampleCount; index++) {
             try {
-                ProjectionSampler.SampledInputs sampled = sampler.sample(
-                        nodes, graph, model, random);
+                ProjectionSampler.SampledInputs sampled = sampling.sample(random);
                 ReadinessResult sampledReadiness = readinessEngine.calculate(
                         sampled.nodes(), sampled.graph(), sampled.params(), cutoff);
                 appendSample(

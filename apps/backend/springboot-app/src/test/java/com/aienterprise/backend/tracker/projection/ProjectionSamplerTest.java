@@ -1,6 +1,7 @@
 package com.aienterprise.backend.tracker.projection;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.LinkedHashMap;
@@ -35,10 +36,11 @@ class ProjectionSamplerTest {
     @Test
     void oneThousandSamplesPreserveEveryModelConstraint() {
         DeterministicRandom random = new DeterministicRandom(20260716L);
+        ProjectionSampler.SamplingSession session = sampler.prepare(
+                nodes(), graph(), model());
         Set<Double> allowedDeltaScales = Set.of(0.75, 1.0, 1.25);
         for (int sampleIndex = 0; sampleIndex < 1_000; sampleIndex++) {
-            ProjectionSampler.SampledInputs sampled = sampler.sample(
-                    nodes(), graph(), model(), random);
+            ProjectionSampler.SampledInputs sampled = session.sample(random);
 
             Map<Integer, Double> sums = sampled.nodes().stream()
                     .collect(Collectors.groupingBy(
@@ -66,6 +68,25 @@ class ProjectionSamplerTest {
                     >= sampled.params().dormancyFloor());
             assertTrue(sampled.params().dormancyStepPerDecade() >= 0);
         }
+    }
+
+    @Test
+    void preparedSessionReusesOneValidatedGraphPerDeltaScale() {
+        ProjectionSampler.SamplingSession session = sampler.prepare(
+                nodes(), graph(), model());
+        DeterministicRandom random = new DeterministicRandom(77L);
+        Map<Double, CapabilityGraph> graphsByScale = new LinkedHashMap<>();
+
+        for (int index = 0; index < 100; index++) {
+            ProjectionSampler.SampledInputs sampled = session.sample(random);
+            CapabilityGraph prior = graphsByScale.putIfAbsent(
+                    sampled.deltaScale(), sampled.graph());
+            if (prior != null) {
+                assertSame(prior, sampled.graph());
+            }
+        }
+
+        assertEquals(Set.of(0.75, 1.0, 1.25), graphsByScale.keySet());
     }
 
     private static void assertMonotoneUnitMap(Map<Integer, Double> values) {

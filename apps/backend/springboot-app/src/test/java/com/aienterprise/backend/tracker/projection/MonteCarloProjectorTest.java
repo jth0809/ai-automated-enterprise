@@ -100,15 +100,19 @@ class MonteCarloProjectorTest {
             private int calls;
 
             @Override
-            SampledInputs sample(
+            SamplingSession prepare(
                     java.util.List<NodeRow> centralNodes,
                     CapabilityGraph centralGraph,
-                    ModelParameters model,
-                    DeterministicRandom random) {
-                if (calls++ < failures) {
-                    throw new IllegalArgumentException("synthetic invalid sample");
-                }
-                return super.sample(centralNodes, centralGraph, model, random);
+                    ModelParameters model) {
+                SamplingSession delegate = super.prepare(
+                        centralNodes, centralGraph, model);
+                return random -> {
+                    if (calls++ < failures) {
+                        throw new IllegalArgumentException(
+                                "synthetic invalid sample");
+                    }
+                    return delegate.sample(random);
+                };
             }
         };
     }

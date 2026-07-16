@@ -3,6 +3,7 @@ package com.aienterprise.backend.tracker.projection;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,11 +30,34 @@ public class ProjectionSampler {
             CapabilityGraph centralGraph,
             ModelParameters model,
             DeterministicRandom random) {
+        return prepare(centralNodes, centralGraph, model).sample(random);
+    }
+
+    SamplingSession prepare(
+            List<NodeRow> centralNodes,
+            CapabilityGraph centralGraph,
+            ModelParameters model) {
         if (centralNodes == null || centralGraph == null
-                || model == null || random == null) {
+                || model == null) {
             throw new IllegalArgumentException("projection sampling inputs are required");
         }
         parameterValidator.validate(model);
+        List<NodeRow> immutableNodes = List.copyOf(centralNodes);
+        graphValidator.validate(centralGraph, immutableNodes);
+        Map<Double, CapabilityGraph> sampledGraphs = new HashMap<>();
+        return random -> samplePrepared(
+                immutableNodes, centralGraph, model, random, sampledGraphs);
+    }
+
+    private SampledInputs samplePrepared(
+            List<NodeRow> centralNodes,
+            CapabilityGraph centralGraph,
+            ModelParameters model,
+            DeterministicRandom random,
+            Map<Double, CapabilityGraph> sampledGraphs) {
+        if (random == null) {
+            throw new IllegalArgumentException("projection random source is required");
+        }
 
         double trendCovarianceScale = bounded(
                 model, "trend_covariance_scale", random);
@@ -71,9 +95,12 @@ public class ProjectionSampler {
 
         List<NodeRow> sampledNodes = sampleWeights(
                 centralNodes, concentration, random);
-        CapabilityGraph sampledGraph = sampleGraph(
-                centralGraph, deltaScale);
-        graphValidator.validate(sampledGraph, sampledNodes);
+        CapabilityGraph sampledGraph = sampledGraphs.get(deltaScale);
+        if (sampledGraph == null) {
+            sampledGraph = sampleGraph(centralGraph, deltaScale);
+            graphValidator.validate(sampledGraph, sampledNodes);
+            sampledGraphs.put(deltaScale, sampledGraph);
+        }
         return new SampledInputs(
                 sampledParams, sampledNodes, sampledGraph,
                 trendCovarianceScale, deltaScale);
@@ -204,5 +231,10 @@ public class ProjectionSampler {
         public SampledInputs {
             nodes = List.copyOf(nodes);
         }
+    }
+
+    @FunctionalInterface
+    interface SamplingSession {
+        SampledInputs sample(DeterministicRandom random);
     }
 }

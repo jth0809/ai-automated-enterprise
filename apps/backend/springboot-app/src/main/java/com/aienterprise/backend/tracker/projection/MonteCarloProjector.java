@@ -44,11 +44,12 @@ public class MonteCarloProjector {
             censored.put(pillar, 0);
         }
 
+        ProjectionSampler.SamplingSession sampling = sampler.prepare(
+                input.nodes(), input.graph(), input.model());
         int invalid = 0;
         for (int index = 0; index < input.sampleCount(); index++) {
             try {
-                ProjectionSampler.SampledInputs sampled = sampler.sample(
-                        input.nodes(), input.graph(), input.model(), random);
+                ProjectionSampler.SampledInputs sampled = sampling.sample(random);
                 ReadinessResult readiness = readinessEngine.calculate(
                         sampled.nodes(), sampled.graph(), sampled.params(), input.asOf());
                 Double[] etas = projectSample(input, sampled, readiness, random);
