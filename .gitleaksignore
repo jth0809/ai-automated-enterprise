@@ -1,0 +1,2 @@
+# Public forecast dataset identifier; not a credential. Keep this exception fingerprint-specific.
+4b4b04e1067bbd7a4869d9db31d53f295a755ff1:apps/backend/springboot-app/src/main/resources/tracker/forecast-reference-v1.json:generic-api-key:116
