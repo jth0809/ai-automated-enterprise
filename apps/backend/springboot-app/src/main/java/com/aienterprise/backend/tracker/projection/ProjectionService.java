@@ -6,7 +6,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.StringJoiner;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
@@ -25,6 +28,8 @@ import com.aienterprise.backend.tracker.math.MomentumService;
         name = "phase4-projection-enabled",
         havingValue = "true")
 public class ProjectionService {
+
+    private static final Logger log = LoggerFactory.getLogger(ProjectionService.class);
 
     private final ProjectionRepository repository;
     private final MonteCarloProjector projector;
@@ -67,7 +72,9 @@ public class ProjectionService {
         ProjectionFingerprint.Value fingerprint = ProjectionFingerprint.of(input);
         var existing = repository.findCompletedByInputHash(fingerprint.sha256());
         if (existing.isPresent()) {
-            return existing.get().output();
+            ProjectionRunResult reused = existing.get().output();
+            logSummary("reused", reused);
+            return reused;
         }
 
         ProjectionRunResult calculated = projector.project(input);
@@ -76,7 +83,24 @@ public class ProjectionService {
             throw new IllegalStateException(
                     "projector returned a result for another input");
         }
-        return repository.saveCompleted(input, calculated).output();
+        ProjectionRunResult stored = repository.saveCompleted(input, calculated).output();
+        logSummary("completed", stored);
+        return stored;
+    }
+
+    private static void logSummary(String action, ProjectionRunResult output) {
+        StringJoiner rows = new StringJoiner(",", "[", "]");
+        new java.util.TreeMap<>(output.results()).forEach((pillar, result) -> rows.add(
+                pillar + ":" + result.readiness()
+                        + ":" + result.etaP10()
+                        + ":" + result.etaP50()
+                        + ":" + result.etaP90()
+                        + ":" + result.censoredFraction()
+                        + ":" + result.momentum().name()));
+        log.info("tracker projection {} input={} seed={} samples={} invalid={} "
+                        + "rows(pillar:readiness:p10:p50:p90:censored:momentum)={}",
+                action, output.inputSha256(), output.seed(),
+                output.requestedSamples(), output.invalidSamples(), rows);
     }
 
     public record State(
