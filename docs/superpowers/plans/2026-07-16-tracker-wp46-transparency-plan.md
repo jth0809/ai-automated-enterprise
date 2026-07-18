@@ -94,13 +94,13 @@ one source.
   observation gate.
 - Update this plan, the design checkpoint, and master roadmap.
 
-- [ ] Run full Maven, Vitest, production build, browser desktop/375 px/console,
+- [x] Run full Maven, Vitest, production build, browser desktop/375 px/console,
   `git diff --check`, secret/SAST scans, egress verifier, and GitOps rendering.
 - [x] Verify all live/automatic flags are false and protected fixtures remain
   untracked.
-- [ ] Mark WP4.4–WP4.6 software complete and G4
+- [x] Mark WP4.4–WP4.6 software complete and G4
   `PENDING_OBSERVATION`; do not claim formal launch.
-- [ ] Commit as `docs(tracker): complete Phase 4 software gate`.
+- [x] Commit as `docs(tracker): complete Phase 4 software gate`.
 
 ## Completion gate
 

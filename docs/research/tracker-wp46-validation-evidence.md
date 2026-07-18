@@ -1,7 +1,7 @@
 # Tracker WP4.6 and Phase 4 software validation evidence
 
-Date: 2026-07-16 KST
-Software status: `LOCAL_GATE_PASSED`
+Date: 2026-07-18 KST
+Software status: `SOFTWARE_GATE_PASSED`
 G4 status: `PENDING_OBSERVATION`
 
 ## Immutable runtime contract
@@ -42,11 +42,12 @@ run and first cohort.
 | Phase 4 egress scan | No network client, URL-opening, API-key, password, or secret API in projection/backtest/prediction/public credibility paths |
 | High-confidence secret diff scan | No credential material; the only initial pattern hit was the verifier's own literal detection regex |
 | Whitespace check | `git diff --check` passed for committed checkpoints and is rerun at closure |
+| PR security gates | [PR #43](https://github.com/jth0809/ai-automated-enterprise/pull/43): [Gitleaks](https://github.com/jth0809/ai-automated-enterprise/actions/runs/29630056908), [Semgrep](https://github.com/jth0809/ai-automated-enterprise/actions/runs/29630056886), and [Trivy](https://github.com/jth0809/ai-automated-enterprise/actions/runs/29630056888) all passed |
 
 The repository's pull-request workflows remain the authoritative Semgrep
 `p/ci`, Gitleaks full-history, and Trivy HIGH/CRITICAL gates. Native scanner
-binaries were not installed on this Windows host; their PR results must pass
-before the final software checkpoint is merged.
+binaries were not installed on this Windows host; all three authoritative
+workflows passed for PR #43 on 2026-07-18.
 
 ## Browser and accessibility verification
 
