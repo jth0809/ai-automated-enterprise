@@ -20,7 +20,7 @@ class BacktestCandidateTest {
     void registryContainsExactlyThePredeclaredTwentySevenCandidates() {
         List<BacktestCandidate> candidates = BacktestCandidate.registry();
 
-        assertEquals("backtest-candidates-v1", BacktestCandidate.REGISTRY_VERSION);
+        assertEquals("backtest-candidates-v2", BacktestCandidate.REGISTRY_VERSION);
         assertEquals(27, candidates.size());
         assertEquals(27, new HashSet<>(candidates).size());
         assertEquals(new BacktestCandidate(4, 2, .75), candidates.getFirst());

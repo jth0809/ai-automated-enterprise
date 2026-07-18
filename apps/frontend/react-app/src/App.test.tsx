@@ -25,9 +25,17 @@ function stubAllRoutes() {
                 displayedEtaYear: null,
                 etaLow: null,
                 etaHigh: null,
-                label: "현 추세 지속 시나리오 기준 · 모델 내 80% 구간",
+                label: "현 추세 지속 시나리오 · 모델 내부 민감도 80% 구간",
                 overallReadiness: null,
                 bottleneckPillar: null,
+                indicatorStatus: "INCOMPLETE_SNAPSHOT",
+                readinessBottleneckPillars: [],
+                etaBottleneckPillars: [],
+                unresolvedEtaPillars: [],
+                missingPillars: [1, 2, 3, 4, 5, 6],
+                snapshotDate: null,
+                paramsVersion: null,
+                graphVersion: null,
                 frozen: false,
               }
             : url.includes("/api/tracker/pillars")
