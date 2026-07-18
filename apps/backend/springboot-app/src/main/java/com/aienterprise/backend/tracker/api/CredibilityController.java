@@ -45,7 +45,7 @@ import com.aienterprise.backend.tracker.projection.ProjectionRunResult;
 public class CredibilityController {
 
     public static final List<String> HONESTY_LABELS = List.of(
-            "ETA는 예보가 아니라 현 추세 지속을 가정한 시나리오 투영이며 구간은 모델 내부의 80%다. 모형족 오류와 미지의 구조 단절 확률은 포함하지 않는다.",
+            "ETA는 예보가 아니라 현 추세 지속을 가정한 시나리오 투영이며 구간은 모델 내부 민감도의 80%다. 모형족 오류·자료 선택 절차·목표 임계값 불확실성·외부 충격은 포함하지 않는다.",
             "수송 $ / kg은 실제 원가가 아니라 공개된 가격을 바탕으로 한 추정치다.",
             "관측 사건은 측정값이고 TRL/EGL 사상·가중치·DAG 집계는 구성 지수다.",
             "수송 경제성 임계값은 자연상수가 아니라 공개된 모델 가정이다.");
@@ -56,6 +56,7 @@ public class CredibilityController {
     private final ProjectionRepository projections;
     private final BacktestRepository backtests;
     private final PredictionRepository predictions;
+    private final EvidenceCoverageService evidenceCoverage;
     private final Map<String, Boolean> automaticFeatures;
     private final TransportAssumptions transportAssumptions;
     private final Clock clock;
@@ -68,6 +69,7 @@ public class CredibilityController {
             ProjectionRepository projections,
             BacktestRepository backtests,
             PredictionRepository predictions,
+            EvidenceCoverageService evidenceCoverage,
             @Value("${tracker.phase4-projection-enabled:false}")
             boolean projectionEnabled,
             @Value("${tracker.phase4-backtest-enabled:false}")
@@ -90,7 +92,7 @@ public class CredibilityController {
             @Value("${tracker.transport-target-hard-usd-per-kg:100}")
             BigDecimal hardTransportTarget) {
         this(tracker, modelParameters, readiness, projections, backtests,
-                predictions, featureMap(
+                predictions, evidenceCoverage, featureMap(
                         projectionEnabled, backtestEnabled, issuanceEnabled,
                         resolutionEnabled, ll2Enabled, officialIndexEnabled,
                         metaculusEnabled, goldenLiveEnabled),
@@ -107,6 +109,7 @@ public class CredibilityController {
             ProjectionRepository projections,
             BacktestRepository backtests,
             PredictionRepository predictions,
+            EvidenceCoverageService evidenceCoverage,
             Map<String, Boolean> automaticFeatures,
             TransportAssumptions transportAssumptions,
             Clock clock) {
@@ -117,6 +120,8 @@ public class CredibilityController {
         this.projections = Objects.requireNonNull(projections, "projections");
         this.backtests = Objects.requireNonNull(backtests, "backtests");
         this.predictions = Objects.requireNonNull(predictions, "predictions");
+        this.evidenceCoverage = Objects.requireNonNull(
+                evidenceCoverage, "evidenceCoverage");
         this.automaticFeatures = Map.copyOf(automaticFeatures);
         this.transportAssumptions = Objects.requireNonNull(
                 transportAssumptions, "transportAssumptions");
@@ -141,6 +146,7 @@ public class CredibilityController {
                         dataset.datasetVersion(), dataset.datasetSha256(),
                         dataset.nodeSetVersion(), dataset.recordCount(),
                         dataset.importedAt()),
+                evidenceCoverage.current(),
                 predictions.findCurrentCalibration().orElse(null),
                 predictions.operationsStatus(asOf), formulas(),
                 HONESTY_LABELS, automaticFeatures, transportAssumptions));
@@ -303,6 +309,7 @@ public class CredibilityController {
             HazardParameters hazardParameters,
             GraphDescriptor graph,
             DatasetDescriptor dataset,
+            EvidenceCoverage evidenceCoverage,
             PredictionRepository.StoredCalibration currentCalibration,
             PredictionRepository.OperationsStatus predictionOperations,
             Map<String, String> formulas,

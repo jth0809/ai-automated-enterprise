@@ -1529,6 +1529,39 @@ body {
   line-height: 1.45;
 }
 
+.credibility-coverage {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.4rem;
+  margin-top: 0.7rem;
+}
+
+.credibility-coverage p {
+  min-width: 0;
+  padding: 0.5rem 0.55rem;
+  border-radius: 0.5rem;
+  background: var(--surface-2);
+  color: var(--text-muted);
+  font-size: 0.74rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.credibility-alignment {
+  margin-top: 0.65rem !important;
+  padding: 0.5rem 0.6rem;
+  border-left: 3px solid var(--accent-strong);
+  background: color-mix(in srgb, var(--accent-soft) 55%, transparent);
+  color: var(--text);
+  font-size: 0.76rem;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.credibility-skill {
+  font-weight: 700;
+}
+
 .credibility-primary {
   font-size: 1.45rem;
   font-weight: 800;
@@ -1717,7 +1750,8 @@ body {
   }
 
   .credibility-formulas,
-  .credibility-flags {
+  .credibility-flags,
+  .credibility-coverage {
     grid-template-columns: 1fr;
   }
 

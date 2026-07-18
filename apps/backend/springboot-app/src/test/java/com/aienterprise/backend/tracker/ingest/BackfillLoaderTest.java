@@ -125,6 +125,10 @@ class BackfillLoaderTest {
                  WHERE dataset_version = 'backfill-test-v1'
                 """).query(Integer.class).single();
         assertEquals(8, auditCount);
+        assertEquals(8, jdbc.sql("""
+                SELECT candidate_record_count FROM backfill_import
+                 WHERE dataset_version = 'backfill-test-v1'
+                """).query(Integer.class).single());
 
         long expectedWeeks = ChronoUnit.WEEKS.between(
                 FIRST_MONDAY, LAST_COMPLETED_MONDAY) + 1;
@@ -345,6 +349,31 @@ class BackfillLoaderTest {
         assertEquals(1, jdbc.sql("SELECT COUNT(*) FROM backfill_import")
                 .query(Integer.class).single());
         assertEquals(snapshots, jdbc.sql("SELECT COUNT(*) FROM pillar_snapshot")
+                .query(Integer.class).single());
+    }
+
+    @Test
+    void sameHashImportRepairsOnlyMissingCandidateCount() {
+        loader.loadDatasetIfNeeded();
+        int events = jdbc.sql("SELECT COUNT(*) FROM event")
+                .query(Integer.class).single();
+        int evidence = jdbc.sql("SELECT COUNT(*) FROM historical_evidence")
+                .query(Integer.class).single();
+        jdbc.sql("""
+                UPDATE backfill_import
+                   SET candidate_record_count = NULL
+                 WHERE dataset_version = 'backfill-test-v1'
+                """).update();
+
+        loader.loadDatasetIfNeeded();
+
+        assertEquals(8, jdbc.sql("""
+                SELECT candidate_record_count FROM backfill_import
+                 WHERE dataset_version = 'backfill-test-v1'
+                """).query(Integer.class).single());
+        assertEquals(events, jdbc.sql("SELECT COUNT(*) FROM event")
+                .query(Integer.class).single());
+        assertEquals(evidence, jdbc.sql("SELECT COUNT(*) FROM historical_evidence")
                 .query(Integer.class).single());
     }
 

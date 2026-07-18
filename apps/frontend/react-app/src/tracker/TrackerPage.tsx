@@ -131,7 +131,7 @@ export function TrackerPage() {
           <p>예측 비교 데이터를 불러오지 못했습니다.</p>
         </section>
       )}
-      <MethodologyCredibility />
+      <MethodologyCredibility summary={data.summary} />
       <details className="review-section">
         <summary>검수 큐 (admin)</summary>
         <ReviewQueue />

@@ -41,6 +41,15 @@ function stubTrackerRoutes(options: { failForecast?: boolean } = {}) {
             edgeCount: 29,
           },
           dataset: null,
+          evidenceCoverage: {
+            historicalCandidateCount: 0,
+            approvedClaimCount: 0,
+            distinctCandidatesUsed: 0,
+            activeNodeCount: 35,
+            directlyMappedActiveNodeCount: 0,
+            singleEvidenceClaimCount: 0,
+            verificationLevelCounts: {},
+          },
           currentCalibration: null,
           predictionOperations: {
             completedCohorts: 0,
@@ -56,7 +65,7 @@ function stubTrackerRoutes(options: { failForecast?: boolean } = {}) {
           },
           formulas: {},
           honestyLabels: [
-            "ETA는 예보가 아니라 현 추세 지속을 가정한 시나리오 투영이며 구간은 모델 내부의 80%다. 모형족 오류와 미지의 구조 단절 확률은 포함하지 않는다.",
+            "ETA는 예보가 아니라 현 추세 지속을 가정한 시나리오 투영이며 구간은 모델 내부 민감도의 80%다. 모형족 오류·자료 선택 절차·목표 임계값 불확실성·외부 충격은 포함하지 않는다.",
             "수송 $ / kg은 실제 원가가 아니라 공개된 가격을 바탕으로 한 추정치다.",
             "관측 사건은 측정값이고 TRL/EGL 사상·가중치·DAG 집계는 구성 지수다.",
             "수송 경제성 임계값은 자연상수가 아니라 공개된 모델 가정이다.",
@@ -86,7 +95,13 @@ function stubTrackerRoutes(options: { failForecast?: boolean } = {}) {
         return ok({ status: "NOT_RUN" });
       }
       if (url.includes("/api/tracker/backtests/latest")) {
-        return ok({ status: "NOT_RUN" });
+        return ok({
+          status: "NOT_RUN",
+          modelEvaluations: [],
+          skillStatus: "INSUFFICIENT_DATA",
+          readinessMaeRatioVsPersistence: null,
+          selectedMatchesActive: false,
+        });
       }
       if (url.includes("/api/tracker/predictions/scorecard")) {
         return ok({

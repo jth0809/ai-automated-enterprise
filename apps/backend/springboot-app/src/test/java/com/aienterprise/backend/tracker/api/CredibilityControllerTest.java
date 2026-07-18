@@ -26,7 +26,7 @@ import com.aienterprise.backend.tracker.backtest.BacktestSkillDiagnostics;
 class CredibilityControllerTest {
 
     private static final List<String> HONESTY = List.of(
-            "ETA는 예보가 아니라 현 추세 지속을 가정한 시나리오 투영이며 구간은 모델 내부의 80%다. 모형족 오류와 미지의 구조 단절 확률은 포함하지 않는다.",
+            "ETA는 예보가 아니라 현 추세 지속을 가정한 시나리오 투영이며 구간은 모델 내부 민감도의 80%다. 모형족 오류·자료 선택 절차·목표 임계값 불확실성·외부 충격은 포함하지 않는다.",
             "수송 $ / kg은 실제 원가가 아니라 공개된 가격을 바탕으로 한 추정치다.",
             "관측 사건은 측정값이고 TRL/EGL 사상·가중치·DAG 집계는 구성 지수다.",
             "수송 경제성 임계값은 자연상수가 아니라 공개된 모델 가정이다.");
@@ -69,6 +69,7 @@ class CredibilityControllerTest {
         assertEquals("params-v2", response.modelParameters().params().version());
         assertEquals("hazard-v1", response.hazardParameters().version());
         assertEquals("graph-v1.0", response.graph().version());
+        assertEquals(35, response.evidenceCoverage().activeNodeCount());
         assertTrue(response.formulas().containsKey("effectiveReadiness"));
         assertTrue(response.automaticFeatures().values().stream()
                 .noneMatch(Boolean::booleanValue));

@@ -97,8 +97,9 @@ public class BackfillLoader {
                 throw new IllegalStateException(
                         "Tracker backfill dataset hash mismatch for " + datasetVersion);
             }
-            if (weeklyProjector.isCurrent(
-                    datasetSha256, NODE_SET_VERSION, RUBRIC_VERSION)) {
+            if (existing.get().candidateRecordCount() != null
+                    && weeklyProjector.isCurrent(
+                            datasetSha256, NODE_SET_VERSION, RUBRIC_VERSION)) {
                 return;
             }
         }
@@ -110,6 +111,15 @@ public class BackfillLoader {
             throw new IllegalStateException("Invalid tracker backfill dataset " + datasetVersion
                     + System.lineSeparator()
                     + String.join(System.lineSeparator(), validated.errors()));
+        }
+        if (existing.isPresent()
+                && existing.get().candidateRecordCount() == null) {
+            repository.updateBackfillCandidateRecordCount(
+                    datasetVersion, validated.candidates().size());
+            if (weeklyProjector.isCurrent(
+                    datasetSha256, NODE_SET_VERSION, RUBRIC_VERSION)) {
+                return;
+            }
         }
         if (validated.claims().isEmpty()) {
             log.info("tracker backfill dataset {} is empty; skipping import", datasetVersion);
@@ -131,7 +141,8 @@ public class BackfillLoader {
                     claims, datasetSha256, NODE_SET_VERSION, RUBRIC_VERSION);
             repository.recordBackfillImport(BackfillImportRow.draft(
                     datasetVersion, datasetSha256, NODE_SET_VERSION,
-                    rubricVersionId, claims.size()));
+                    rubricVersionId, claims.size(),
+                    validated.candidates().size()));
             log.info("tracker backfill imported {} reviewed claims from dataset {}",
                     claims.size(), datasetVersion);
             return;

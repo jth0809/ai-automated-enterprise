@@ -1054,7 +1054,8 @@ public class TrackerRepository {
     public Optional<BackfillImportRow> findBackfillImport(String datasetVersion) {
         return jdbc.sql("""
                 SELECT dataset_version, dataset_sha256, node_set_version,
-                       rubric_version_id, imported_at, record_count
+                       rubric_version_id, imported_at, record_count,
+                       candidate_record_count
                   FROM backfill_import
                  WHERE dataset_version = :datasetVersion
                 """)
@@ -1065,7 +1066,8 @@ public class TrackerRepository {
                         rs.getString("node_set_version"),
                         rs.getLong("rubric_version_id"),
                         rs.getTimestamp("imported_at").toInstant(),
-                        rs.getInt("record_count")))
+                        rs.getInt("record_count"),
+                        rs.getObject("candidate_record_count", Integer.class)))
                 .optional();
     }
 
@@ -1132,17 +1134,35 @@ public class TrackerRepository {
         jdbc.sql("""
                 INSERT INTO backfill_import
                   (dataset_version, dataset_sha256, node_set_version,
-                   rubric_version_id, record_count)
+                   rubric_version_id, record_count, candidate_record_count)
                 VALUES
                   (:datasetVersion, :datasetSha256, :nodeSetVersion,
-                   :rubricVersionId, :recordCount)
+                   :rubricVersionId, :recordCount, :candidateRecordCount)
                 """)
                 .param("datasetVersion", row.datasetVersion())
                 .param("datasetSha256", row.datasetSha256())
                 .param("nodeSetVersion", row.nodeSetVersion())
                 .param("rubricVersionId", row.rubricVersionId())
                 .param("recordCount", row.recordCount())
+                .param("candidateRecordCount", row.candidateRecordCount())
                 .update();
+    }
+
+    public void updateBackfillCandidateRecordCount(
+            String datasetVersion, int candidateRecordCount) {
+        int updated = jdbc.sql("""
+                UPDATE backfill_import
+                   SET candidate_record_count = :candidateRecordCount
+                 WHERE dataset_version = :datasetVersion
+                   AND candidate_record_count IS NULL
+                """)
+                .param("candidateRecordCount", candidateRecordCount)
+                .param("datasetVersion", datasetVersion)
+                .update();
+        if (updated > 1) {
+            throw new IllegalStateException(
+                    "candidate count repair updated multiple imports");
+        }
     }
 
     public List<NodeRow> findAllNodes() {
