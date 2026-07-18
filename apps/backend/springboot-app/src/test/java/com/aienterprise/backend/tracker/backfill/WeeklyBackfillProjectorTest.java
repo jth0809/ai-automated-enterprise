@@ -23,7 +23,9 @@ import org.springframework.transaction.support.TransactionTemplate;
 
 import com.aienterprise.backend.tracker.domain.SnapshotRow;
 import com.aienterprise.backend.tracker.domain.TrackerRepository;
+import com.aienterprise.backend.tracker.graph.CapabilityReadinessService;
 import com.aienterprise.backend.tracker.math.LogitEta;
+import com.aienterprise.backend.tracker.math.ModelParameterRepository;
 import com.aienterprise.backend.tracker.math.Params;
 
 @SpringBootTest(
@@ -41,6 +43,12 @@ class WeeklyBackfillProjectorTest {
 
     @Autowired
     private JdbcClient jdbc;
+
+    @Autowired
+    private CapabilityReadinessService readinessService;
+
+    @Autowired
+    private ModelParameterRepository parameterRepository;
 
     @Autowired
     private PlatformTransactionManager transactionManager;
@@ -107,6 +115,29 @@ class WeeklyBackfillProjectorTest {
     }
 
     @Test
+    void replaysRawAndDagEffectiveReadinessWithVersionedInputs() {
+        WeeklyBackfillProjector projector = projector("1957-01-15T00:00:00Z");
+        List<BackfillClaim> claims = List.of(
+                claim("BF-DAG-1", "P6-FUNDING", "INSTITUTIONAL_ADVANCE", 1,
+                        FIRST_MONDAY, ProgramEndEffect.NONE),
+                claim("BF-DAG-2", "P6-SETTLEMENT-INTEGRATION",
+                        "INSTITUTIONAL_ADVANCE", 9,
+                        FIRST_MONDAY, ProgramEndEffect.NONE));
+
+        projector.project(claims, HASH_A, "nodes-v1.0", "r2.0");
+
+        SnapshotRow row = repository.findPillarSnapshotsBetween(
+                        FIRST_MONDAY, FIRST_MONDAY).stream()
+                .filter(snapshot -> snapshot.pillar() == 6)
+                .findFirst()
+                .orElseThrow();
+        assertEquals(0.1851, row.rawReadiness(), 1e-9);
+        assertEquals(0.0321, row.readiness(), 1e-9);
+        assertEquals("graph-v1.0", row.graphVersion());
+        assertEquals("params-v2", row.paramsVersion());
+    }
+
+    @Test
     void sameFingerprintIsNoOpAndNextWeekAppendsOnlySixRows() {
         WeeklyBackfillProjector first = projector("1957-01-15T00:00:00Z");
         first.project(List.of(), HASH_A, "nodes-v1.0", "r2.0");
@@ -150,7 +181,8 @@ class WeeklyBackfillProjectorTest {
         double zeroLogit = LogitEta.logitClipped(0, Params.defaults().epsilon());
         repository.replaceSnapshot(new SnapshotRow(
                 0, 1, FIRST_MONDAY, 0, zeroLogit,
-                null, null, null, 10, null, null, null, null, "params-v1"));
+                null, null, null, 10, null, null, null, null,
+                "params-v2", 0.0, "graph-v1.0"));
         long operationalId = snapshotId(1, FIRST_MONDAY);
         projector.project(List.of(), HASH_A, "nodes-v1.0", "r2.0");
         assertEquals(operationalId, snapshotId(1, FIRST_MONDAY));
@@ -159,7 +191,8 @@ class WeeklyBackfillProjectorTest {
         repository.replaceSnapshot(new SnapshotRow(
                 0, 2, FIRST_MONDAY, 0.10,
                 LogitEta.logitClipped(0.10, Params.defaults().epsilon()),
-                null, null, null, 10, null, null, null, null, "params-v1"));
+                null, null, null, 10, null, null, null, null,
+                "params-v2", 0.10, "graph-v1.0"));
         int countBeforeFailure = snapshotCount();
         String markerBeforeFailure = repository.findOpsState(
                 WeeklyBackfillProjector.MARKER_KEY).orElseThrow().value();
@@ -182,6 +215,8 @@ class WeeklyBackfillProjectorTest {
     private WeeklyBackfillProjector projector(String instant, String version) {
         return new WeeklyBackfillProjector(
                 repository,
+                readinessService,
+                parameterRepository,
                 Clock.fixed(Instant.parse(instant), ZoneOffset.UTC),
                 FIRST_MONDAY,
                 version);
@@ -193,8 +228,18 @@ class WeeklyBackfillProjectorTest {
             Integer level,
             LocalDate occurredOn,
             ProgramEndEffect endEffect) {
+        return claim(id, "P6-FUNDING", eventType, level, occurredOn, endEffect);
+    }
+
+    private BackfillClaim claim(
+            String id,
+            String nodeCode,
+            String eventType,
+            Integer level,
+            LocalDate occurredOn,
+            ProgramEndEffect endEffect) {
         return new BackfillClaim(
-                id, "HC-" + id, "nodes-v1.0", "r2.0", "P6-FUNDING",
+                id, "HC-" + id, "nodes-v1.0", "r2.0", nodeCode,
                 eventType, level, "Test actor", occurredOn, "DAY", "OFFICIAL",
                 "Test event", "Boundary fixture.", endEffect,
                 endEffect == ProgramEndEffect.CAPABILITY_PROGRAM_END

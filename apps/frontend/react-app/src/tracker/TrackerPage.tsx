@@ -22,6 +22,7 @@ import { EventTimeline } from "./EventTimeline";
 import { ForecastComparisonPanel } from "./ForecastComparisonPanel";
 import { LayerBPanel } from "./LayerBPanel";
 import { KIndexCard } from "./KIndexCard";
+import { MethodologyCredibility } from "./MethodologyCredibility";
 import { PillarEtaList } from "./PillarEtaList";
 import { OpsPanel } from "./OpsPanel";
 import { PillarRadar } from "./PillarRadar";
@@ -75,10 +76,20 @@ export function TrackerPage() {
   }, []);
 
   if (failed) {
-    return <p className="tracker-empty">추적기 데이터가 아직 없습니다.</p>;
+    return (
+      <div className="tracker">
+        <p className="tracker-empty">추적기 데이터가 아직 없습니다.</p>
+        <MethodologyCredibility />
+      </div>
+    );
   }
   if (!data) {
-    return <p className="tracker-loading">Loading…</p>;
+    return (
+      <div className="tracker">
+        <p className="tracker-loading">Loading…</p>
+        <MethodologyCredibility />
+      </div>
+    );
   }
   return (
     <div className="tracker">
@@ -111,6 +122,7 @@ export function TrackerPage() {
           <p>예측 비교 데이터를 불러오지 못했습니다.</p>
         </section>
       )}
+      <MethodologyCredibility />
       <details className="review-section">
         <summary>검수 큐 (admin)</summary>
         <ReviewQueue />

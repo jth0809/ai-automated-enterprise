@@ -16,9 +16,11 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.boot.sql.init.dependency.DependsOnDatabaseInitialization;
+import org.springframework.core.annotation.Order;
 
 import com.aienterprise.backend.news.NewsConfig;
 import com.aienterprise.backend.news.NewsIngestionScheduler.FeedSpec;
+import com.aienterprise.backend.tracker.backtest.BacktestService;
 import com.aienterprise.backend.tracker.domain.TrackerRepository;
 import com.aienterprise.backend.tracker.ingest.ArticleBodyExtractor;
 import com.aienterprise.backend.tracker.ingest.ArticlePageFetcher;
@@ -107,10 +109,23 @@ public class TrackerConfig {
     }
 
     @Bean
+    @Order(10)
     @ConditionalOnProperty(prefix = "tracker", name = "backfill-on-boot", havingValue = "true", matchIfMissing = true)
     @Profile("!test | demo")
     ApplicationRunner trackerBackfillRunner(ObjectProvider<BackfillLoader> backfillLoader) {
         return args -> backfillLoader.ifAvailable(BackfillLoader::loadDatasetIfNeeded);
+    }
+
+    @Bean
+    @Order(20)
+    @ConditionalOnProperty(
+            prefix = "tracker",
+            name = "phase4-backtest-enabled",
+            havingValue = "true")
+    @Profile("!test | demo")
+    ApplicationRunner trackerBacktestRunner(
+            ObjectProvider<BacktestService> backtestService) {
+        return args -> backtestService.ifAvailable(BacktestService::run);
     }
 
     @Bean

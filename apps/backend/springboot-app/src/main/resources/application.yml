@@ -69,6 +69,19 @@ anthropic:
 tracker:
   enabled: ${TRACKER_ENABLED:false}
   feeds: ${TRACKER_FEEDS:}
+  # Phase 4 Monte Carlo projection is local-only but remains independently dark.
+  # When enabled it stores summary quantiles only; no samples or network calls.
+  phase4-projection-enabled: ${TRACKER_PHASE4_PROJECTION_ENABLED:false}
+  # WP4.4 historical backtesting is local and deterministic, but intentionally
+  # expensive. It stays dark until explicitly run and performs no network call.
+  phase4-backtest-enabled: ${TRACKER_PHASE4_BACKTEST_ENABLED:false}
+  # WP4.5 micro-predictions are deterministic and network-free. Automatic
+  # issuance and due-date resolution remain independently dark; token-gated
+  # admin operations are available only while the tracker itself is enabled.
+  phase4-prediction-issuance-enabled: ${TRACKER_PHASE4_PREDICTION_ISSUANCE_ENABLED:false}
+  phase4-prediction-resolution-enabled: ${TRACKER_PHASE4_PREDICTION_RESOLUTION_ENABLED:false}
+  phase4-prediction-issuance-cron: ${TRACKER_PHASE4_PREDICTION_ISSUANCE_CRON:0 45 1 * * MON}
+  phase4-prediction-resolution-cron: ${TRACKER_PHASE4_PREDICTION_RESOLUTION_CRON:0 15 2 * * *}
   # Launch Library 2 remains independently dark until GitOps egress review.
   # It imports only the previous completed year's Layer B cadence metrics;
   # it never promotes launches into Layer C capability events.

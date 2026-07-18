@@ -13,6 +13,7 @@ import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -30,6 +31,9 @@ import com.aienterprise.backend.tracker.backfill.ValidatedBackfill;
 import com.aienterprise.backend.tracker.backfill.ValidatedNodeAudit;
 import com.aienterprise.backend.tracker.backfill.WeeklyBackfillProjector;
 import com.aienterprise.backend.tracker.domain.TrackerRepository;
+import com.aienterprise.backend.tracker.graph.CapabilityReadinessService;
+import com.aienterprise.backend.tracker.graph.ReadinessResult;
+import com.aienterprise.backend.tracker.math.ModelParameterRepository;
 import com.aienterprise.backend.tracker.math.Params;
 import com.aienterprise.backend.tracker.math.Readiness;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -63,6 +67,12 @@ class BackfillLoaderTest {
 
     @Autowired
     private BackfillLoader loader;
+
+    @Autowired
+    private CapabilityReadinessService readinessService;
+
+    @Autowired
+    private ModelParameterRepository parameterRepository;
 
     @Test
     void productionImportEntryPointUsesTheSharedClusterLock() throws NoSuchMethodException {
@@ -186,6 +196,28 @@ class BackfillLoaderTest {
                 .toList();
         assertEquals(0.4624,
                 Readiness.pillarReadiness(p1Nodes, Params.defaults()), 1e-9);
+
+        ReadinessResult dagReadiness = readinessService.calculate(
+                repository.findAllNodes(), Params.defaults(), LocalDate.of(2026, 7, 16));
+        assertEquals("graph-v1.0", dagReadiness.graphVersion());
+        assertPillarReadiness(dagReadiness.rawPillarReadiness(), Map.of(
+                1, 0.4624,
+                2, 0.1884,
+                3, 0.1524,
+                4, 0.1920,
+                5, 0.2991,
+                6, 0.2667));
+        assertPillarReadiness(dagReadiness.effectivePillarReadiness(), Map.of(
+                1, 0.4624,
+                2, 0.1842,
+                3, 0.1470,
+                4, 0.1920,
+                5, 0.2991,
+                6, 0.2667));
+        dagReadiness.nodes().values().forEach(node -> assertTrue(
+                node.effectiveReadiness() <= node.rawReadiness() + 1e-12,
+                node.nodeCode()));
+
         long expectedWeeks = ChronoUnit.WEEKS.between(
                 FIRST_MONDAY, LAST_COMPLETED_MONDAY) + 1;
         assertEquals(expectedWeeks * 6, jdbc.sql("""
@@ -198,13 +230,30 @@ class BackfillLoaderTest {
                             .filter(node -> node.pillar() == selectedPillar)
                             .toList(),
                     Params.defaults());
+            double expectedEffective = dagReadiness.effectivePillarReadiness()
+                    .get(selectedPillar);
             double lastReadiness = jdbc.sql("""
                     SELECT readiness FROM pillar_snapshot
                      WHERE pillar = :pillar AND snapshot_date = :snapshotDate
                     """).param("pillar", pillar)
                     .param("snapshotDate", java.sql.Date.valueOf(LAST_COMPLETED_MONDAY))
                     .query(Double.class).single();
-            assertEquals(expectedReadiness, lastReadiness, 0.00001, "pillar " + pillar);
+            double lastRawReadiness = jdbc.sql("""
+                    SELECT raw_readiness FROM pillar_snapshot
+                     WHERE pillar = :pillar AND snapshot_date = :snapshotDate
+                    """).param("pillar", pillar)
+                    .param("snapshotDate", java.sql.Date.valueOf(LAST_COMPLETED_MONDAY))
+                    .query(Double.class).single();
+            assertEquals(expectedEffective, lastReadiness, 0.00001,
+                    "effective pillar " + pillar);
+            assertEquals(expectedReadiness, lastRawReadiness, 0.00001,
+                    "raw pillar " + pillar);
+            assertEquals("graph-v1.0|params-v2", jdbc.sql("""
+                    SELECT graph_version || '|' || params_version FROM pillar_snapshot
+                     WHERE pillar = :pillar AND snapshot_date = :snapshotDate
+                    """).param("pillar", pillar)
+                    .param("snapshotDate", java.sql.Date.valueOf(LAST_COMPLETED_MONDAY))
+                    .query(String.class).single());
         }
         int importedEvidence = jdbc.sql("SELECT COUNT(*) FROM historical_evidence")
                 .query(Integer.class).single();
@@ -439,7 +488,8 @@ class BackfillLoaderTest {
     private BackfillLoader loader(Resource candidates, Resource mappings, String version) {
         return new BackfillLoader(
                 repository, candidates, mappings, version,
-                new WeeklyBackfillProjector(repository, TEST_CLOCK));
+                new WeeklyBackfillProjector(
+                        repository, readinessService, parameterRepository, TEST_CLOCK));
     }
 
     private BackfillLoader transitionLoader() {
@@ -518,6 +568,14 @@ class BackfillLoaderTest {
                 .param("snapshotDate", java.sql.Date.valueOf(snapshotDate))
                 .query(Double.class)
                 .single();
+    }
+
+    private static void assertPillarReadiness(
+            Map<Integer, Double> actual,
+            Map<Integer, Double> expected) {
+        assertEquals(expected.keySet(), actual.keySet());
+        expected.forEach((pillar, readiness) -> assertEquals(
+                readiness, actual.get(pillar), 1e-9, "pillar " + pillar));
     }
 
     private static Resource resource(String content) {

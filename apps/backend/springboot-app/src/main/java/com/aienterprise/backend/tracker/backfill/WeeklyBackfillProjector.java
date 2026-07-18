@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -22,9 +23,13 @@ import org.springframework.transaction.annotation.Transactional;
 import com.aienterprise.backend.tracker.domain.NodeRow;
 import com.aienterprise.backend.tracker.domain.SnapshotRow;
 import com.aienterprise.backend.tracker.domain.TrackerRepository;
+import com.aienterprise.backend.tracker.graph.CapabilityGraph;
+import com.aienterprise.backend.tracker.graph.CapabilityReadinessService;
+import com.aienterprise.backend.tracker.graph.ReadinessResult;
 import com.aienterprise.backend.tracker.math.LogitEta;
+import com.aienterprise.backend.tracker.math.ModelParameterRepository;
+import com.aienterprise.backend.tracker.math.ModelParameters;
 import com.aienterprise.backend.tracker.math.Params;
-import com.aienterprise.backend.tracker.math.Readiness;
 
 @Component
 @ConditionalOnProperty(prefix = "tracker", name = "enabled", havingValue = "true")
@@ -32,7 +37,7 @@ public class WeeklyBackfillProjector {
 
     static final String MARKER_KEY = "BACKFILL_WEEKLY_PROJECTION_V1";
     static final LocalDate DEFAULT_FIRST_MONDAY = LocalDate.of(1957, 1, 7);
-    static final String DEFAULT_PROJECTOR_VERSION = "weekly-projector-v1";
+    static final String DEFAULT_PROJECTOR_VERSION = "weekly-projector-v2";
 
     private static final LocalDate MAX_DATE = LocalDate.of(9999, 12, 31);
     private static final Pattern SHA256 = Pattern.compile("[0-9a-f]{64}");
@@ -42,21 +47,33 @@ public class WeeklyBackfillProjector {
     private static final double LOGIT_TOLERANCE = 0.00000051;
 
     private final TrackerRepository repository;
+    private final CapabilityReadinessService readinessService;
+    private final ModelParameterRepository parameterRepository;
     private final Clock clock;
     private final LocalDate firstMonday;
     private final String projectorVersion;
 
     @Autowired
-    public WeeklyBackfillProjector(TrackerRepository repository) {
-        this(repository, Clock.systemUTC());
+    public WeeklyBackfillProjector(
+            TrackerRepository repository,
+            CapabilityReadinessService readinessService,
+            ModelParameterRepository parameterRepository) {
+        this(repository, readinessService, parameterRepository, Clock.systemUTC());
     }
 
-    public WeeklyBackfillProjector(TrackerRepository repository, Clock clock) {
-        this(repository, clock, DEFAULT_FIRST_MONDAY, DEFAULT_PROJECTOR_VERSION);
+    public WeeklyBackfillProjector(
+            TrackerRepository repository,
+            CapabilityReadinessService readinessService,
+            ModelParameterRepository parameterRepository,
+            Clock clock) {
+        this(repository, readinessService, parameterRepository,
+                clock, DEFAULT_FIRST_MONDAY, DEFAULT_PROJECTOR_VERSION);
     }
 
     WeeklyBackfillProjector(
             TrackerRepository repository,
+            CapabilityReadinessService readinessService,
+            ModelParameterRepository parameterRepository,
             Clock clock,
             LocalDate firstMonday,
             String projectorVersion) {
@@ -68,6 +85,8 @@ public class WeeklyBackfillProjector {
             throw new IllegalArgumentException("invalid projectorVersion");
         }
         this.repository = repository;
+        this.readinessService = readinessService;
+        this.parameterRepository = parameterRepository;
         this.clock = clock;
         this.firstMonday = firstMonday;
         this.projectorVersion = projectorVersion;
@@ -76,10 +95,14 @@ public class WeeklyBackfillProjector {
     public boolean isCurrent(
             String datasetSha256, String nodeSetVersion, String rubricVersion) {
         LocalDate target = lastCompletedMonday();
+        List<NodeRow> nodes = repository.findAllNodes();
+        ModelParameters model = parameterRepository.loadActive();
+        CapabilityGraph graph = readinessService.loadActiveGraph(nodes);
         ProjectionMarker marker = readMarker();
         return marker != null
                 && marker.fingerprint().equals(fingerprint(
-                        datasetSha256, nodeSetVersion, rubricVersion))
+                        datasetSha256, nodeSetVersion, rubricVersion,
+                        model.params(), graph))
                 && marker.through().equals(target);
     }
 
@@ -89,7 +112,12 @@ public class WeeklyBackfillProjector {
             String datasetSha256,
             String nodeSetVersion,
             String rubricVersion) {
-        String fingerprint = fingerprint(datasetSha256, nodeSetVersion, rubricVersion);
+        List<NodeRow> nodes = repository.findAllNodes();
+        ModelParameters model = parameterRepository.loadActive();
+        Params params = model.params();
+        CapabilityGraph graph = readinessService.loadActiveGraph(nodes);
+        String fingerprint = fingerprint(
+                datasetSha256, nodeSetVersion, rubricVersion, params, graph);
         LocalDate target = lastCompletedMonday();
         if (target.isBefore(firstMonday)) {
             throw new IllegalStateException("weekly projection target precedes first Monday");
@@ -125,8 +153,6 @@ public class WeeklyBackfillProjector {
         List<BackfillClaim> claims = new ArrayList<>(inputClaims);
         claims.sort(Comparator.comparing(BackfillClaim::occurredOn)
                 .thenComparing(BackfillClaim::backfillId));
-        List<NodeRow> nodes = repository.findAllNodes();
-        Params params = Params.defaults();
         Map<String, ReplayState> states = new LinkedHashMap<>();
         List<SnapshotRow> inserts = new ArrayList<>();
         int nextClaim = 0;
@@ -139,19 +165,27 @@ public class WeeklyBackfillProjector {
             if (!date.isAfter(writeAfter)) {
                 continue;
             }
+            List<NodeRow> replayNodes = materializeNodes(nodes, states, params, date);
+            ReadinessResult readiness = readinessService.calculate(
+                    replayNodes, graph, params, date);
             for (int pillar = 1; pillar <= 6; pillar++) {
-                double readiness = pillarReadiness(nodes, states, pillar, params, date);
-                double logit = LogitEta.logitClipped(readiness, params.epsilon());
+                double rawPillar = readiness.rawPillarReadiness()
+                        .getOrDefault(pillar, 0.0);
+                double effectivePillar = readiness.effectivePillarReadiness()
+                        .getOrDefault(pillar, 0.0);
+                double logit = LogitEta.logitClipped(effectivePillar, params.epsilon());
                 SnapshotKey key = new SnapshotKey(pillar, date);
                 SnapshotRow existingRow = existing.get(key);
                 if (existingRow != null) {
-                    assertCompatible(existingRow, readiness, logit, params.version());
+                    assertCompatible(
+                            existingRow, rawPillar, effectivePillar, logit,
+                            params.version(), graph.version());
                     continue;
                 }
                 inserts.add(new SnapshotRow(
-                        0, pillar, date, readiness, logit,
+                        0, pillar, date, effectivePillar, logit,
                         null, null, null, null, null, null, null, null,
-                        params.version()));
+                        params.version(), rawPillar, graph.version()));
             }
         }
 
@@ -191,14 +225,19 @@ public class WeeklyBackfillProjector {
     }
 
     private String fingerprint(
-            String datasetSha256, String nodeSetVersion, String rubricVersion) {
+            String datasetSha256,
+            String nodeSetVersion,
+            String rubricVersion,
+            Params params,
+            CapabilityGraph graph) {
         if (datasetSha256 == null || !SHA256.matcher(datasetSha256).matches()) {
             throw new IllegalArgumentException("datasetSha256 must be lowercase SHA-256");
         }
         return projectorVersion + ":" + datasetSha256 + ":"
                 + requireToken(nodeSetVersion, "nodeSetVersion") + ":"
                 + requireToken(rubricVersion, "rubricVersion") + ":"
-                + Params.defaults().version();
+                + params.version() + ":" + graph.version() + ":"
+                + graph.declaredSha256();
     }
 
     private static String requireToken(String value, String name) {
@@ -230,12 +269,17 @@ public class WeeklyBackfillProjector {
 
     private static void assertCompatible(
             SnapshotRow existing,
-            double readiness,
+            double rawReadiness,
+            double effectiveReadiness,
             double logit,
-            String paramsVersion) {
-        if (Math.abs(existing.readiness() - readiness) > READINESS_TOLERANCE
+            String paramsVersion,
+            String graphVersion) {
+        if (Math.abs(existing.readiness() - effectiveReadiness) > READINESS_TOLERANCE
+                || existing.rawReadiness() == null
+                || Math.abs(existing.rawReadiness() - rawReadiness) > READINESS_TOLERANCE
                 || Math.abs(existing.logitClipped() - logit) > LOGIT_TOLERANCE
-                || !paramsVersion.equals(existing.paramsVersion())) {
+                || !paramsVersion.equals(existing.paramsVersion())
+                || !Objects.equals(graphVersion, existing.graphVersion())) {
             throw new IllegalStateException(
                     "weekly projection conflicts with existing operational snapshot for pillar "
                             + existing.pillar() + " on " + existing.snapshotDate());
@@ -266,29 +310,26 @@ public class WeeklyBackfillProjector {
                 Math.max(previous.level(), claim.claimedLevel()), null));
     }
 
-    private static double pillarReadiness(
+    private static List<NodeRow> materializeNodes(
             List<NodeRow> nodes,
             Map<String, ReplayState> states,
-            int pillar,
             Params params,
             LocalDate asOf) {
-        double readiness = 0;
+        List<NodeRow> replayNodes = new ArrayList<>(nodes.size());
         for (NodeRow node : nodes) {
-            if (node.pillar() != pillar) {
-                continue;
-            }
             ReplayState state = states.getOrDefault(node.code(), ReplayState.initial());
-            if (state.level() == 0) {
-                continue;
-            }
             LocalDate dormantSince = state.programEndDate() == null
                     ? null : state.programEndDate().plusYears(params.dormancyTriggerYears());
             boolean dormant = dormantSince != null && !asOf.isBefore(dormantSince);
-            readiness += node.weight() * Readiness.nodeReadiness(
-                    state.level(), dormant, state.programEndDate(),
-                    node.scaleType(), params, asOf);
+            replayNodes.add(new NodeRow(
+                    node.id(), node.code(), node.pillar(), node.nameKo(), node.scaleType(),
+                    state.level(), state.level() == 0 ? null : node.verificationLevel(),
+                    dormant ? "DORMANT" : "ACTIVE",
+                    dormant ? dormantSince : null,
+                    state.programEndDate(), node.weight(), node.integrationNode(),
+                    node.description(), node.nodeSetVersion()));
         }
-        return readiness;
+        return List.copyOf(replayNodes);
     }
 
     public record ProjectionSummary(

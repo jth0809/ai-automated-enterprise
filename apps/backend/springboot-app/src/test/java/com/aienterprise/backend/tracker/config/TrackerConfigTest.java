@@ -11,6 +11,7 @@ import org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration;
 import org.springframework.boot.jdbc.autoconfigure.JdbcClientAutoConfiguration;
 import org.springframework.boot.jdbc.autoconfigure.JdbcTemplateAutoConfiguration;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
+import org.springframework.core.annotation.Order;
 
 import com.aienterprise.backend.news.NewsIngestionScheduler.FeedSpec;
 import com.aienterprise.backend.tracker.domain.TrackerRepository;
@@ -169,5 +170,33 @@ class TrackerConfigTest {
                         "spring.profiles.active=test,demo")
                 .run(context -> assertThat(context)
                         .hasBean("trackerForecastReferenceRunner"));
+    }
+
+    @Test
+    void phase4BacktestRunnerIsDarkByDefaultAndOrderedAfterBackfill() {
+        runner.withUserConfiguration(TrackerConfig.class)
+                .withPropertyValues(
+                        "tracker.enabled=true",
+                        "spring.profiles.active=test,demo")
+                .run(context -> assertThat(context)
+                        .doesNotHaveBean("trackerBacktestRunner"));
+
+        runner.withUserConfiguration(TrackerConfig.class)
+                .withPropertyValues(
+                        "tracker.enabled=true",
+                        "tracker.phase4-backtest-enabled=true",
+                        "spring.profiles.active=test,demo")
+                .run(context -> {
+                    assertThat(context).hasBean("trackerBackfillRunner");
+                    assertThat(context).hasBean("trackerBacktestRunner");
+                    Order backfillOrder = context.getBeanFactory()
+                            .findAnnotationOnBean("trackerBackfillRunner", Order.class);
+                    Order backtestOrder = context.getBeanFactory()
+                            .findAnnotationOnBean("trackerBacktestRunner", Order.class);
+                    assertThat(backfillOrder).isNotNull();
+                    assertThat(backtestOrder).isNotNull();
+                    assertThat(backfillOrder.value())
+                            .isLessThan(backtestOrder.value());
+                });
     }
 }
