@@ -30,8 +30,8 @@ import com.aienterprise.backend.tracker.transport.TransportEtaOverlay;
 @RequestMapping("/api/tracker")
 public class TrackerController {
 
-    // v2.10 honesty label: fixed wording, served verbatim with every summary.
-    static final String LABEL = "현 추세 지속 시나리오 기준 · 모델 내 80% 구간";
+    // Fixed wording: this is internal model sensitivity, not empirical confidence.
+    static final String LABEL = "현 추세 지속 시나리오 · 모델 내부 민감도 80% 구간";
 
     private static final Map<Integer, String> PILLAR_NAMES = Map.of(
             1, "수송",
@@ -45,6 +45,8 @@ public class TrackerController {
     private final TransportEconomicsRepository transportRepository;
     private final TransportEtaOverlay transportEtaOverlay;
     private final Clock clock;
+    private final TrackerIndicatorService indicatorService =
+            new TrackerIndicatorService();
 
     @Autowired
     public TrackerController(
@@ -68,13 +70,27 @@ public class TrackerController {
     @GetMapping("/summary")
     public ResponseEntity<Map<String, Object>> summary() {
         Optional<SnapshotRow> overall = repository.findLatestSnapshot(0);
+        List<SnapshotRow> pillarSnapshots = new ArrayList<>(6);
+        for (int pillar = 1; pillar <= 6; pillar++) {
+            repository.findLatestSnapshot(pillar).ifPresent(pillarSnapshots::add);
+        }
+        TrackerIndicators indicators = indicatorService.derive(pillarSnapshots);
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("displayedEtaYear", overall.map(SnapshotRow::displayedEtaYear).orElse(null));
         body.put("etaLow", overall.map(SnapshotRow::etaLow).orElse(null));
         body.put("etaHigh", overall.map(SnapshotRow::etaHigh).orElse(null));
         body.put("label", LABEL);
         body.put("overallReadiness", overall.map(SnapshotRow::readiness).orElse(null));
-        body.put("bottleneckPillar", bottleneckPillar());
+        body.put("bottleneckPillar", indicators.legacyBottleneckPillar());
+        body.put("indicatorStatus", indicators.status().name());
+        body.put("readinessBottleneckPillars",
+                indicators.readinessBottleneckPillars());
+        body.put("etaBottleneckPillars", indicators.etaBottleneckPillars());
+        body.put("unresolvedEtaPillars", indicators.unresolvedEtaPillars());
+        body.put("missingPillars", indicators.missingPillars());
+        body.put("snapshotDate", indicators.snapshotDate());
+        body.put("paramsVersion", indicators.paramsVersion());
+        body.put("graphVersion", indicators.graphVersion());
         body.put("frozen", repository.findOpsState("STATE_FROZEN")
                 .map(state -> "Y".equals(state.value())).orElse(false));
         return ResponseEntity.ok(body);
@@ -150,16 +166,4 @@ public class TrackerController {
         return ResponseEntity.ok(body);
     }
 
-    private Integer bottleneckPillar() {
-        Integer bottleneck = null;
-        double worst = Double.MAX_VALUE;
-        for (int pillar = 1; pillar <= 6; pillar++) {
-            Optional<SnapshotRow> latest = repository.findLatestSnapshot(pillar);
-            if (latest.isPresent() && latest.get().readiness() < worst) {
-                worst = latest.get().readiness();
-                bottleneck = pillar;
-            }
-        }
-        return bottleneck;
-    }
 }

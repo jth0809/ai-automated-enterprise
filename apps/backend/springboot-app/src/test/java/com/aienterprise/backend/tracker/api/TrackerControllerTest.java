@@ -62,12 +62,47 @@ class TrackerControllerTest {
         assertEquals(HttpStatus.OK, response.getStatusCode());
         Map<String, Object> body = response.getBody();
         assertEquals(Set.of("displayedEtaYear", "etaLow", "etaHigh", "label",
-                "overallReadiness", "bottleneckPillar", "frozen"), body.keySet());
-        assertEquals("현 추세 지속 시나리오 기준 · 모델 내 80% 구간", body.get("label"));
+                "overallReadiness", "bottleneckPillar", "frozen",
+                "indicatorStatus", "readinessBottleneckPillars",
+                "etaBottleneckPillars", "unresolvedEtaPillars",
+                "missingPillars", "snapshotDate", "paramsVersion",
+                "graphVersion"), body.keySet());
+        assertEquals("현 추세 지속 시나리오 · 모델 내부 민감도 80% 구간",
+                body.get("label"));
         assertEquals(false, body.get("frozen"));
         assertEquals(0.0, (Double) body.get("overallReadiness"), 1e-9);
-        // Pillar 3 has no backfill events, so it is the readiness bottleneck.
+        // Pillars 3 and 5 tie at zero in the sample; the legacy alias stays first.
         assertEquals(3, body.get("bottleneckPillar"));
+        assertEquals(List.of(3, 5), body.get("readinessBottleneckPillars"));
+        assertEquals("COMPLETE", body.get("indicatorStatus"));
+        assertEquals(List.of(), body.get("missingPillars"));
+    }
+
+    @Test
+    void readinessAndEtaBottlenecksChangeOnlyFromSnapshotData() {
+        LocalDate date = LocalDate.of(2099, 1, 5);
+        replaceIndicatorSnapshots(date,
+                List.of(.40, .30, .147, .20, .50, .25),
+                List.of(2072.1, 2085.1, 2086.7, 2090.0, 2064.5, 2089.8));
+
+        Map<String, Object> first = controller.summary().getBody();
+
+        assertEquals(List.of(3), first.get("readinessBottleneckPillars"));
+        assertEquals(List.of(4), first.get("etaBottleneckPillars"));
+        assertEquals(3, first.get("bottleneckPillar"));
+        assertEquals(date, first.get("snapshotDate"));
+        assertEquals("params-v2", first.get("paramsVersion"));
+        assertEquals("graph-v1.0", first.get("graphVersion"));
+
+        replaceIndicatorSnapshots(date,
+                List.of(.40, .10, .147, .20, .50, .25),
+                List.of(2072.1, 2085.1, 2086.7, 2089.9, 2064.5, 2092.0));
+
+        Map<String, Object> changed = controller.summary().getBody();
+
+        assertEquals(List.of(2), changed.get("readinessBottleneckPillars"));
+        assertEquals(List.of(6), changed.get("etaBottleneckPillars"));
+        assertEquals(2, changed.get("bottleneckPillar"));
     }
 
     @Test
@@ -130,5 +165,17 @@ class TrackerControllerTest {
         assertEquals(EvidenceKind.HISTORICAL_REFERENCE, evidence.kind());
         assertEquals(null, evidence.evidenceQuote());
         assertTrue(evidence.factSummary().startsWith("Reviewer-authored"));
+    }
+
+    private void replaceIndicatorSnapshots(
+            LocalDate date, List<Double> readiness, List<Double> etaYears) {
+        for (int pillar = 1; pillar <= 6; pillar++) {
+            double value = readiness.get(pillar - 1);
+            double eta = etaYears.get(pillar - 1);
+            repository.replaceSnapshot(new SnapshotRow(
+                    0, pillar, date, value, 0.0, .01, .01,
+                    4, 10, eta, eta - 2, eta + 2, eta,
+                    "params-v2", value, "graph-v1.0"));
+        }
     }
 }
