@@ -8,6 +8,9 @@ $certManagerNamespace = Get-RenderedResource -Rendered $certManager -Kind "Names
 $alertmanagerValues = [regex]::Match($observability, "(?ms)^    alertmanager:`n.*?(?=^    [a-zA-Z]|\z)").Value
 $alertmanagerSpec = [regex]::Match($observability, "(?ms)^      alertmanagerSpec:`n.*?(?=^      [a-zA-Z]|\z)").Value
 $alertmanagerConfig = Get-RenderedResourceByName -Rendered $observability -Kind "AlertmanagerConfig" -Name "platform-alertmanager"
+$alertmanagerRoute = [regex]::Match($alertmanagerConfig, '(?ms)^  route:\n.*\z').Value
+$alertmanagerRootRoute = [regex]::Match($alertmanagerRoute, '(?ms)^  route:\n.*?(?=^    routes:)').Value
+$alertmanagerChildRoutes = [regex]::Match($alertmanagerRoute, '(?ms)^    routes:\n.*\z').Value
 $alertmanagerPolicy = [regex]::Match(
     $observability,
     "(?ms)^apiVersion: cilium\.io/v2`nkind: CiliumNetworkPolicy`nmetadata:`n  name: alertmanager`n.*?(?=^---`n|\z)"
@@ -45,11 +48,19 @@ Assert-NoMatches $alertmanagerConfig "alerting\.aienterprise\.io/role" "the glob
 Assert-NoMatches $alertmanagerSpec "(?m)^\s+secrets:" "Alertmanager must not mount the webhook as a file"
 Assert-Matches $alertmanagerConfig "(?ms)apiURL:.*?key: address.*?name: alertmanager-discord-webhook" "Discord must select the Vault-backed Secret key"
 Assert-Matches $alertmanagerConfig "(?m)^\s+sendResolved: true$" "resolved alerts must be delivered"
-Assert-Matches $alertmanagerConfig "(?ms)groupBy:.*?- namespace.*?- alertname" "alerts must keep stable grouping"
-Assert-Matches $alertmanagerConfig "(?m)^\s+groupWait: 30s$" "notification group wait must remain bounded"
-Assert-Matches $alertmanagerConfig "(?m)^\s+groupInterval: 5m$" "notification group interval must remain bounded"
-Assert-Matches $alertmanagerConfig "(?m)^\s+repeatInterval: 4h$" "notification repeat interval must remain bounded"
-Assert-Matches $alertmanagerConfig '(?ms)routes:.*?matchers:.*?name: alertname.*?value: Watchdog.*?receiver: "null"' "Watchdog must route to null"
+Assert-Matches $alertmanagerRootRoute '(?m)^    receiver: discord$' "unknown warnings and critical alerts must default to Discord"
+Assert-MatchCount $alertmanagerRootRoute '(?m)^    - namespace$' 1 "root alerts must group by namespace"
+Assert-NoMatches $alertmanagerRootRoute '(?m)^    - alertname$' "root grouping must coalesce related alert names"
+Assert-Matches $alertmanagerRootRoute '(?m)^    groupWait: 2m$' "warnings must wait two minutes for related symptoms"
+Assert-Matches $alertmanagerRootRoute '(?m)^    groupInterval: 5m$' "notification group interval must remain five minutes"
+Assert-Matches $alertmanagerRootRoute '(?m)^    repeatInterval: 12h$' "warnings must repeat no more than twice daily"
+Assert-MatchCount $alertmanagerChildRoutes '(?m)^      receiver: "null"$' 3 "only three child routes may discard alerts"
+Assert-Matches $alertmanagerChildRoutes '(?ms)name: alertname\n\s+value: Watchdog\n\s+receiver: "null"' "Watchdog must route to null"
+Assert-Matches $alertmanagerChildRoutes '(?ms)name: severity\n\s+value: info\n\s+receiver: "null"' "informational alerts must route directly to null"
+Assert-Matches $alertmanagerChildRoutes '(?ms)matchType: =~\n\s+name: alertname\n\s+value: KubeCPUOvercommit\|KubeMemoryOvercommit\n\s+receiver: "null"' "only the structural overcommit alerts must route to null"
+Assert-Matches $alertmanagerChildRoutes '(?ms)groupWait: 30s.*?name: severity\n\s+value: critical\n\s+receiver: discord\n\s+repeatInterval: 4h' "critical alerts must retain fast delivery and repetition"
+Assert-MatchCount $alertmanagerRoute '(?m)^[ \t]+- groupWait: 30s\r?$' 1 "only critical alerts may use the short wait"
+Assert-MatchCount $alertmanagerRoute '(?m)^[ \t]+repeatInterval: 4h\r?$' 1 "only critical alerts may use the short repeat"
 Assert-MatchCount $alertmanagerConfig "(?m)^\s+(?:-\s+)?sourceMatch:$" 3 "the three source-based inhibition rules must remain"
 Assert-MatchCount $alertmanagerConfig "(?m)^\s+(?:-\s+)?targetMatch:$" 4 "all four inhibition targets must remain"
 Assert-Matches $alertmanagerConfig "(?ms)sourceMatch:.*?value: critical.*?targetMatch:.*?value: warning\|info" "critical alerts must inhibit warning and info alerts"
