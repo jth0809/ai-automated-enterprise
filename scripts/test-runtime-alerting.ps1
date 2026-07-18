@@ -16,6 +16,10 @@ $certManagerPolicy = [regex]::Match(
     $certManager,
     "(?ms)^apiVersion: cilium\.io/v2`nkind: CiliumNetworkPolicy`nmetadata:`n  name: cert-manager-controller`n.*?(?=^---`n|\z)"
 ).Value
+$certManagerApiEgress = [regex]::Match(
+    $certManagerPolicy,
+    '(?ms)^  - toEntities:\n.*?(?=^  - to(?:Endpoints|Entities|FQDNs):|\z)'
+).Value
 $alertmanagerAuthorization = Get-RenderedResourceByName -Rendered $observability -Kind "AuthorizationPolicy" -Name "allow-prometheus-to-alertmanager"
 $prometheusAuthorization = Get-RenderedResourceByName -Rendered $observability -Kind "AuthorizationPolicy" -Name "allow-observability-clients-to-prometheus"
 $certManagerAuthorization = Get-RenderedResourceByName -Rendered $observability -Kind "AuthorizationPolicy" -Name "allow-prometheus-to-cert-manager"
@@ -102,6 +106,9 @@ Assert-Matches $certManager "(?m)^\s+- action: keep$" "non-controller cert-manag
 if ($certManagerPolicy.Length -eq 0) {
     throw "[ASSERT] cert-manager controller needs a dedicated Cilium policy"
 }
+if ($certManagerApiEgress.Length -eq 0) {
+    throw "[ASSERT] cert-manager needs a Kubernetes API egress block"
+}
 Assert-Matches $certManagerPolicy "(?ms)endpointSelector:.*?app\.kubernetes\.io/component: controller.*?app\.kubernetes\.io/instance: cert-manager.*?app\.kubernetes\.io/name: cert-manager" "CNP must select only the cert-manager controller"
 Assert-MatchCount $certManagerPolicy "(?m)^\s+- fromEndpoints:$" 1 "cert-manager must have exactly one metrics ingress source"
 Assert-Matches $certManagerPolicy "(?ms)ingress:.*?app\.kubernetes\.io/name: prometheus" "cert-manager metrics ingress must select Prometheus pods"
@@ -117,11 +124,15 @@ Assert-MatchCount $certManagerPolicy "(?m)^\s+- matchName: (?:acme-v02\.api\.let
 Assert-MatchCount $certManagerPolicy "(?m)^\s+- matchName: .+$" 4 "cert-manager must not have extra FQDN destinations"
 Assert-MatchCount $certManagerPolicy "(?m)^\s+- kube-apiserver$" 1 "cert-manager must reach only the Kubernetes API entity"
 Assert-MatchCount $certManagerPolicy "(?m)^\s+- (?:all|world|cluster|host|init|ingress|unmanaged|remote-node|health|kube-apiserver|none)$" 1 "cert-manager must not allow another Cilium entity"
+Assert-MatchCount $certManagerApiEgress '(?m)^      - port: "443"$' 1 "cert-manager API egress must preserve the Service port"
+Assert-MatchCount $certManagerApiEgress '(?m)^      - port: "6443"$' 1 "cert-manager API egress must allow the observed OKE backend port"
+Assert-MatchCount $certManagerApiEgress '(?m)^        protocol: TCP$' 2 "cert-manager API egress must contain only two TCP ports"
+Assert-MatchCount $certManagerPolicy '(?m)^      - port: "6443"$' 1 "cert-manager must expose the OKE API backend port only once"
 Assert-MatchCount $certManagerPolicy '(?m)^\s+- port: "53"$' 2 "cert-manager DNS must use TCP and UDP 53"
 Assert-MatchCount $certManagerPolicy '(?m)^\s+- port: "443"$' 2 "cert-manager API and ACME traffic must use HTTPS"
 Assert-MatchCount $certManagerPolicy '(?m)^\s+- port: "80"$' 1 "HTTP-01 self-checks must use the public HTTP listener"
 Assert-MatchCount $certManagerPolicy '(?m)^\s+- port: "15008"$' 1 "cert-manager must accept Ambient HBONE"
-Assert-MatchCount $certManagerPolicy '(?m)^\s+- port: "[^\"]+"$' 7 "cert-manager policy must contain no extra ports"
+Assert-MatchCount $certManagerPolicy '(?m)^\s+- port: "[^\"]+"$' 8 "cert-manager policy must contain no extra ports"
 Assert-Matches $infrastructure "(?ms)name: infra-observability.*?dependsOn:.*?name: infra-istio-ambient.*?name: security-external-secrets" "observability must wait for Vault access"
 
 Write-Host "Runtime alerting contracts passed"
