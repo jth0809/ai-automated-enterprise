@@ -96,7 +96,7 @@ one source.
 
 - [ ] Run full Maven, Vitest, production build, browser desktop/375 px/console,
   `git diff --check`, secret/SAST scans, egress verifier, and GitOps rendering.
-- [ ] Verify all live/automatic flags are false and protected fixtures remain
+- [x] Verify all live/automatic flags are false and protected fixtures remain
   untracked.
 - [ ] Mark WP4.4–WP4.6 software complete and G4
   `PENDING_OBSERVATION`; do not claim formal launch.

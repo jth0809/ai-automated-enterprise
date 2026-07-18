@@ -227,15 +227,15 @@ Oracle-compatible V18 schema, Jackson, JUnit 5, Maven 3.9.9, Git.
 - Modify this plan's checkboxes.
 - Modify the master roadmap for WP4.4 only.
 
-- [ ] Run focused and full Maven tests, full Vitest, production build,
+- [x] Run focused and full Maven tests, full Vitest, production build,
   `git diff --check`, and backtest-package egress scan.
 - [x] Run the real 147-claim corpus with backtest explicitly enabled and record
   all 27 calibration scores, the selected candidate, locked holdout metrics,
   insufficiency states, input/report hashes, and row counts.
 - [x] Re-run identical input and prove idempotent run/report reuse.
 - [x] Verify live/polling flags remain false and protected files remain untracked.
-- [ ] Mark WP4.4 complete while leaving WP4.5–WP4.6 and G4 pending.
-- [ ] Commit as `docs(tracker): publish WP4.4 backtest evidence`.
+- [x] Mark WP4.4 complete while leaving WP4.5–WP4.6 and G4 pending.
+- [x] Commit as `docs(tracker): publish WP4.4 backtest evidence`.
 
 ## Completion gate
 

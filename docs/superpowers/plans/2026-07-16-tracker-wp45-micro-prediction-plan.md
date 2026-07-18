@@ -157,15 +157,15 @@ published calibration is identity with an explicit insufficiency status.
 - Create `docs/research/tracker-wp45-validation-evidence.md`.
 - Modify this plan and the master roadmap for WP4.5 only.
 
-- [ ] Run focused/full Maven, Vitest, production build, diff/security/GitOps
+- [x] Run focused/full Maven, Vitest, production build, diff/security/GitOps
   checks, and a network-egress scan.
 - [x] Manually issue the first audited cohort from the 147-claim corpus and
   publish all probabilities, horizons, exposure/rate diagnostics, hashes, and
   insufficiency state.
 - [x] Re-run identical issuance and prove cohort reuse.
 - [x] Verify live/polling flags remain false and protected fixtures untracked.
-- [ ] Mark WP4.5 complete while leaving WP4.6 and G4 observation pending.
-- [ ] Commit as `docs(tracker): publish first micro predictions`.
+- [x] Mark WP4.5 complete while leaving WP4.6 and G4 observation pending.
+- [x] Commit as `docs(tracker): publish first micro predictions`.
 
 ## Completion gate
 
