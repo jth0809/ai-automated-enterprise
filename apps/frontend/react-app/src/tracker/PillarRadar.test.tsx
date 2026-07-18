@@ -23,7 +23,10 @@ function pillars(readiness: number[]) {
 describe("PillarRadar", () => {
   it("computes hexagon polygon points as readiness x radius from the center", () => {
     const { container } = render(
-      <PillarRadar pillars={pillars([1, 0.5, 0, 1, 0.5, 0])} bottleneck={3} />,
+      <PillarRadar
+        pillars={pillars([1, 0.5, 0, 1, 0.5, 0])}
+        bottlenecks={[3, 6]}
+      />,
     );
 
     const polygon = container.querySelector("polygon.radar-value");
@@ -49,13 +52,14 @@ describe("PillarRadar", () => {
     }
   });
 
-  it("highlights the bottleneck pillar label", () => {
+  it("highlights every readiness bottleneck pillar label", () => {
     const { container } = render(
-      <PillarRadar pillars={pillars([1, 1, 0, 1, 1, 1])} bottleneck={3} />,
+      <PillarRadar pillars={pillars([1, 1, 0, 1, 1, 0])} bottlenecks={[3, 6]} />,
     );
 
     const highlighted = container.querySelectorAll("text.radar-label-bottleneck");
-    expect(highlighted).toHaveLength(1);
+    expect(highlighted).toHaveLength(2);
     expect(highlighted[0].textContent).toBe("거주 인프라");
+    expect(highlighted[1].textContent).toBe("경제·거버넌스");
   });
 });

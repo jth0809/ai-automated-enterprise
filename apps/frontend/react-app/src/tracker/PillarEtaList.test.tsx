@@ -17,7 +17,13 @@ const PILLARS: PillarSummary[] = [
 
 describe("PillarEtaList", () => {
   it("shows each pillar's resolved ETA or an unresolved marker", () => {
-    render(<PillarEtaList pillars={PILLARS} bottleneck={1} />);
+    render(
+      <PillarEtaList
+        pillars={PILLARS}
+        etaBottlenecks={[1]}
+        unresolvedEtaPillars={[1]}
+      />,
+    );
 
     expect(screen.getByText("수송")).toBeInTheDocument();
     expect(screen.getByText("2151")).toBeInTheDocument(); // rounded 2150.7
@@ -26,10 +32,21 @@ describe("PillarEtaList", () => {
     expect(screen.getByText("2175+")).toBeInTheDocument();
   });
 
-  it("marks the bottleneck pillar", () => {
-    const { container } = render(<PillarEtaList pillars={PILLARS} bottleneck={1} />);
+  it("marks ETA bottlenecks independently from unresolved state", () => {
+    const { container } = render(
+      <PillarEtaList
+        pillars={PILLARS}
+        etaBottlenecks={[4]}
+        unresolvedEtaPillars={[1]}
+      />,
+    );
     const rows = container.querySelectorAll("li.pillar-eta-bottleneck");
     expect(rows).toHaveLength(1);
-    expect(rows[0].textContent).toContain("수송");
+    expect(rows[0].textContent).toContain("자원·에너지");
+    expect(rows[0].textContent).toContain("전체 ETA 병목");
+    const unresolved = container.querySelectorAll("li.pillar-eta-unresolved");
+    expect(unresolved).toHaveLength(1);
+    expect(unresolved[0].textContent).toContain("수송");
+    expect(unresolved[0].textContent).toContain("추세 미해결");
   });
 });

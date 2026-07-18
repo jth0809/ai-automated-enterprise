@@ -10,6 +10,14 @@ export interface Summary {
   label: string;
   overallReadiness: number | null;
   bottleneckPillar: number | null;
+  indicatorStatus: "COMPLETE" | "INCOMPLETE_SNAPSHOT";
+  readinessBottleneckPillars: number[];
+  etaBottleneckPillars: number[];
+  unresolvedEtaPillars: number[];
+  missingPillars: number[];
+  snapshotDate: string | null;
+  paramsVersion: string | null;
+  graphVersion: string | null;
   frozen: boolean;
 }
 
@@ -363,7 +371,47 @@ export interface TimelineEvent {
 export async function getSummary(): Promise<Summary> {
   const res = await fetch("/api/tracker/summary");
   if (!res.ok) throw new Error(`tracker summary failed: HTTP ${res.status}`);
-  return (await res.json()) as Summary;
+  const body: unknown = await res.json();
+  if (!isSummary(body)) {
+    throw new Error("tracker summary returned an invalid contract");
+  }
+  return body;
+}
+
+function isSummary(value: unknown): value is Summary {
+  const nullableNumber = (item: unknown) =>
+    item === null || typeof item === "number" && Number.isFinite(item);
+  const nullableString = (item: unknown) =>
+    item === null || typeof item === "string";
+  const nullablePillar = (item: unknown) => item === null || isPillar(item);
+  return (
+    isRecord(value) &&
+    nullableNumber(value.displayedEtaYear) &&
+    nullableNumber(value.etaLow) &&
+    nullableNumber(value.etaHigh) &&
+    typeof value.label === "string" &&
+    nullableNumber(value.overallReadiness) &&
+    nullablePillar(value.bottleneckPillar) &&
+    (value.indicatorStatus === "COMPLETE" ||
+      value.indicatorStatus === "INCOMPLETE_SNAPSHOT") &&
+    isPillarArray(value.readinessBottleneckPillars) &&
+    isPillarArray(value.etaBottleneckPillars) &&
+    isPillarArray(value.unresolvedEtaPillars) &&
+    isPillarArray(value.missingPillars) &&
+    nullableString(value.snapshotDate) &&
+    nullableString(value.paramsVersion) &&
+    nullableString(value.graphVersion) &&
+    typeof value.frozen === "boolean"
+  );
+}
+
+function isPillarArray(value: unknown): value is number[] {
+  if (!Array.isArray(value) || !value.every(isPillar)) return false;
+  return new Set(value).size === value.length;
+}
+
+function isPillar(value: unknown): value is number {
+  return Number.isInteger(value) && Number(value) >= 1 && Number(value) <= 6;
 }
 
 export async function getPillars(): Promise<PillarSummary[]> {

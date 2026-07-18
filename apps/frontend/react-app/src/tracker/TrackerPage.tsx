@@ -20,6 +20,7 @@ import type {
 import { Countdown } from "./Countdown";
 import { EventTimeline } from "./EventTimeline";
 import { ForecastComparisonPanel } from "./ForecastComparisonPanel";
+import { ForecastStatusBar } from "./ForecastStatusBar";
 import { LayerBPanel } from "./LayerBPanel";
 import { KIndexCard } from "./KIndexCard";
 import { MethodologyCredibility } from "./MethodologyCredibility";
@@ -103,8 +104,16 @@ export function TrackerPage() {
         label={data.summary.label}
         pillars={data.pillars}
       />
-      <PillarRadar pillars={data.pillars} bottleneck={data.summary.bottleneckPillar} />
-      <PillarEtaList pillars={data.pillars} bottleneck={data.summary.bottleneckPillar} />
+      <ForecastStatusBar summary={data.summary} pillars={data.pillars} />
+      <PillarRadar
+        pillars={data.pillars}
+        bottlenecks={data.summary.readinessBottleneckPillars}
+      />
+      <PillarEtaList
+        pillars={data.pillars}
+        etaBottlenecks={data.summary.etaBottleneckPillars}
+        unresolvedEtaPillars={data.summary.unresolvedEtaPillars}
+      />
       <EventTimeline events={data.events} />
       <LayerBPanel metrics={data.layerB} />
       <KIndexCard summary={data.kIndex} />

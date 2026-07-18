@@ -2,7 +2,7 @@ import type { PillarSummary } from "./api";
 
 interface PillarRadarProps {
   pillars: PillarSummary[];
-  bottleneck: number | null;
+  bottlenecks: number[];
 }
 
 const CENTER = 100;
@@ -27,22 +27,28 @@ function points(scales: number[]): string {
  * Library-free SVG hexagon radar: each vertex sits at readiness x radius from
  * the center; the bottleneck pillar's label is highlighted.
  */
-export function PillarRadar({ pillars, bottleneck }: PillarRadarProps) {
+export function PillarRadar({ pillars, bottlenecks }: PillarRadarProps) {
   const ordered = [...pillars].sort((a, b) => a.pillar - b.pillar);
   const scales = ordered.map((p) => p.readiness ?? 0);
+  const highlightedPillars = new Set(bottlenecks);
+  const bottleneckLabel = ordered
+    .filter((pillar) => highlightedPillars.has(pillar.pillar))
+    .map((pillar) => `P${pillar.pillar} ${pillar.name}`)
+    .join(", ");
   return (
     <svg
       className="radar"
       viewBox="0 0 200 200"
       role="img"
-      aria-label="Pillar readiness radar"
+      aria-label={`Pillar readiness radar · 현재 준비도 병목 ${bottleneckLabel || "없음"}`}
     >
+      <title>현재 준비도 병목 {bottleneckLabel || "없음"}</title>
       <polygon className="radar-grid" points={points([1, 1, 1, 1, 1, 1])} />
       <polygon className="radar-grid" points={points([0.5, 0.5, 0.5, 0.5, 0.5, 0.5])} />
       <polygon className="radar-value" points={points(scales)} />
       {ordered.map((pillar, i) => {
         const [x, y] = vertex(i, LABEL_RADIUS / RADIUS);
-        const highlighted = pillar.pillar === bottleneck;
+        const highlighted = highlightedPillars.has(pillar.pillar);
         return (
           <text
             key={pillar.pillar}
