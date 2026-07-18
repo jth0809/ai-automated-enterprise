@@ -27,6 +27,7 @@
 - `gitops/infrastructure/observability/kustomization.yaml`: includes the new configuration resource in the observability bundle.
 - `scripts/test-runtime-alerting.ps1`: rendered-manifest contracts for the global config, Secret selector, routing, security, and resource budget.
 - `scripts/test-alerting-docs-and-ci.ps1`: documentation contracts for README and runbook status accuracy.
+- `.github/workflows/security-scan-iac.yaml`: runs the alerting contract when README or its companion operational documents change.
 - `docs/runbooks/discord-alerting.md`: operator provisioning and read-only runtime checks.
 - `README.md`: high-level alerting architecture, status commands, and honest readiness state.
 
@@ -192,6 +193,7 @@ git commit -m "fix(gitops): repair Alertmanager Discord config"
 
 **Files:**
 - Modify: `scripts/test-alerting-docs-and-ci.ps1:3-49`
+- Modify: `.github/workflows/security-scan-iac.yaml:10-34`
 - Modify: `docs/runbooks/discord-alerting.md:51-67`
 - Modify: `README.md:39-47,114-125,155-166`
 
@@ -213,7 +215,7 @@ Add these assertions:
 Assert-Matches $readme "AlertmanagerConfig" "README must describe the supported Alertmanager configuration path"
 Assert-Matches $readme "DISCORD_ALERTS_WEBHOOK_URL" "README must identify the Vault-backed alert credential"
 Assert-Matches $readme "docs/runbooks/discord-alerting\.md" "README must link the alerting runbook"
-Assert-Matches $readme "(?is)runtime delivery verification.*pending|실제 전달 검증.*대기" "README must distinguish configuration from delivery verification"
+Assert-Matches $readme "(?is)runtime delivery verification.*pending" "README must distinguish configuration from delivery verification"
 Assert-Matches $runbook "kubectl -n monitoring get alertmanagerconfig platform-alertmanager" "runbook must verify the global AlertmanagerConfig"
 Assert-Matches $runbook "(?is)Reconciled=True.*Available=True|Reconciled.*Available" "runbook must define Alertmanager readiness conditions"
 ```
@@ -232,9 +234,11 @@ Run:
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/test-alerting-docs-and-ci.ps1
 ```
 
-Expected: failure stating that README must describe `AlertmanagerConfig`.
+Expected: failure stating that `README.md` changes must trigger push and pull-request CI.
 
-- [ ] **Step 3: Update the runbook**
+- [ ] **Step 3: Update CI path filters and the runbook**
+
+Add `README.md` to both the push and pull-request path filters in `.github/workflows/security-scan-iac.yaml` so future README-only changes execute the documentation contract.
 
 In the read-only verification command block, add:
 
@@ -279,7 +283,7 @@ All GitOps alerting contracts passed
 - [ ] **Step 6: Commit documentation and its contract**
 
 ```powershell
-git add -- README.md docs/runbooks/discord-alerting.md scripts/test-alerting-docs-and-ci.ps1
+git add -- .github/workflows/security-scan-iac.yaml README.md docs/runbooks/discord-alerting.md docs/superpowers/specs/2026-07-18-alertmanager-discord-config-repair-design.md docs/superpowers/plans/2026-07-18-alertmanager-discord-config-repair-plan.md scripts/test-alerting-docs-and-ci.ps1
 git commit -m "docs(alerting): document repaired Discord routing"
 ```
 

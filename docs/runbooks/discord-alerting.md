@@ -56,14 +56,18 @@ kubectl -n monitoring get secret alertmanager-discord-webhook
 kubectl -n flux-system get provider discord
 kubectl -n flux-system get alert platform-errors
 kubectl -n backend get alertprovider discord
+kubectl -n monitoring get alertmanagerconfig platform-alertmanager
 kubectl -n monitoring get alertmanager kube-prometheus-stack-alertmanager
+kubectl -n monitoring get pods -l alertmanager=kube-prometheus-stack-alertmanager
 kubectl -n monitoring get prometheusrule platform-actionable-alerts
 ```
 
 - Flux `Provider/discord`와 `Alert/platform-errors`가 오류를 보이지 않는지 확인한다.
 - Flagger `AlertProvider/discord`가 Secret을 참조하는지 확인한다.
-- Alertmanager Pod가 1개만 Ready인지 확인하고, PrometheusRule에 `NodeCPURequestsHigh`, `CertificateExpiringSoon`, `FlaggerCanaryFailed`가 로드됐는지 확인한다.
+- `AlertmanagerConfig/platform-alertmanager`의 Discord `apiURL`이 `alertmanager-discord-webhook/address`를 참조하는지 확인한다. Secret 값 자체를 출력하지 않는다.
+- Alertmanager 조건이 `Reconciled=True`, `Available=True`이고 Pod가 정확히 1개만 Ready인지 확인한다. PrometheusRule에는 `NodeCPURequestsHigh`, `CertificateExpiringSoon`, `FlaggerCanaryFailed`가 로드돼야 한다.
 - 경보 전달 검증은 자연 발생한 비프로덕션 또는 실제 이벤트를 사용한다. 확인만을 위해 프로덕션 Kustomization, Canary, Pod를 고의로 실패시키지 않는다.
+- 자연 이벤트의 Discord 수신을 확인하기 전까지 실제 전달 검증은 대기 상태로 기록한다.
 - 전달이 안 되면 ExternalSecret → Provider/AlertProvider/Alertmanager 상태 → DNS → Cilium/Hubble drop 순서로 확인한다.
 
 ## Webhook 교체(rotation)

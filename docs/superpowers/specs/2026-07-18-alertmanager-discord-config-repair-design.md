@@ -66,6 +66,7 @@ The chart's default empty AlertmanagerConfig selectors will be overridden with `
 - Replace the invalid inline configuration in `gitops/infrastructure/observability/release.yaml` with the global `AlertmanagerConfig` reference.
 - Update `scripts/test-runtime-alerting.ps1` before production files so the old configuration fails the new contract.
 - Update `scripts/test-alerting-docs-and-ci.ps1` to require current README alerting documentation.
+- Update `.github/workflows/security-scan-iac.yaml` so README changes execute the alerting documentation contract.
 - Update `docs/runbooks/discord-alerting.md` with the new resource and read-only verification sequence.
 - Update `README.md` with the Vault-backed Flux/Flagger/Alertmanager-to-Discord architecture and explicitly distinguish GitOps configuration from live delivery verification.
 

@@ -18,6 +18,7 @@ on:
       - "docs/superpowers/specs/2026-07-10-discord-alerting-design.md"
       - "REQUIRED_SECRETS.md"
       - "BACKLOG_BY_DOMAIN.md"
+      - "README.md"
       - "**/Dockerfile"
       - ".github/workflows/security-scan-iac.yaml"
   pull_request:
@@ -29,6 +30,7 @@ on:
       - "docs/superpowers/specs/2026-07-10-discord-alerting-design.md"
       - "REQUIRED_SECRETS.md"
       - "BACKLOG_BY_DOMAIN.md"
+      - "README.md"
       - "**/Dockerfile"
       - ".github/workflows/security-scan-iac.yaml"
   workflow_dispatch:

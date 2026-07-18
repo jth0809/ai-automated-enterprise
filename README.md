@@ -43,7 +43,7 @@ Oracle Cloud **Always Free Tier**(ARM A1 2 OCPU / 12GB) 위에 Zero-Trust DevSec
 | 인그레스 / TLS | Kubernetes Gateway API v1.3 + Istio Gateway, cert-manager + Let's Encrypt(ACME HTTP-01 자동 발급·갱신), HTTP→HTTPS 301 |
 | 시크릿 | OCI Vault + External Secrets Operator (ClusterSecretStore `oci-vault`) |
 | 프로그레시브 딜리버리 | Flagger (gatewayapi:v1 프로바이더) + flagger-loadtester |
-| 관측성 | kube-prometheus-stack (Prometheus 보존 1d/2GB, Grafana) |
+| 관측성 / 운영 알림 | kube-prometheus-stack (Prometheus 보존 1d/2GB, Grafana, Alertmanager 1 replica) + Flux/Flagger/Alertmanager → Discord (OCI Vault 기반) |
 | 메시징/캐시 | ~~Kafka(Strimzi), Redis~~ — **Free Tier 자원 한계로 의도적 비활성** (아래 참고) |
 
 ## 저장소 구조
@@ -117,9 +117,18 @@ kubectl get kustomizations -n flux-system     # GitOps 동기화 상태
 kubectl get canary -n backend                 # 카나리 진행 상황 (Progressing/Succeeded/Failed)
 kubectl get pods -n frontend -n backend
 kubectl get certificate -n istio-ingress      # TLS 인증서 발급/갱신 상태
+kubectl -n monitoring get alertmanagerconfig platform-alertmanager
+kubectl -n monitoring get alertmanager kube-prometheus-stack-alertmanager
+kubectl -n monitoring get pods -l alertmanager=kube-prometheus-stack-alertmanager
 curl https://ai-auto.kro.kr/                  # 프런트엔드 (HTTP 200)
 curl -I http://ai-auto.kro.kr/                # 301 → https 리다이렉트 확인
 ```
+
+### 운영 알림
+
+Flux 조정 오류와 Flagger 카나리 실패는 각 Discord Provider가 전달하고, Prometheus 경보는 전역 `AlertmanagerConfig/platform-alertmanager`를 거쳐 같은 운영 채널로 전달한다. Discord incoming Webhook은 저장소에 기록하지 않고 OCI Vault의 `DISCORD_ALERTS_WEBHOOK_URL`에서 External Secrets Operator가 동기화한다.
+
+GitOps 구성과 정적 계약은 구현되어 있지만 실제 이벤트의 Discord 수신은 `runtime delivery verification pending` 상태다. 프로덕션 장애를 인위적으로 만들지 말고 자연 발생한 비프로덕션 또는 실제 조치 가능 이벤트로 검증한다. 프로비저닝·상태 확인·교체 절차는 [Discord 알림 운영 Runbook](docs/runbooks/discord-alerting.md)을 따른다.
 
 ### Grafana 대시보드
 ```bash
@@ -162,5 +171,6 @@ kubectl patch deploy -n backend backend-springboot --type=merge \
 | Phase 3 Kafka/Redis | ⏸️ **의도적 보류** — Free Tier 2 OCPU에서 Strimzi+Redis 오퍼레이터는 OOM 유발, 앱 코드도 아직 미사용. 매니페스트는 `gitops/databases/`에 보관 |
 | Phase 4 CI/CD | ✅ 완료 (빌드→Trivy 게이트→SBOM 생성→OCIR→cosign→GitOps 자동 커밋). IaC 스캔(Trivy config), SAST(Semgrep), 시크릿 스캔(Gitleaks), DAST(OWASP ZAP baseline, 주간+수동), CycloneDX SBOM 아티팩트 가동. 남은 항목: 클러스터 측 cosign 서명 검증(admission) |
 | Phase 5 프로그레시브 딜리버리 | ✅ 카나리 완주(promotion) 검증 완료. A/B 테스트는 미구현 |
+| 운영 알림 (Discord) | 🛠️ Flux·Flagger·Alertmanager GitOps 구성 완료. Alertmanager는 Vault Secret을 참조하는 전역 `AlertmanagerConfig` 사용. 실제 Discord 전달은 `runtime delivery verification pending` |
 | Zero-Trust (mTLS + default-deny CNP) | ✅ 앱 네임스페이스 적용 완료. ATP egress도 `world`가 아닌 리전 ADB FQDN(`adb.ap-osaka-1.oraclecloud.com`)으로 한정 |
 | HTTPS / 실도메인 | ✅ `ai-auto.kro.kr` + `api.ai-auto.kro.kr` — Let's Encrypt 자동 발급(ClusterIssuer `letsencrypt-prod`, Gateway HTTP-01), HTTP는 301 리다이렉트 |

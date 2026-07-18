@@ -5,6 +5,7 @@ $requiredSecrets = Read-RepoFile "REQUIRED_SECRETS.md"
 $backlog = Read-RepoFile "BACKLOG_BY_DOMAIN.md"
 $runbook = Read-RepoFile "docs/runbooks/discord-alerting.md"
 $design = Read-RepoFile "docs/superpowers/specs/2026-07-10-discord-alerting-design.md"
+$readme = Read-RepoFile "README.md"
 
 Assert-Matches $workflow "pwsh -NoProfile -File scripts/test-gitops-alerting\.ps1" "IaC CI must execute alert contracts"
 Assert-MatchCount $workflow 'scripts/\*\*\.ps1' 2 "PowerShell contract changes must trigger push and pull-request CI"
@@ -13,7 +14,8 @@ $contractPaths = @(
     "docs/runbooks/discord-alerting.md",
     "docs/superpowers/specs/2026-07-10-discord-alerting-design.md",
     "REQUIRED_SECRETS.md",
-    "BACKLOG_BY_DOMAIN.md"
+    "BACKLOG_BY_DOMAIN.md",
+    "README.md"
 )
 foreach ($contractPath in $contractPaths) {
     Assert-MatchCount $workflow ([regex]::Escape($contractPath)) 2 "$contractPath changes must trigger push and pull-request CI"
@@ -38,14 +40,20 @@ Assert-NoMatches $selectedEventList 'workflow_run|dependabot_alert' "unsupported
 Assert-Matches $runbook "flux-system/flux-discord-webhook" "runbook must verify the Flux ExternalSecret"
 Assert-Matches $runbook "backend/flagger-discord-webhook" "runbook must verify the Flagger ExternalSecret"
 Assert-Matches $runbook "monitoring/alertmanager-discord-webhook" "runbook must verify the Alertmanager ExternalSecret"
+Assert-Matches $runbook "kubectl -n monitoring get alertmanagerconfig platform-alertmanager" "runbook must verify the global AlertmanagerConfig"
+Assert-Matches $runbook "(?is)Reconciled=True.*Available=True|Reconciled.*Available" "runbook must define Alertmanager readiness conditions"
 Assert-Matches $runbook "(?is)rotation.*Vault" "runbook must document safe rotation"
+Assert-Matches $readme "AlertmanagerConfig" "README must describe the supported Alertmanager configuration path"
+Assert-Matches $readme "DISCORD_ALERTS_WEBHOOK_URL" "README must identify the Vault-backed alert credential"
+Assert-Matches $readme "docs/runbooks/discord-alerting\.md" "README must link the alerting runbook"
+Assert-Matches $readme "(?is)runtime delivery verification.*pending" "README must distinguish configuration from delivery verification"
 Assert-Matches $backlog "(?is)GitOps implementation complete.*Vault provisioning.*runtime delivery verification pending" "implemented alerting must remain operationally pending"
 Assert-Matches $backlog "(?is)GitHub.*Discord.*external setting.*pending" "GitHub to Discord must stay pending"
 Assert-Matches $backlog "(?is)dependabot_alert.*deferred" "unsupported direct Dependabot alerts must remain deferred"
 Assert-Matches $backlog "(?is)SMTP.*deferred|email.*deferred" "email routing must remain deferred"
 Assert-Matches $design "(?is)GitOps implementation complete.*runtime delivery verification pending" "design status must distinguish code from runtime verification"
 
-$trackedText = $workflow + $requiredSecrets + $backlog + $runbook + $design
+$trackedText = $workflow + $requiredSecrets + $backlog + $runbook + $design + $readme
 Assert-NoMatches $trackedText "https://discord\.com/api/webhooks/[0-9]" "No real Webhook URL may be tracked"
 
 Write-Host "Alerting documentation and CI contracts passed"
