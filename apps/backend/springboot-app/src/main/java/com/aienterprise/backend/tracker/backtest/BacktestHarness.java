@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -66,6 +67,7 @@ public final class BacktestHarness {
                                 value.candidate(), value.metrics()))
                         .toList());
         CalibrationSelector.Selection selected = activeSelector.select(pool);
+        BacktestCandidate activeCandidate = BacktestCandidate.active(input.model());
 
         CandidateEvaluation selectedCalibration = calibration.stream()
                 .filter(value -> value.candidate().equals(selected.candidate()))
@@ -74,12 +76,45 @@ public final class BacktestHarness {
                 selected.candidate(),
                 input.descriptor().schedule().holdout().folds());
         requireCohort(holdout, BacktestSchedule.Cohort.HOLDOUT);
+        CandidateEvaluation activeCalibration = calibration.stream()
+                .filter(value -> value.candidate().equals(activeCandidate))
+                .findFirst().orElseThrow(() -> new IllegalStateException(
+                        "active model is outside the pre-registered candidate set"));
+        CandidateEvaluation activeHoldout = activeCandidate.equals(
+                selected.candidate())
+                        ? holdout
+                        : session.evaluate(activeCandidate,
+                                input.descriptor().schedule().holdout().folds());
+        requireCohort(activeHoldout, BacktestSchedule.Cohort.HOLDOUT);
 
         List<BacktestReport.FoldResult> folds = new ArrayList<>();
         folds.addAll(selectedCalibration.folds());
         folds.addAll(holdout.folds());
         List<BacktestReport.MetricComparison> metrics = compare(
                 selectedCalibration.metrics(), holdout.metrics());
+        BacktestMetric.Bundle calibrationPersistence = noChangeMetrics(
+                selectedCalibration.folds(), input.model().params().epsilon());
+        BacktestMetric.Bundle holdoutPersistence = noChangeMetrics(
+                holdout.folds(), input.model().params().epsilon());
+        List<BacktestReport.ModelEvaluation> modelEvaluations = List.of(
+                modelEvaluation(
+                        BacktestReport.ModelRole.SELECTED,
+                        selected.candidate(), selectedCalibration.metrics(),
+                        holdout.metrics(), EnumSet.allOf(BacktestMetric.Code.class)),
+                modelEvaluation(
+                        BacktestReport.ModelRole.ACTIVE,
+                        activeCandidate, activeCalibration.metrics(),
+                        activeHoldout.metrics(), EnumSet.allOf(BacktestMetric.Code.class)),
+                modelEvaluation(
+                        BacktestReport.ModelRole.PERSISTENCE,
+                        null, calibrationPersistence, holdoutPersistence,
+                        EnumSet.of(
+                                BacktestMetric.Code.READINESS_MAE,
+                                BacktestMetric.Code.LOGIT_READINESS_MAE)),
+                modelEvaluation(
+                        BacktestReport.ModelRole.ALWAYS_NO_CHANGE,
+                        null, calibrationPersistence, holdoutPersistence,
+                        EnumSet.of(BacktestMetric.Code.DIRECTION_ACCURACY)));
         BacktestSchedule.Split schedule = input.descriptor().schedule();
         LocalDate asOf = schedule.all().stream()
                 .map(BacktestSchedule.Fold::target)
@@ -104,14 +139,27 @@ public final class BacktestHarness {
                 schedule.calibration().folds().size(),
                 schedule.holdout().folds().size(),
                 selected.candidate(), selected.objectiveScore(),
-                selected.scores(), folds, metrics);
+                selected.scores(), folds, metrics, modelEvaluations);
     }
 
     private static List<BacktestReport.MetricComparison> compare(
             BacktestMetric.Bundle calibration,
             BacktestMetric.Bundle holdout) {
-        List<BacktestReport.MetricComparison> result = new ArrayList<>(35);
+        return compare(
+                calibration, holdout,
+                EnumSet.allOf(BacktestMetric.Code.class));
+    }
+
+    private static List<BacktestReport.MetricComparison> compare(
+            BacktestMetric.Bundle calibration,
+            BacktestMetric.Bundle holdout,
+            Set<BacktestMetric.Code> codes) {
+        List<BacktestReport.MetricComparison> result = new ArrayList<>(
+                codes.size() * 7);
         for (BacktestMetric.Code code : BacktestMetric.Code.values()) {
+            if (!codes.contains(code)) {
+                continue;
+            }
             for (int pillar = 0; pillar <= 6; pillar++) {
                 int currentPillar = pillar;
                 BacktestMetric.Value calibrationValue = calibration.find(
@@ -130,10 +178,54 @@ public final class BacktestHarness {
         return List.copyOf(result);
     }
 
+    private static BacktestReport.ModelEvaluation modelEvaluation(
+            BacktestReport.ModelRole role,
+            BacktestCandidate candidate,
+            BacktestMetric.Bundle calibration,
+            BacktestMetric.Bundle holdout,
+            Set<BacktestMetric.Code> codes) {
+        return new BacktestReport.ModelEvaluation(
+                role, candidate, compare(calibration, holdout, codes));
+    }
+
+    private static BacktestMetric.Bundle noChangeMetrics(
+            List<BacktestReport.FoldResult> source, double epsilon) {
+        List<BacktestReport.FoldResult> baseline = source.stream()
+                .map(fold -> {
+                    double current = fold.currentReadiness();
+                    boolean covered = Math.abs(
+                            fold.actualReadiness() - current)
+                            <= COVERAGE_TOLERANCE;
+                    return new BacktestReport.FoldResult(
+                            fold.foldIndex(), fold.cohort(), fold.cutoff(),
+                            fold.target(), fold.pillar(), current, current,
+                            fold.actualReadiness(),
+                            LogitEta.logitClipped(current, epsilon),
+                            fold.actualLogit(), false, fold.actualAdvance(),
+                            current, current, covered, null,
+                            BacktestMetric.Status.OK);
+                })
+                .toList();
+        return BacktestMetric.aggregate(baseline);
+    }
+
     private static BacktestMetric.Value insufficient(
             BacktestMetric.Code code, int pillar) {
         return new BacktestMetric.Value(
                 code, pillar, null, 0, BacktestMetric.Status.INSUFFICIENT_DATA);
+    }
+
+    static SnapshotRow targetSnapshot(
+            Map<Integer, List<SnapshotRow>> history,
+            int pillar,
+            LocalDate target) {
+        return Objects.requireNonNull(history, "history")
+                .getOrDefault(pillar, List.of()).stream()
+                .filter(row -> target.equals(row.snapshotDate()))
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException(
+                        "candidate truth is missing target " + target
+                                + " for pillar " + pillar));
     }
 
     private static void requireCohort(
@@ -234,30 +326,16 @@ public final class BacktestHarness {
         private final Map<Double, CapabilityGraph> graphs = new HashMap<>();
         private final Map<Double, Map<Integer, List<SnapshotRow>>> histories =
                 new HashMap<>();
-        private final Map<Integer, Map<LocalDate, SnapshotRow>> centralTruth;
-        private final LocalDate maxCutoff;
+        private final LocalDate maxTarget;
 
         private HistoricalEvaluationSession(
                 Input input, BacktestFingerprint.Value fingerprint) {
             this.input = input;
             this.fingerprint = fingerprint;
             this.replay = new HistoricalClaimReplay(input.nodes(), input.claims());
-            this.maxCutoff = input.descriptor().schedule().all().stream()
-                    .map(BacktestSchedule.Fold::cutoff)
-                    .max(LocalDate::compareTo).orElseThrow();
-            LocalDate maxTarget = input.descriptor().schedule().all().stream()
+            this.maxTarget = input.descriptor().schedule().all().stream()
                     .map(BacktestSchedule.Fold::target)
                     .max(LocalDate::compareTo).orElseThrow();
-            Map<Integer, List<SnapshotRow>> truthHistory = replay.weeklyHistory(
-                    maxTarget, input.model().params(), input.graph());
-            this.histories.put(1.0, truthHistory);
-            Map<Integer, Map<LocalDate, SnapshotRow>> truth = new LinkedHashMap<>();
-            truthHistory.forEach((pillar, values) -> {
-                Map<LocalDate, SnapshotRow> byDate = new HashMap<>();
-                values.forEach(value -> byDate.put(value.snapshotDate(), value));
-                truth.put(pillar, Collections.unmodifiableMap(byDate));
-            });
-            this.centralTruth = Collections.unmodifiableMap(truth);
             this.graphs.put(1.0, input.graph());
         }
 
@@ -277,7 +355,7 @@ public final class BacktestHarness {
             ModelParameters model = candidate.apply(input.model());
             Map<Integer, List<SnapshotRow>> history = histories.computeIfAbsent(
                     candidate.deltaScale(), ignored -> replay.weeklyHistory(
-                            maxCutoff, input.model().params(), graph));
+                            maxTarget, input.model().params(), graph));
 
             List<BacktestReport.FoldResult> results = new ArrayList<>();
             for (BacktestSchedule.Fold fold : folds) {
@@ -299,16 +377,13 @@ public final class BacktestHarness {
                 for (int pillar = 1; pillar <= 6; pillar++) {
                     HindcastPredictor.PillarPrediction projected =
                             prediction.pillars().get(pillar);
-                    SnapshotRow actualRow = centralTruth.get(pillar).get(fold.target());
-                    if (actualRow == null) {
-                        throw new IllegalStateException(
-                                "central truth is missing target " + fold.target());
-                    }
+                    SnapshotRow actualRow = targetSnapshot(
+                            history, pillar, fold.target());
                     double actual = actualRow.readiness();
                     double predictedLogit = LogitEta.logitClipped(
                             projected.predictedReadiness(), model.params().epsilon());
                     double actualLogit = LogitEta.logitClipped(
-                            actual, input.model().params().epsilon());
+                            actual, model.params().epsilon());
                     boolean predictedAdvance = projected.predictedReadiness()
                             > projected.currentReadiness() + ADVANCE_TOLERANCE;
                     boolean actualAdvance = actual

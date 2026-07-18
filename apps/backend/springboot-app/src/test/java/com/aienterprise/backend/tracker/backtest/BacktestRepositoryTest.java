@@ -34,6 +34,8 @@ class BacktestRepositoryTest {
         assertEquals(report.folds().size(), count(
                 "SELECT COUNT(*) FROM backtest_fold"));
         assertEquals(35, count("SELECT COUNT(*) FROM backtest_metric"));
+        assertEquals(91, count(
+                "SELECT COUNT(*) FROM backtest_model_evaluation"));
         assertEquals(stored, repository.findCurrent().orElseThrow());
         assertEquals(stored, repository.findCompletedByInputHash(
                 report.inputSha256()).orElseThrow());
@@ -104,7 +106,7 @@ class BacktestRepositoryTest {
                 report.sampleCount(), report.calibrationCutoffCount(),
                 report.holdoutCutoffCount(), report.selectedCandidate(),
                 report.objectiveScore(), report.calibrationCandidates(), folds,
-                report.metrics());
+                report.metrics(), report.modelEvaluations());
     }
 
     private int count(String sql) {

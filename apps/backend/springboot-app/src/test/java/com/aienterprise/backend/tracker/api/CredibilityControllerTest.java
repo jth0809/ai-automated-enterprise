@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 
 import com.aienterprise.backend.tracker.prediction.PredictionScorecard;
+import com.aienterprise.backend.tracker.backtest.BacktestSkillDiagnostics;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE,
         properties = "tracker.enabled=true")
@@ -55,6 +56,8 @@ class CredibilityControllerTest {
                 CredibilityController.ProjectionResponse.class, "seed"));
         assertEquals(String.class, recordType(
                 CredibilityController.BacktestResponse.class, "seed"));
+        assertEquals(List.class, recordType(
+                CredibilityController.BacktestResponse.class, "modelEvaluations"));
     }
 
     @Test
@@ -81,8 +84,13 @@ class CredibilityControllerTest {
 
         assertEquals(CredibilityController.RunStatus.NOT_RUN,
                 controller.projection().getBody().status());
-        assertEquals(CredibilityController.RunStatus.NOT_RUN,
-                controller.backtest().getBody().status());
+        CredibilityController.BacktestResponse backtest = controller
+                .backtest().getBody();
+        assertEquals(CredibilityController.RunStatus.NOT_RUN, backtest.status());
+        assertEquals(List.of(), backtest.modelEvaluations());
+        assertEquals(BacktestSkillDiagnostics.SkillStatus.INSUFFICIENT_DATA,
+                backtest.skillStatus());
+        assertEquals(null, backtest.readinessMaeRatioVsPersistence());
         assertEquals(CredibilityController.PublicationStatus.EMPTY,
                 controller.predictions().getBody().status());
         var scorecard = controller.scorecard().getBody();

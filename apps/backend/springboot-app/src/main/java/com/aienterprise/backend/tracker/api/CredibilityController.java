@@ -21,6 +21,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.aienterprise.backend.tracker.backtest.BacktestReport;
 import com.aienterprise.backend.tracker.backtest.BacktestRepository;
+import com.aienterprise.backend.tracker.backtest.BacktestCandidate;
+import com.aienterprise.backend.tracker.backtest.BacktestSkillDiagnostics;
 import com.aienterprise.backend.tracker.domain.NodeRow;
 import com.aienterprise.backend.tracker.domain.TrackerRepository;
 import com.aienterprise.backend.tracker.graph.CapabilityEdgeRow;
@@ -193,11 +195,21 @@ public class CredibilityController {
     @GetMapping("/backtests/latest")
     public ResponseEntity<BacktestResponse> backtest() {
         return ResponseEntity.ok(backtests.findCurrent()
-                .map(run -> new BacktestResponse(
-                        RunStatus.COMPLETED, run.id(),
-                        run.report().inputSha256(), run.reportSha256(),
-                        Long.toString(run.report().seed()),
-                        run.startedAt(), run.completedAt(), run.report()))
+                .map(run -> {
+                    BacktestCandidate active = BacktestCandidate.active(
+                            modelParameters.loadActive());
+                    BacktestSkillDiagnostics.Result diagnostics =
+                            BacktestSkillDiagnostics.from(run.report(), active);
+                    return new BacktestResponse(
+                            RunStatus.COMPLETED, run.id(),
+                            run.report().inputSha256(), run.reportSha256(),
+                            Long.toString(run.report().seed()),
+                            run.startedAt(), run.completedAt(), run.report(),
+                            run.report().modelEvaluations(),
+                            diagnostics.skillStatus(),
+                            diagnostics.readinessMaeRatioVsPersistence(),
+                            diagnostics.selectedMatchesActive());
+                })
                 .orElseGet(BacktestResponse::notRun));
     }
 
@@ -368,12 +380,22 @@ public class CredibilityController {
             String seed,
             Instant startedAt,
             Instant completedAt,
-            BacktestReport report) {
+            BacktestReport report,
+            List<BacktestReport.ModelEvaluation> modelEvaluations,
+            BacktestSkillDiagnostics.SkillStatus skillStatus,
+            Double readinessMaeRatioVsPersistence,
+            boolean selectedMatchesActive) {
+
+        public BacktestResponse {
+            modelEvaluations = List.copyOf(modelEvaluations);
+        }
 
         static BacktestResponse notRun() {
             return new BacktestResponse(
                     RunStatus.NOT_RUN, null, null, null, null, null, null,
-                    null);
+                    null, List.of(),
+                    BacktestSkillDiagnostics.SkillStatus.INSUFFICIENT_DATA,
+                    null, false);
         }
     }
 

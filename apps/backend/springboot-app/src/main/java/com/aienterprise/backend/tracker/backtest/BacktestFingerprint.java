@@ -12,7 +12,7 @@ import java.util.Objects;
 
 public final class BacktestFingerprint {
 
-    public static final String INPUT_VERSION = "tracker-backtest-input-v1";
+    public static final String INPUT_VERSION = "tracker-backtest-input-v2";
 
     private BacktestFingerprint() {
     }

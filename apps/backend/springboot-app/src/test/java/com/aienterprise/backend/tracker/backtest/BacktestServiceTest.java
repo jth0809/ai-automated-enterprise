@@ -112,6 +112,6 @@ class BacktestServiceTest {
                 report.sampleCount(), report.calibrationCutoffCount(),
                 report.holdoutCutoffCount(), report.selectedCandidate(),
                 report.objectiveScore(), report.calibrationCandidates(),
-                report.folds(), report.metrics());
+                report.folds(), report.metrics(), report.modelEvaluations());
     }
 }

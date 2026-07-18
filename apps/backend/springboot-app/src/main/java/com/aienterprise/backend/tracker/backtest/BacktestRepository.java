@@ -9,6 +9,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.EnumSet;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.simple.JdbcClient;
@@ -129,6 +130,9 @@ public class BacktestRepository {
 
         report.folds().forEach(fold -> insertFold(runId, fold));
         report.metrics().forEach(metric -> insertMetric(runId, metric));
+        report.modelEvaluations().forEach(evaluation ->
+                evaluation.metrics().forEach(metric ->
+                        insertModelEvaluation(runId, evaluation, metric)));
         requirePersistedCounts(runId, report);
 
         jdbc.sql("""
@@ -220,6 +224,44 @@ public class BacktestRepository {
                 .update();
     }
 
+    private void insertModelEvaluation(
+            long runId,
+            BacktestReport.ModelEvaluation evaluation,
+            BacktestReport.MetricComparison metric) {
+        BacktestCandidate candidate = evaluation.candidate();
+        jdbc.sql("""
+                INSERT INTO backtest_model_evaluation
+                  (run_id, model_role, metric_code, pillar,
+                   window_m, k_shrink, delta_scale,
+                   calibration_value, holdout_value,
+                   calibration_samples, holdout_samples,
+                   calibration_status, holdout_status)
+                VALUES
+                  (:runId, :modelRole, :metricCode, :pillar,
+                   :windowM, :kShrink, :deltaScale,
+                   :calibrationValue, :holdoutValue,
+                   :calibrationSamples, :holdoutSamples,
+                   :calibrationStatus, :holdoutStatus)
+                """)
+                .param("runId", runId)
+                .param("modelRole", evaluation.role().name())
+                .param("metricCode", metric.code().name())
+                .param("pillar", metric.pillar())
+                .param("windowM",
+                        candidate == null ? null : candidate.windowM(), Types.NUMERIC)
+                .param("kShrink",
+                        candidate == null ? null : candidate.kShrink(), Types.NUMERIC)
+                .param("deltaScale",
+                        candidate == null ? null : candidate.deltaScale(), Types.NUMERIC)
+                .param("calibrationValue", metric.calibrationValue(), Types.NUMERIC)
+                .param("holdoutValue", metric.holdoutValue(), Types.NUMERIC)
+                .param("calibrationSamples", metric.calibrationSamples())
+                .param("holdoutSamples", metric.holdoutSamples())
+                .param("calibrationStatus", metric.calibrationStatus().name())
+                .param("holdoutStatus", metric.holdoutStatus().name())
+                .update();
+    }
+
     private StoredRun hydrate(RunRow row) {
         BacktestReport report = codec.decode(row.reportJson(), row.reportSha256());
         if (!row.inputSha256().equals(report.inputSha256())) {
@@ -239,8 +281,13 @@ public class BacktestRepository {
         int metricCount = jdbc.sql("""
                 SELECT COUNT(*) FROM backtest_metric WHERE run_id = :runId
                 """).param("runId", runId).query(Integer.class).single();
+        int evaluationCount = jdbc.sql("""
+                SELECT COUNT(*) FROM backtest_model_evaluation WHERE run_id = :runId
+                """).param("runId", runId).query(Integer.class).single();
         if (foldCount != report.folds().size()
-                || metricCount != report.metrics().size()) {
+                || metricCount != report.metrics().size()
+                || evaluationCount != report.modelEvaluations().stream()
+                        .mapToInt(value -> value.metrics().size()).sum()) {
             throw new IllegalStateException(
                     "persisted backtest audit is incomplete");
         }
@@ -271,6 +318,35 @@ public class BacktestRepository {
                 .filter(fold -> fold.cohort()
                         == BacktestSchedule.Cohort.HOLDOUT)
                 .count();
+        Set<BacktestReport.ModelRole> expectedRoles = EnumSet.allOf(
+                BacktestReport.ModelRole.class);
+        Set<BacktestReport.ModelRole> actualRoles = new HashSet<>();
+        Set<String> evaluationKeys = new HashSet<>();
+        report.modelEvaluations().forEach(evaluation -> {
+            actualRoles.add(evaluation.role());
+            evaluation.metrics().forEach(metric -> evaluationKeys.add(
+                    evaluation.role().name() + ":" + metric.code().name()
+                            + ":" + metric.pillar()));
+        });
+        int evaluationMetricCount = report.modelEvaluations().stream()
+                .mapToInt(value -> value.metrics().size()).sum();
+        boolean invalidEvaluations = !expectedRoles.equals(actualRoles)
+                || report.modelEvaluations().size() != expectedRoles.size()
+                || evaluationMetricCount != 91
+                || evaluationKeys.size() != 91
+                || !hasEvaluationShape(report,
+                        BacktestReport.ModelRole.SELECTED, 35)
+                || !hasEvaluationShape(report,
+                        BacktestReport.ModelRole.ACTIVE, 35)
+                || !hasEvaluationShape(report,
+                        BacktestReport.ModelRole.PERSISTENCE, 14)
+                || !hasEvaluationShape(report,
+                        BacktestReport.ModelRole.ALWAYS_NO_CHANGE, 7)
+                || report.modelEvaluations().stream()
+                        .filter(value -> value.role()
+                                == BacktestReport.ModelRole.SELECTED)
+                        .anyMatch(value -> !report.selectedCandidate()
+                                .equals(value.candidate()));
         boolean invalid = !BacktestReport.REPORT_VERSION.equals(
                         report.reportVersion())
                 || !BacktestCandidate.REGISTRY_VERSION.equals(
@@ -287,11 +363,23 @@ public class BacktestRepository {
                 || calibrationFolds != report.calibrationCutoffCount() * 6L
                 || holdoutFolds != report.holdoutCutoffCount() * 6L
                 || report.metrics().size() != 35
-                || metricKeys.size() != 35;
+                || metricKeys.size() != 35
+                || invalidEvaluations;
         if (invalid) {
             throw new IllegalArgumentException(
                     "backtest report is not a complete locked split");
         }
+    }
+
+    private static boolean hasEvaluationShape(
+            BacktestReport report,
+            BacktestReport.ModelRole role,
+            int expectedMetrics) {
+        return report.modelEvaluations().stream()
+                .filter(value -> value.role() == role)
+                .findFirst()
+                .map(value -> value.metrics().size() == expectedMetrics)
+                .orElse(false);
     }
 
     private static RunRow mapRun(ResultSet rs, int rowNum) throws SQLException {
@@ -316,7 +404,9 @@ public class BacktestRepository {
         return "report=" + report.reportVersion()
                 + ";candidates=" + report.calibrationCandidates().size()
                 + ";folds=" + report.folds().size()
-                + ";metrics=" + report.metrics().size();
+                + ";metrics=" + report.metrics().size()
+                + ";evaluations=" + report.modelEvaluations().stream()
+                        .mapToInt(value -> value.metrics().size()).sum();
     }
 
     public record StoredRun(
