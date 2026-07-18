@@ -40,6 +40,7 @@ The installed CRD explicitly supports a Discord `apiURL` `SecretKeySelector`. It
 
 The configuration will contain:
 
+- the existing 5-minute global resolve timeout;
 - root receiver `discord`;
 - grouping by `namespace` and `alertname`;
 - existing 30-second group wait, 5-minute group interval, and 4-hour repeat interval;
@@ -49,6 +50,8 @@ The configuration will contain:
 - `sendResolved: true`.
 
 The inline Helm `alertmanager.config` block and file-mount-only `alertmanagerSpec.secrets` entry will be removed. The ExternalSecret remains unchanged and the webhook value remains absent from rendered Git content.
+
+The chart's default empty AlertmanagerConfig selectors will be overridden with `null`. This prevents the global configuration from also being selected as a supplemental configuration and keeps the global resource as the single route owner.
 
 ## Alternatives rejected
 

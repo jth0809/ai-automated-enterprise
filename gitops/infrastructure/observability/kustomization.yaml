@@ -5,6 +5,7 @@ resources:
   - source.yaml
   - release.yaml
   - discord-externalsecret.yaml
+  - alertmanager-config.yaml
   - alert-rules.yaml
   - network-policy.yaml
   - authorization-policy.yaml
