@@ -27,7 +27,7 @@ spec:
         - name: ocir-pull-secret
       containers:
         - name: frontend
-          image: ap-osaka-1.ocir.io/axmlliealtlv/frontend-react:9f3f87f7b31c
+          image: ap-osaka-1.ocir.io/axmlliealtlv/frontend-react:570379de19a2
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
