@@ -31,9 +31,10 @@ public record BacktestReport(
         double objectiveScore,
         List<CandidateScore> calibrationCandidates,
         List<FoldResult> folds,
-        List<MetricComparison> metrics) {
+        List<MetricComparison> metrics,
+        List<ModelEvaluation> modelEvaluations) {
 
-    public static final String REPORT_VERSION = "backtest-report-v1";
+    public static final String REPORT_VERSION = "backtest-report-v2";
 
     public BacktestReport {
         reportVersion = required(reportVersion, "reportVersion");
@@ -75,6 +76,15 @@ public record BacktestReport(
                 .sorted(Comparator.comparing(MetricComparison::code)
                         .thenComparingInt(MetricComparison::pillar))
                 .toList();
+        modelEvaluations = modelEvaluations == null
+                ? List.of()
+                : modelEvaluations.stream()
+                        .sorted(Comparator.comparing(ModelEvaluation::role))
+                        .toList();
+        if (modelEvaluations.stream().map(ModelEvaluation::role).distinct().count()
+                != modelEvaluations.size()) {
+            throw new IllegalArgumentException("duplicate backtest model role");
+        }
     }
 
     public record CandidateScore(
@@ -166,6 +176,40 @@ public record BacktestReport(
             validateMetricSide(
                     calibrationValue, calibrationSamples, calibrationStatus);
             validateMetricSide(holdoutValue, holdoutSamples, holdoutStatus);
+        }
+    }
+
+    public enum ModelRole {
+        SELECTED,
+        ACTIVE,
+        PERSISTENCE,
+        ALWAYS_NO_CHANGE
+    }
+
+    public record ModelEvaluation(
+            ModelRole role,
+            BacktestCandidate candidate,
+            List<MetricComparison> metrics) {
+
+        public ModelEvaluation {
+            role = Objects.requireNonNull(role, "role");
+            boolean candidateRole = role == ModelRole.SELECTED
+                    || role == ModelRole.ACTIVE;
+            if (candidateRole != (candidate != null)) {
+                throw new IllegalArgumentException(
+                        "candidate tuple must match model role");
+            }
+            metrics = Objects.requireNonNull(metrics, "metrics").stream()
+                    .sorted(Comparator.comparing(MetricComparison::code)
+                            .thenComparingInt(MetricComparison::pillar))
+                    .toList();
+            long distinct = metrics.stream()
+                    .map(metric -> metric.code().name() + ":" + metric.pillar())
+                    .distinct().count();
+            if (metrics.isEmpty() || distinct != metrics.size()) {
+                throw new IllegalArgumentException(
+                        "model evaluation metrics must be unique and non-empty");
+            }
         }
     }
 

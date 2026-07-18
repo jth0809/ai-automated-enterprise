@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { TrackerPage } from "./TrackerPage";
 import { EventTimeline } from "./EventTimeline";
@@ -41,6 +41,15 @@ function stubTrackerRoutes(options: { failForecast?: boolean } = {}) {
             edgeCount: 29,
           },
           dataset: null,
+          evidenceCoverage: {
+            historicalCandidateCount: 0,
+            approvedClaimCount: 0,
+            distinctCandidatesUsed: 0,
+            activeNodeCount: 35,
+            directlyMappedActiveNodeCount: 0,
+            singleEvidenceClaimCount: 0,
+            verificationLevelCounts: {},
+          },
           currentCalibration: null,
           predictionOperations: {
             completedCohorts: 0,
@@ -56,7 +65,7 @@ function stubTrackerRoutes(options: { failForecast?: boolean } = {}) {
           },
           formulas: {},
           honestyLabels: [
-            "ETA는 예보가 아니라 현 추세 지속을 가정한 시나리오 투영이며 구간은 모델 내부의 80%다. 모형족 오류와 미지의 구조 단절 확률은 포함하지 않는다.",
+            "ETA는 예보가 아니라 현 추세 지속을 가정한 시나리오 투영이며 구간은 모델 내부 민감도의 80%다. 모형족 오류·자료 선택 절차·목표 임계값 불확실성·외부 충격은 포함하지 않는다.",
             "수송 $ / kg은 실제 원가가 아니라 공개된 가격을 바탕으로 한 추정치다.",
             "관측 사건은 측정값이고 TRL/EGL 사상·가중치·DAG 집계는 구성 지수다.",
             "수송 경제성 임계값은 자연상수가 아니라 공개된 모델 가정이다.",
@@ -86,7 +95,13 @@ function stubTrackerRoutes(options: { failForecast?: boolean } = {}) {
         return ok({ status: "NOT_RUN" });
       }
       if (url.includes("/api/tracker/backtests/latest")) {
-        return ok({ status: "NOT_RUN" });
+        return ok({
+          status: "NOT_RUN",
+          modelEvaluations: [],
+          skillStatus: "INSUFFICIENT_DATA",
+          readinessMaeRatioVsPersistence: null,
+          selectedMatchesActive: false,
+        });
       }
       if (url.includes("/api/tracker/predictions/scorecard")) {
         return ok({
@@ -109,15 +124,23 @@ function stubTrackerRoutes(options: { failForecast?: boolean } = {}) {
             displayedEtaYear: 2048.3,
             etaLow: 2042,
             etaHigh: 2056,
-            label: "현 추세 지속 시나리오 기준 · 모델 내 80% 구간",
+            label: "현 추세 지속 시나리오 · 모델 내부 민감도 80% 구간",
             overallReadiness: 0.12,
             bottleneckPillar: 3,
+            indicatorStatus: "COMPLETE",
+            readinessBottleneckPillars: [3],
+            etaBottleneckPillars: [4],
+            unresolvedEtaPillars: [],
+            missingPillars: [],
+            snapshotDate: "2026-07-18",
+            paramsVersion: "params-v2",
+            graphVersion: "graph-v1.0",
             frozen: false,
           }
         : url.includes("/api/tracker/pillars")
           ? [1, 2, 3, 4, 5, 6].map((pillar) => ({
               pillar,
-              name: `pillar-${pillar}`,
+              name: ["수송", "생명 유지", "거주 인프라", "자원·에너지", "로봇·자율 운영", "경제·거버넌스"][pillar - 1],
               readiness: pillar / 10,
               etaYear: null,
               momentum: null,
@@ -221,8 +244,15 @@ describe("TrackerPage", () => {
 
     expect(await screen.findByText("2048")).toBeInTheDocument();
     expect(
-      screen.getByText("현 추세 지속 시나리오 기준 · 모델 내 80% 구간"),
+      screen.getByText("현 추세 지속 시나리오 · 모델 내부 민감도 80% 구간"),
     ).toBeInTheDocument();
+    const forecastStatus = screen.getByRole("region", {
+      name: "예측 상태와 자동 병목",
+    });
+    expect(within(forecastStatus).getByText(/현재 준비도 병목 P3 거주 인프라/))
+      .toBeInTheDocument();
+    expect(within(forecastStatus).getByText(/전체 ETA 병목 P4 자원·에너지/))
+      .toBeInTheDocument();
     expect(container.querySelector("polygon.radar-value")).not.toBeNull();
     expect(
       await screen.findByText(/ISRU: 추진제·물·산소 현지 생산/),

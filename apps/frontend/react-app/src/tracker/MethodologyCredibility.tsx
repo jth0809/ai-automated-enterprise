@@ -8,16 +8,23 @@ import {
   getProjection,
 } from "./api";
 import type {
+  BacktestCandidate,
+  BacktestMetric,
+  BacktestModelRole,
   BacktestResponse,
+  BacktestSkillStatus,
   DagResponse,
   MethodologyResponse,
   PredictionsResponse,
   PredictionScorecardResponse,
   ProjectionResponse,
+  Summary,
 } from "./api";
+import { forecastAlignment } from "./forecastAlignment";
+import type { ForecastAlignmentState } from "./forecastAlignment";
 
 export const TRACKER_HONESTY_LABELS = [
-  "ETA는 예보가 아니라 현 추세 지속을 가정한 시나리오 투영이며 구간은 모델 내부의 80%다. 모형족 오류와 미지의 구조 단절 확률은 포함하지 않는다.",
+  "ETA는 예보가 아니라 현 추세 지속을 가정한 시나리오 투영이며 구간은 모델 내부 민감도의 80%다. 모형족 오류·자료 선택 절차·목표 임계값 불확실성·외부 충격은 포함하지 않는다.",
   "수송 $ / kg은 실제 원가가 아니라 공개된 가격을 바탕으로 한 추정치다.",
   "관측 사건은 측정값이고 TRL/EGL 사상·가중치·DAG 집계는 구성 지수다.",
   "수송 경제성 임계값은 자연상수가 아니라 공개된 모델 가정이다.",
@@ -59,8 +66,10 @@ type Remote<T> =
 
 export function MethodologyCredibility({
   loaders = DEFAULT_LOADERS,
+  summary = null,
 }: {
   loaders?: CredibilityLoaders;
+  summary?: Summary | null;
 }) {
   const methodology = useRemote(loaders.methodology);
   const dag = useRemote(loaders.dag);
@@ -91,7 +100,7 @@ export function MethodologyCredibility({
 
       <div className="credibility-grid">
         <MethodologyCard remote={methodology} />
-        <ProjectionCard remote={projection} />
+        <ProjectionCard remote={projection} summary={summary} />
         <DagCard remote={dag} />
         <BacktestCard remote={backtest} />
         <PredictionsCard remote={predictions} />
@@ -158,6 +167,23 @@ function MethodologyBody({ value }: { value: MethodologyResponse }) {
           : `${value.dataset.version} · ${value.dataset.recordCount}건 · 가져오기 ${formatTime(value.dataset.importedAt)}`}
       </p>
       {value.dataset !== null && <HashLine label="데이터 해시" value={value.dataset.sha256} />}
+      <div className="credibility-coverage" aria-label="역사 증거 커버리지">
+        <p>
+          후보 사용 {value.evidenceCoverage.distinctCandidatesUsed} / {value.evidenceCoverage.historicalCandidateCount} ({formatRatio(value.evidenceCoverage.distinctCandidatesUsed, value.evidenceCoverage.historicalCandidateCount)})
+        </p>
+        <p>
+          직접 매핑 활성 노드 {value.evidenceCoverage.directlyMappedActiveNodeCount} / {value.evidenceCoverage.activeNodeCount} ({formatRatio(value.evidenceCoverage.directlyMappedActiveNodeCount, value.evidenceCoverage.activeNodeCount)})
+        </p>
+        <p>
+          단일 근거 청구 {value.evidenceCoverage.singleEvidenceClaimCount} / {value.evidenceCoverage.approvedClaimCount} ({formatRatio(value.evidenceCoverage.singleEvidenceClaimCount, value.evidenceCoverage.approvedClaimCount)})
+        </p>
+        <p>
+          검증 등급 {formatVerificationCounts(value.evidenceCoverage.verificationLevelCounts)}
+        </p>
+      </div>
+      <p className="credibility-note">
+        증거 커버리지는 자료 구조 진단이며 준비도 점수에 자동 가산되지 않습니다.
+      </p>
       <p className="credibility-note">
         중앙 ${value.transportAssumptions.centralUsdPerKg}/kg · 민감도 $
         {value.transportAssumptions.hardUsdPerKg}–${value.transportAssumptions.easyUsdPerKg}
@@ -192,7 +218,13 @@ function MethodologyBody({ value }: { value: MethodologyResponse }) {
   );
 }
 
-function ProjectionCard({ remote }: { remote: Remote<ProjectionResponse> }) {
+function ProjectionCard({
+  remote,
+  summary,
+}: {
+  remote: Remote<ProjectionResponse>;
+  summary: Summary | null;
+}) {
   return (
     <article className="credibility-card">
       <h3>현재 시나리오 투영</h3>
@@ -202,14 +234,21 @@ function ProjectionCard({ remote }: { remote: Remote<ProjectionResponse> }) {
         <RemoteMessage text="투영 실행 기록 없음" />
       )}
       {remote.state === "ready" && remote.data.status === "COMPLETED" && (
-        <ProjectionBody value={remote.data} />
+        <ProjectionBody value={remote.data} summary={summary} />
       )}
     </article>
   );
 }
 
-function ProjectionBody({ value }: { value: ProjectionResponse }) {
+function ProjectionBody({
+  value,
+  summary,
+}: {
+  value: ProjectionResponse;
+  summary: Summary | null;
+}) {
   const overall = value.output?.results["0"];
+  const alignment = forecastAlignment(summary, value);
   return (
     <>
       <p className="credibility-primary">
@@ -223,6 +262,21 @@ function ProjectionBody({ value }: { value: ProjectionResponse }) {
       </p>
       <p className="credibility-note">
         유효 {value.validSamples?.toLocaleString("ko-KR") ?? "-"} / 요청 {value.requestedSamples?.toLocaleString("ko-KR") ?? "-"} · 무효 {value.invalidSamples ?? "-"}
+      </p>
+      <p className="credibility-note">
+        스냅샷 {summary?.snapshotDate ?? "-"} · 투영 완료 {value.completedAt ? formatTime(value.completedAt) : "-"}
+      </p>
+      <p className="credibility-note">
+        스냅샷 {summary?.paramsVersion ?? "-"} / {summary?.graphVersion ?? "-"} · 투영 {value.paramsVersion ?? "-"} / {value.graphVersion ?? "-"}
+      </p>
+      <p
+        className={alignment === "ALIGNED" ? "credibility-alignment" : "credibility-warning credibility-alignment"}
+        role={alignment === "ALIGNED" ? undefined : "status"}
+      >
+        {alignmentLabel(alignment)}
+      </p>
+      <p className="credibility-note">
+        모델 내부 민감도 80% 구간이며 독립적으로 보정된 신뢰구간이 아닙니다.
       </p>
       {value.seed && <p className="credibility-seed">시드 <code>{value.seed}</code></p>}
       {value.inputSha256 && <HashLine label="입력 해시" value={value.inputSha256} />}
@@ -304,12 +358,13 @@ function BacktestBody({ value }: { value: BacktestResponse }) {
   return (
     <>
       <p className="credibility-primary">
-        m={report.selectedCandidate.windowM} · k={report.selectedCandidate.kShrink} · δ=
-        {report.selectedCandidate.deltaScale}
-        <span>보정 목적함수 {report.objectiveScore.toFixed(6)}</span>
+        계산 완료
+        <span>
+          선택 추천 m={report.selectedCandidate.windowM} · k={report.selectedCandidate.kShrink} · δ={report.selectedCandidate.deltaScale}
+        </span>
       </p>
       <p className="credibility-note">
-        보정 {report.calibrationCutoffCount}개 · 잠금 홀드아웃 {report.holdoutCutoffCount}개 · 폴드당 {report.sampleCount.toLocaleString("ko-KR")}표본
+        보정 목적함수 {report.objectiveScore.toFixed(6)} · 보정 {report.calibrationCutoffCount}개 · 잠금 홀드아웃 {report.holdoutCutoffCount}개 · 폴드당 {report.sampleCount.toLocaleString("ko-KR")}표본
       </p>
       {value.seed && <p className="credibility-seed">시드 <code>{value.seed}</code></p>}
       {value.reportSha256 && <HashLine label="보고서 해시" value={value.reportSha256} />}
@@ -338,6 +393,54 @@ function BacktestBody({ value }: { value: BacktestResponse }) {
           </tbody>
         </table>
       </div>
+      {value.modelEvaluations.length === 0 ? (
+        <p className="credibility-warning" role="status">
+          기준선 미평가(v1 기록)
+        </p>
+      ) : (
+        <>
+          <p className="credibility-note credibility-skill">
+            {skillLabel(value.skillStatus)}
+            {value.readinessMaeRatioVsPersistence === null
+              ? ""
+              : ` · 선택/지속성 MAE 비 ${value.readinessMaeRatioVsPersistence.toFixed(3)}`}
+          </p>
+          <div className="credibility-table-wrap">
+            <table aria-label="백테스트 모델 및 기준선 비교">
+              <caption>백테스트 모델 및 기준선 비교</caption>
+              <thead>
+                <tr>
+                  <th scope="col">역할</th>
+                  <th scope="col">파라미터</th>
+                  <th scope="col">준비도 MAE</th>
+                  <th scope="col">방향 정확도</th>
+                  <th scope="col">홀드아웃 표본</th>
+                </tr>
+              </thead>
+              <tbody>
+                {value.modelEvaluations.map((evaluation) => {
+                  const readinessMae = aggregateMetric(evaluation.metrics, "READINESS_MAE");
+                  const direction = aggregateMetric(evaluation.metrics, "DIRECTION_ACCURACY");
+                  return (
+                    <tr key={evaluation.role}>
+                      <th scope="row">{modelRoleLabel(evaluation.role)}</th>
+                      <td>{formatCandidate(evaluation.candidate)}</td>
+                      <td>{formatMetric(readinessMae?.holdoutValue ?? null)}</td>
+                      <td>{formatMetric(direction?.holdoutValue ?? null)}</td>
+                      <td>{readinessMae?.holdoutSamples ?? direction?.holdoutSamples ?? "-"}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+          <p className="credibility-warning" role="status">
+            {value.selectedMatchesActive
+              ? "선택 추천과 현재 활성 모델은 같지만 자동 승격은 수행하지 않았습니다."
+              : "선택 추천은 자동 승격되지 않았으며 현재 활성 모델과 분리되어 있습니다."}
+          </p>
+        </>
+      )}
     </>
   );
 }
@@ -465,4 +568,58 @@ function formatMetric(value: number | null) {
 
 function formatTime(value: string) {
   return value.replace("T", " ").replace(/:\d{2}(?:\.\d+)?Z$/, "Z");
+}
+
+function formatRatio(numerator: number, denominator: number) {
+  return denominator === 0 ? "자료 없음" : `${((numerator / denominator) * 100).toFixed(1)}%`;
+}
+
+function formatVerificationCounts(values: Record<string, number>) {
+  const entries = Object.entries(values);
+  return entries.length === 0
+    ? "자료 없음"
+    : entries.map(([level, count]) => `${level} ${count}건`).join(" · ");
+}
+
+function alignmentLabel(state: ForecastAlignmentState) {
+  switch (state) {
+    case "ALIGNED":
+      return "스냅샷과 투영 정렬";
+    case "DIFFERENT_RUN":
+      return "별도 실행 결과 — 같은 버전이지만 중앙값이 다릅니다.";
+    case "VERSION_MISMATCH":
+      return "스냅샷과 투영 버전 불일치 — 직접 비교에 주의하십시오.";
+    case "UNAVAILABLE":
+      return "스냅샷–투영 정렬 여부를 계산할 자료가 없습니다.";
+  }
+}
+
+function aggregateMetric(metrics: BacktestMetric[], code: string) {
+  return metrics.find((metric) => metric.pillar === 0 && metric.code === code);
+}
+
+function formatCandidate(candidate: BacktestCandidate | null) {
+  return candidate === null
+    ? "해당 없음"
+    : `m=${candidate.windowM}, k=${candidate.kShrink}, δ=${candidate.deltaScale}`;
+}
+
+function modelRoleLabel(role: BacktestModelRole) {
+  const labels: Record<BacktestModelRole, string> = {
+    SELECTED: "선택 추천",
+    ACTIVE: "현재 활성",
+    PERSISTENCE: "지속성 기준",
+    ALWAYS_NO_CHANGE: "항상 무변화",
+  };
+  return labels[role];
+}
+
+function skillLabel(status: BacktestSkillStatus) {
+  const labels: Record<BacktestSkillStatus, string> = {
+    OUTPERFORMS_PERSISTENCE: "지속성 기준 대비 준비도 MAE 개선",
+    NO_SKILL_VS_PERSISTENCE: "지속성 기준보다 개선되지 않음",
+    INSUFFICIENT_DATA: "지속성 기준 비교 자료 부족",
+    LEGACY_NOT_EVALUATED: "기준선 미평가(v1 기록)",
+  };
+  return labels[status];
 }

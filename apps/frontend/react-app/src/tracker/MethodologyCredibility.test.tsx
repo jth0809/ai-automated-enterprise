@@ -4,8 +4,27 @@ import {
   MethodologyCredibility,
   TRACKER_HONESTY_LABELS,
 } from "./MethodologyCredibility";
+import type { Summary } from "./api";
 
 const never = () => new Promise<never>(() => undefined);
+
+const ALIGNED_SUMMARY: Summary = {
+  displayedEtaYear: 2091.2,
+  etaLow: 2089.1,
+  etaHigh: 2093.6,
+  label: "현 추세 지속 시나리오 · 모델 내부 민감도 80% 구간",
+  overallReadiness: 0.147,
+  bottleneckPillar: 3,
+  indicatorStatus: "COMPLETE",
+  readinessBottleneckPillars: [3],
+  etaBottleneckPillars: [4],
+  unresolvedEtaPillars: [],
+  missingPillars: [],
+  snapshotDate: "2026-07-18",
+  paramsVersion: "params-v2",
+  graphVersion: "graph-v1.0",
+  frozen: false,
+};
 
 function fullLoaders() {
   return {
@@ -47,6 +66,15 @@ function fullLoaders() {
         nodeSetVersion: "nodes-v1.0",
         recordCount: 147,
         importedAt: "2026-07-16T13:45:41Z",
+      },
+      evidenceCoverage: {
+        historicalCandidateCount: 210,
+        approvedClaimCount: 147,
+        distinctCandidatesUsed: 147,
+        activeNodeCount: 35,
+        directlyMappedActiveNodeCount: 31,
+        singleEvidenceClaimCount: 147,
+        verificationLevelCounts: { OFFICIAL: 147 },
       },
       currentCalibration: {
         calibrationVersion: "calibration-identity-v1-c4c989b85755",
@@ -165,8 +193,8 @@ function fullLoaders() {
       startedAt: "2026-07-16T13:45:41Z",
       completedAt: "2026-07-16T13:48:12Z",
       report: {
-        reportVersion: "backtest-report-v1",
-        candidateRegistryVersion: "backtest-candidates-v1",
+        reportVersion: "backtest-report-v2",
+        candidateRegistryVersion: "backtest-candidates-v2",
         calibrationCutoffCount: 52,
         holdoutCutoffCount: 16,
         sampleCount: 1000,
@@ -195,6 +223,34 @@ function fullLoaders() {
           },
         ],
       },
+      modelEvaluations: [
+        {
+          role: "SELECTED" as const,
+          candidate: { windowM: 8, kShrink: 4, deltaScale: 0.75 },
+          metrics: [
+            holdoutMetric("READINESS_MAE", 0.0120402, 96),
+            holdoutMetric("DIRECTION_ACCURACY", 0.3125, 96),
+          ],
+        },
+        {
+          role: "ACTIVE" as const,
+          candidate: { windowM: 6, kShrink: 4, deltaScale: 1 },
+          metrics: [holdoutMetric("READINESS_MAE", 0.0131, 96)],
+        },
+        {
+          role: "PERSISTENCE" as const,
+          candidate: null,
+          metrics: [holdoutMetric("READINESS_MAE", 0.01, 96)],
+        },
+        {
+          role: "ALWAYS_NO_CHANGE" as const,
+          candidate: null,
+          metrics: [holdoutMetric("DIRECTION_ACCURACY", 0.6875, 96)],
+        },
+      ],
+      skillStatus: "NO_SKILL_VS_PERSISTENCE" as const,
+      readinessMaeRatioVsPersistence: 1.20402,
+      selectedMatchesActive: false,
     }),
     predictions: async () => ({
       status: "PUBLISHED" as const,
@@ -273,18 +329,27 @@ describe("MethodologyCredibility", () => {
   });
 
   it("publishes model, DAG, projection, backtest, and prediction evidence", async () => {
-    render(<MethodologyCredibility loaders={fullLoaders()} />);
+    render(
+      <MethodologyCredibility
+        loaders={fullLoaders()}
+        summary={ALIGNED_SUMMARY}
+      />,
+    );
 
     expect(await screen.findByText("params-v2")).toBeInTheDocument();
     expect(screen.getByText("hazard-v1")).toBeInTheDocument();
     expect(screen.getByText("graph-v1.0")).toBeInTheDocument();
-    expect(screen.getByText(/147건/)).toBeInTheDocument();
+    expect(screen.getByText(/backfill-v1 · 147건/)).toBeInTheDocument();
+    expect(screen.getByText(/후보 사용 147 \/ 210 \(70.0%\)/)).toBeInTheDocument();
+    expect(screen.getByText(/직접 매핑 활성 노드 31 \/ 35 \(88.6%\)/)).toBeInTheDocument();
+    expect(screen.getByText(/단일 근거 청구 147 \/ 147 \(100.0%\)/)).toBeInTheDocument();
     expect(screen.getByText(/중앙 \$200\/kg/)).toBeInTheDocument();
     expect(screen.getByText(/r_eff = min/)).toBeInTheDocument();
     expect(screen.getAllByText("비활성").length).toBeGreaterThanOrEqual(8);
 
     expect(screen.getByText("2091.2년")).toBeInTheDocument();
     expect(screen.getByText("2089.1–2093.6년")).toBeInTheDocument();
+    expect(screen.getByText("스냅샷과 투영 정렬")).toBeInTheDocument();
     expect(screen.getByText("검열 0.0%")).toBeInTheDocument();
     expect(screen.getAllByText("6770845816941252525")).toHaveLength(2);
 
@@ -296,12 +361,33 @@ describe("MethodologyCredibility", () => {
     const metrics = screen.getByRole("table", { name: "백테스트 전체 필라 지표" });
     expect(within(metrics).getByText("READINESS_MAE")).toBeInTheDocument();
     expect(within(metrics).getByText("0.0120")).toBeInTheDocument();
+    const baselines = screen.getByRole("table", {
+      name: "백테스트 모델 및 기준선 비교",
+    });
+    expect(within(baselines).getByText("선택 추천")).toBeInTheDocument();
+    expect(within(baselines).getByText("현재 활성")).toBeInTheDocument();
+    expect(within(baselines).getByText("지속성 기준")).toBeInTheDocument();
+    expect(within(baselines).getByText("항상 무변화")).toBeInTheDocument();
+    expect(screen.getByText(/지속성 기준보다 개선되지 않음/)).toBeInTheDocument();
+    expect(screen.getByText(/자동 승격되지 않았/)).toBeInTheDocument();
+    expect(screen.queryByText(/검증 통과/)).not.toBeInTheDocument();
 
     const predictions = screen.getByRole("table", { name: "공표 마이크로 예측" });
     expect(within(predictions).getByText(/장주기 자율 운영/)).toBeInTheDocument();
     expect(within(predictions).getByText("8.1%")).toBeInTheDocument();
     expect(screen.getByText("결과 부족 · n=0")).toBeInTheDocument();
     expect(screen.getByText(/통합 노드는 구성 노드의 최고값을 상속하지 않는다/)).toBeInTheDocument();
+  });
+
+  it("warns when the weekly snapshot and audit projection use different versions", async () => {
+    render(
+      <MethodologyCredibility
+        loaders={fullLoaders()}
+        summary={{ ...ALIGNED_SUMMARY, graphVersion: "graph-v2.0" }}
+      />,
+    );
+
+    expect(await screen.findByText(/버전 불일치/)).toBeInTheDocument();
   });
 
   it("shows explicit independent error and empty states without hiding honesty", async () => {
@@ -342,3 +428,16 @@ describe("MethodologyCredibility", () => {
     }
   });
 });
+
+function holdoutMetric(code: string, value: number, samples: number) {
+  return {
+    code,
+    pillar: 0,
+    calibrationValue: value,
+    holdoutValue: value,
+    calibrationSamples: samples,
+    holdoutSamples: samples,
+    calibrationStatus: "OK",
+    holdoutStatus: "OK",
+  };
+}

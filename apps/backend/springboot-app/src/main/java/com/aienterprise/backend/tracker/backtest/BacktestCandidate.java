@@ -19,7 +19,7 @@ public record BacktestCandidate(
     private static final List<Double> K_VALUES = List.of(2.0, 4.0, 8.0);
     private static final List<Double> DELTA_VALUES = List.of(.75, 1.0, 1.25);
 
-    public static final String REGISTRY_VERSION = "backtest-candidates-v1";
+    public static final String REGISTRY_VERSION = "backtest-candidates-v2";
     public static final BacktestCandidate DEFAULT =
             new BacktestCandidate(6, 4, 1.0);
 
@@ -36,6 +36,12 @@ public record BacktestCandidate(
 
     public static List<BacktestCandidate> registry() {
         return REGISTRY;
+    }
+
+    public static BacktestCandidate active(ModelParameters model) {
+        Objects.requireNonNull(model, "model");
+        return new BacktestCandidate(
+                model.params().windowM(), model.params().kShrink(), 1.0);
     }
 
     public String id() {

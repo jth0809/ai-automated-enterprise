@@ -10,6 +10,14 @@ export interface Summary {
   label: string;
   overallReadiness: number | null;
   bottleneckPillar: number | null;
+  indicatorStatus: "COMPLETE" | "INCOMPLETE_SNAPSHOT";
+  readinessBottleneckPillars: number[];
+  etaBottleneckPillars: number[];
+  unresolvedEtaPillars: number[];
+  missingPillars: number[];
+  snapshotDate: string | null;
+  paramsVersion: string | null;
+  graphVersion: string | null;
   frozen: boolean;
 }
 
@@ -144,6 +152,16 @@ export interface TrackerCalibration {
   [key: string]: unknown;
 }
 
+export interface EvidenceCoverage {
+  historicalCandidateCount: number;
+  approvedClaimCount: number;
+  distinctCandidatesUsed: number;
+  activeNodeCount: number;
+  directlyMappedActiveNodeCount: number;
+  singleEvidenceClaimCount: number;
+  verificationLevelCounts: Record<string, number>;
+}
+
 export interface PredictionOperations {
   completedCohorts: number;
   pendingPredictions: number;
@@ -178,6 +196,7 @@ export interface MethodologyResponse {
     recordCount: number;
     importedAt: string;
   } | null;
+  evidenceCoverage: EvidenceCoverage;
   currentCalibration: TrackerCalibration | null;
   predictionOperations: PredictionOperations;
   formulas: Record<string, string>;
@@ -260,6 +279,30 @@ export interface BacktestMetric {
   holdoutStatus: string;
 }
 
+export interface BacktestCandidate {
+  windowM: number;
+  kShrink: number;
+  deltaScale: number;
+}
+
+export type BacktestModelRole =
+  | "SELECTED"
+  | "ACTIVE"
+  | "PERSISTENCE"
+  | "ALWAYS_NO_CHANGE";
+
+export interface BacktestModelEvaluation {
+  role: BacktestModelRole;
+  candidate: BacktestCandidate | null;
+  metrics: BacktestMetric[];
+}
+
+export type BacktestSkillStatus =
+  | "OUTPERFORMS_PERSISTENCE"
+  | "NO_SKILL_VS_PERSISTENCE"
+  | "INSUFFICIENT_DATA"
+  | "LEGACY_NOT_EVALUATED";
+
 export interface BacktestResponse {
   status: "NOT_RUN" | "COMPLETED";
   runId?: number | null;
@@ -268,19 +311,20 @@ export interface BacktestResponse {
   seed?: string | null;
   startedAt?: string | null;
   completedAt?: string | null;
+  modelEvaluations: BacktestModelEvaluation[];
+  skillStatus: BacktestSkillStatus;
+  readinessMaeRatioVsPersistence: number | null;
+  selectedMatchesActive: boolean;
   report?: {
     reportVersion: string;
     candidateRegistryVersion: string;
     calibrationCutoffCount: number;
     holdoutCutoffCount: number;
     sampleCount: number;
-    selectedCandidate: {
-      windowM: number;
-      kShrink: number;
-      deltaScale: number;
-    };
+    selectedCandidate: BacktestCandidate;
     objectiveScore: number;
     metrics: BacktestMetric[];
+    modelEvaluations?: BacktestModelEvaluation[];
   } | null;
 }
 
@@ -363,7 +407,47 @@ export interface TimelineEvent {
 export async function getSummary(): Promise<Summary> {
   const res = await fetch("/api/tracker/summary");
   if (!res.ok) throw new Error(`tracker summary failed: HTTP ${res.status}`);
-  return (await res.json()) as Summary;
+  const body: unknown = await res.json();
+  if (!isSummary(body)) {
+    throw new Error("tracker summary returned an invalid contract");
+  }
+  return body;
+}
+
+function isSummary(value: unknown): value is Summary {
+  const nullableNumber = (item: unknown) =>
+    item === null || typeof item === "number" && Number.isFinite(item);
+  const nullableString = (item: unknown) =>
+    item === null || typeof item === "string";
+  const nullablePillar = (item: unknown) => item === null || isPillar(item);
+  return (
+    isRecord(value) &&
+    nullableNumber(value.displayedEtaYear) &&
+    nullableNumber(value.etaLow) &&
+    nullableNumber(value.etaHigh) &&
+    typeof value.label === "string" &&
+    nullableNumber(value.overallReadiness) &&
+    nullablePillar(value.bottleneckPillar) &&
+    (value.indicatorStatus === "COMPLETE" ||
+      value.indicatorStatus === "INCOMPLETE_SNAPSHOT") &&
+    isPillarArray(value.readinessBottleneckPillars) &&
+    isPillarArray(value.etaBottleneckPillars) &&
+    isPillarArray(value.unresolvedEtaPillars) &&
+    isPillarArray(value.missingPillars) &&
+    nullableString(value.snapshotDate) &&
+    nullableString(value.paramsVersion) &&
+    nullableString(value.graphVersion) &&
+    typeof value.frozen === "boolean"
+  );
+}
+
+function isPillarArray(value: unknown): value is number[] {
+  if (!Array.isArray(value) || !value.every(isPillar)) return false;
+  return new Set(value).size === value.length;
+}
+
+function isPillar(value: unknown): value is number {
+  return Number.isInteger(value) && Number(value) >= 1 && Number(value) <= 6;
 }
 
 export async function getPillars(): Promise<PillarSummary[]> {
@@ -472,12 +556,36 @@ function isMethodologyResponse(value: unknown): value is MethodologyResponse {
     typeof value.hazardParameters.version === "string" &&
     isRecord(value.graph) &&
     typeof value.graph.version === "string" &&
+    isEvidenceCoverage(value.evidenceCoverage) &&
     isRecord(value.predictionOperations) &&
     isRecord(value.formulas) &&
     Array.isArray(value.honestyLabels) &&
     value.honestyLabels.every((label) => typeof label === "string") &&
     isRecord(value.automaticFeatures) &&
     isRecord(value.transportAssumptions)
+  );
+}
+
+function isEvidenceCoverage(value: unknown): value is EvidenceCoverage {
+  if (!isRecord(value) || !isRecord(value.verificationLevelCounts)) return false;
+  const countKeys = [
+    "historicalCandidateCount",
+    "approvedClaimCount",
+    "distinctCandidatesUsed",
+    "activeNodeCount",
+    "directlyMappedActiveNodeCount",
+    "singleEvidenceClaimCount",
+  ];
+  return (
+    countKeys.every(
+      (key) =>
+        typeof value[key] === "number" &&
+        Number.isInteger(value[key]) &&
+        value[key] >= 0,
+    ) &&
+    Object.values(value.verificationLevelCounts).every(
+      (count) => typeof count === "number" && Number.isInteger(count) && count >= 0,
+    )
   );
 }
 
@@ -512,11 +620,57 @@ function isBacktestResponse(value: unknown): value is BacktestResponse {
   if (!isRecord(value) || !["NOT_RUN", "COMPLETED"].includes(String(value.status))) {
     return false;
   }
+  const skillStatuses = new Set([
+    "OUTPERFORMS_PERSISTENCE",
+    "NO_SKILL_VS_PERSISTENCE",
+    "INSUFFICIENT_DATA",
+    "LEGACY_NOT_EVALUATED",
+  ]);
+  if (
+    !Array.isArray(value.modelEvaluations) ||
+    !value.modelEvaluations.every(isBacktestModelEvaluation) ||
+    !skillStatuses.has(String(value.skillStatus)) ||
+    !(
+      value.readinessMaeRatioVsPersistence === null ||
+      (typeof value.readinessMaeRatioVsPersistence === "number" &&
+        Number.isFinite(value.readinessMaeRatioVsPersistence) &&
+        value.readinessMaeRatioVsPersistence >= 0)
+    ) ||
+    typeof value.selectedMatchesActive !== "boolean"
+  ) {
+    return false;
+  }
   return (
     value.status === "NOT_RUN" ||
     (isRecord(value.report) &&
       isRecord(value.report.selectedCandidate) &&
       Array.isArray(value.report.metrics))
+  );
+}
+
+function isBacktestModelEvaluation(
+  value: unknown,
+): value is BacktestModelEvaluation {
+  return (
+    isRecord(value) &&
+    ["SELECTED", "ACTIVE", "PERSISTENCE", "ALWAYS_NO_CHANGE"].includes(
+      String(value.role),
+    ) &&
+    (value.candidate === null ||
+      (isRecord(value.candidate) &&
+        typeof value.candidate.windowM === "number" &&
+        typeof value.candidate.kShrink === "number" &&
+        typeof value.candidate.deltaScale === "number")) &&
+    Array.isArray(value.metrics) &&
+    value.metrics.every(
+      (metric) =>
+        isRecord(metric) &&
+        typeof metric.code === "string" &&
+        typeof metric.pillar === "number" &&
+        (metric.holdoutValue === null || typeof metric.holdoutValue === "number") &&
+        typeof metric.holdoutSamples === "number" &&
+        typeof metric.holdoutStatus === "string",
+    )
   );
 }
 

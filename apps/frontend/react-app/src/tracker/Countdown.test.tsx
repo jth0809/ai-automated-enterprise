@@ -9,14 +9,14 @@ describe("Countdown", () => {
         etaYear={2048.3}
         etaLow={2042}
         etaHigh={2056}
-        label="현 추세 지속 시나리오 기준 · 모델 내 80% 구간"
+        label="현 추세 지속 시나리오 · 모델 내부 민감도 80% 구간"
       />,
     );
 
     expect(screen.getByText("2048")).toBeInTheDocument();
     expect(screen.getByText(/2042\s*–\s*2056/)).toBeInTheDocument();
     expect(
-      screen.getByText("현 추세 지속 시나리오 기준 · 모델 내 80% 구간"),
+      screen.getByText("현 추세 지속 시나리오 · 모델 내부 민감도 80% 구간"),
     ).toBeInTheDocument();
   });
 
@@ -26,7 +26,7 @@ describe("Countdown", () => {
         etaYear={null}
         etaLow={null}
         etaHigh={null}
-        label="현 추세 지속 시나리오 기준 · 모델 내 80% 구간"
+        label="현 추세 지속 시나리오 · 모델 내부 민감도 80% 구간"
       />,
     );
 
@@ -39,7 +39,7 @@ describe("Countdown", () => {
         etaYear={null}
         etaLow={null}
         etaHigh={null}
-        label="현 추세 지속 시나리오 기준 · 모델 내 80% 구간"
+        label="현 추세 지속 시나리오 · 모델 내부 민감도 80% 구간"
         pillars={[
           { pillar: 1, name: "수송", readiness: 0.32, etaYear: null, momentum: -0.0015,
             baseEtaLow: null, baseEtaHigh: null, etaLow: null, etaHigh: null,

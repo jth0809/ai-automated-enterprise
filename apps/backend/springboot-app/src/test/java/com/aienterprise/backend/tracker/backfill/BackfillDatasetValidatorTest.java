@@ -49,6 +49,20 @@ class BackfillDatasetValidatorTest {
     }
 
     @Test
+    void reportsTheEntireCandidateCorpusNotOnlyMappedCandidates() {
+        ObjectNode used = candidate("HC-USED", evidence("NASA", "PRIMARY", 1));
+        ObjectNode unused = candidate("HC-UNUSED", evidence("NASA", "PRIMARY", 1));
+        ObjectNode mapping = mapping("BF-1", "HC-USED", "OFFICIAL", "NASA");
+
+        ValidatedBackfill result = new BackfillDatasetValidator(false)
+                .validate(candidates(used, unused), mappings(mapping));
+
+        assertTrue(result.errors().isEmpty(), () -> String.join("\n", result.errors()));
+        assertEquals(2, result.candidateRecordCount());
+        assertEquals(1, result.candidates().size());
+    }
+
+    @Test
     void productionModeRejectsOversizedResourcesAndEntryCounts() {
         ObjectNode candidate = candidate("HC-VALID", evidence("NASA", "PRIMARY", 1));
         ObjectNode mapping = mapping("BF-1", "HC-VALID", "OFFICIAL", "NASA");

@@ -98,7 +98,7 @@ public final class BackfillDatasetValidator {
                 "candidate resource", errors)
                 || !withinSize(mappingsResource, MAX_MAPPING_BYTES,
                         "mapping resource", errors)) {
-            return new ValidatedBackfill(List.of(), Map.of(), errors);
+            return new ValidatedBackfill(List.of(), Map.of(), errors, 0);
         }
 
         CorpusReport corpusReport = new HistoricalCorpusValidator().validate(candidatesResource);
@@ -127,7 +127,8 @@ public final class BackfillDatasetValidator {
             if (mappings != null) {
                 errors.add("mappings: root must be a JSON array");
             }
-            return new ValidatedBackfill(claims, usedCandidates, errors);
+            return new ValidatedBackfill(
+                    claims, usedCandidates, errors, corpusReport.totalCount());
         }
         if (mappings.size() > MAX_MAPPINGS) {
             errors.add("mappings: mapping exceeds " + MAX_MAPPINGS + " entries");
@@ -151,7 +152,8 @@ public final class BackfillDatasetValidator {
                         + MAX_STATE_CLAIMS_PER_NODE + " state-changing claims");
             }
         }
-        return new ValidatedBackfill(claims, usedCandidates, errors);
+        return new ValidatedBackfill(
+                claims, usedCandidates, errors, corpusReport.totalCount());
     }
 
     private static void validateMapping(

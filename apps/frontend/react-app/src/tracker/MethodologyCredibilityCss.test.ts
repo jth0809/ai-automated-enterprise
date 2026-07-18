@@ -28,5 +28,11 @@ describe("methodology credibility responsive containment", () => {
 
   it("wraps long Layer B indicator names before they widen the mobile document", () => {
     expect(declarations(".layer-b-name")).toMatch(/overflow-wrap:\s*anywhere\s*;/);
+    expect(declarations(".credibility-coverage p")).toMatch(
+      /overflow-wrap:\s*anywhere\s*;/,
+    );
+    expect(declarations(".credibility-alignment")).toMatch(
+      /overflow-wrap:\s*anywhere\s*;/,
+    );
   });
 });
