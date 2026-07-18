@@ -19,14 +19,14 @@
 
 ### 이벤트 소스는 3곳이고, GitHub Actions는 그중 1곳만 커버한다
 - **CI/저장소 이벤트** (스캔 실패, 빌드 실패, Dependabot, ZAP 이슈) → GitHub 영역.
-- **GitOps/배포 이벤트** (Kustomization/HelmRelease 실패, 카나리 롤백) → Flux Provider/Alert와 Flagger AlertProvider를 GitOps로 구성했다. 실제 전달은 Vault 프로비저닝과 운영 검증 전까지 미확인 상태다.
-- **런타임 이벤트** (파드 크래시루프, 노드 자원, 인증서 만료 임박) → 단일 replica·무영속 Alertmanager와 최소 룰셋을 GitOps로 구성했다. 실제 전달은 Vault 프로비저닝과 운영 검증 전까지 미확인 상태다.
+- **GitOps/배포 이벤트** (Kustomization/HelmRelease 실패, 카나리 롤백) → Flux Provider/Alert와 Flagger AlertProvider를 GitOps로 구성하고 Vault 프로비저닝을 완료했다. Flux는 notification-controller 복구 후, Flagger는 다음 자연 카나리 이벤트에서 직접 전달을 검증한다.
+- **런타임 이벤트** (파드 크래시루프, 노드 자원, 인증서 만료 임박) → 단일 replica·무영속 Alertmanager와 최소 룰셋을 GitOps로 구성했다. `Alertmanager runtime delivery verified 2026-07-18` — 실제 경고와 RESOLVED가 Discord에 도착했다.
 
 ### 할 일
 - [ ] **P1 — GitHub↔Discord 연동**: runbook 작성 완료. **external setting pending** — 저장소 Settings에 base URL + `/github`를 등록하고 실제 delivery를 확인해야 한다. CI 실패는 지원되는 `check_run`/`check_suite`, Dependabot 보안 PR은 `pull_request`로 전달한다. Discord가 지원하지 않는 직접 `dependabot_alert` 전달은 **deferred**다.
-- [ ] **P1 — Flux 알림 활성화**: **GitOps implementation complete; Vault provisioning and runtime delivery verification pending.** OCI Vault 값 등록 후 모든 Kustomization/HelmRelease의 error 이벤트 전달을 확인한다.
-- [ ] **P2 — Flagger 카나리 알림**: **GitOps implementation complete; Vault provisioning and runtime delivery verification pending.** `AlertProvider`와 Canary `analysis.alerts`는 오류만 전송하도록 구성했다.
-- [ ] **P2 — Alertmanager 활성화 + 최소 룰셋**: **GitOps implementation complete; Vault provisioning and runtime delivery verification pending.** `KubePodCrashLooping` 기본 룰과 노드 CPU requests, 인증서 만료, Flagger Failed 룰을 Discord로 라우팅한다. **SMTP/email routing is deferred** until credentials and an explicit egress design are approved.
+- [ ] **P1 — Flux 알림 활성화**: **GitOps implementation complete; Vault provisioning complete; runtime delivery verification pending.** notification-controller 복구 후 Kustomization/HelmRelease의 자연 error 이벤트 전달을 확인한다.
+- [ ] **P2 — Flagger 카나리 알림**: **GitOps implementation complete; Vault provisioning complete; runtime delivery verification pending.** `AlertProvider`와 Canary `analysis.alerts`는 오류만 전송하도록 구성했으며 다음 자연 실패에서 직접 전달을 확인한다.
+- [x] **P2 — Alertmanager 활성화 + 최소 룰셋**: **Alertmanager runtime delivery verified 2026-07-18.** `KubePodCrashLooping` 등 실제 경고와 RESOLVED를 Discord에서 확인했다. info와 구조적 overcommit은 호출하지 않고 Prometheus/Grafana에 보존한다. **SMTP/email routing is deferred** until credentials and an explicit egress design are approved.
 - [ ] **P3 — Loki**: "모든 로그"의 올바른 종착지. 알림이 아니라 조회로 소비한다.
 
 ---
