@@ -1,7 +1,7 @@
 # Alert Noise Reduction and Controller Recovery Design
 
-**Date:** 2026-07-18  
-**Status:** Approved for implementation  
+**Date:** 2026-07-18
+**Status:** Approved for implementation
 **Scope:** cert-manager controller, Flux notification-controller, and the global Alertmanager routing policy
 
 ## Problem
