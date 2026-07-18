@@ -115,7 +115,7 @@ public class BackfillLoader {
         if (existing.isPresent()
                 && existing.get().candidateRecordCount() == null) {
             repository.updateBackfillCandidateRecordCount(
-                    datasetVersion, validated.candidates().size());
+                    datasetVersion, validated.candidateRecordCount());
             if (weeklyProjector.isCurrent(
                     datasetSha256, NODE_SET_VERSION, RUBRIC_VERSION)) {
                 return;
@@ -142,7 +142,7 @@ public class BackfillLoader {
             repository.recordBackfillImport(BackfillImportRow.draft(
                     datasetVersion, datasetSha256, NODE_SET_VERSION,
                     rubricVersionId, claims.size(),
-                    validated.candidates().size()));
+                    validated.candidateRecordCount()));
             log.info("tracker backfill imported {} reviewed claims from dataset {}",
                     claims.size(), datasetVersion);
             return;

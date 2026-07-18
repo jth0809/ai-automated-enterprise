@@ -378,6 +378,23 @@ class BackfillLoaderTest {
     }
 
     @Test
+    void recordsUnmappedCandidatesInCorpusCoverage() throws IOException {
+        ArrayNode mappings = (ArrayNode) JSON.readTree(mappingsText());
+        mappings.remove(mappings.size() - 1);
+        BackfillLoader partial = loader(
+                resource(candidatesText()), resource(mappings.toString()),
+                "backfill-candidate-count-test");
+
+        partial.loadDatasetIfNeeded();
+
+        assertEquals("7|8", jdbc.sql("""
+                SELECT record_count || '|' || candidate_record_count
+                  FROM backfill_import
+                 WHERE dataset_version = 'backfill-candidate-count-test'
+                """).query(String.class).single());
+    }
+
+    @Test
     void existingImportWithMissingProjectionMarkerRebuildsSnapshotsOnly() {
         loader.loadDatasetIfNeeded();
         int events = jdbc.sql("SELECT COUNT(*) FROM event").query(Integer.class).single();
