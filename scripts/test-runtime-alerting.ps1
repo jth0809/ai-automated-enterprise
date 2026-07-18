@@ -8,6 +8,9 @@ $certManagerNamespace = Get-RenderedResource -Rendered $certManager -Kind "Names
 $alertmanagerValues = [regex]::Match($observability, "(?ms)^    alertmanager:`n.*?(?=^    [a-zA-Z]|\z)").Value
 $alertmanagerSpec = [regex]::Match($observability, "(?ms)^      alertmanagerSpec:`n.*?(?=^      [a-zA-Z]|\z)").Value
 $alertmanagerConfig = Get-RenderedResourceByName -Rendered $observability -Kind "AlertmanagerConfig" -Name "platform-alertmanager"
+$alertmanagerRoute = [regex]::Match($alertmanagerConfig, '(?ms)^  route:\n.*\z').Value
+$alertmanagerRootRoute = [regex]::Match($alertmanagerRoute, '(?ms)^  route:\n.*?(?=^    routes:)').Value
+$alertmanagerChildRoutes = [regex]::Match($alertmanagerRoute, '(?ms)^    routes:\n.*\z').Value
 $alertmanagerPolicy = [regex]::Match(
     $observability,
     "(?ms)^apiVersion: cilium\.io/v2`nkind: CiliumNetworkPolicy`nmetadata:`n  name: alertmanager`n.*?(?=^---`n|\z)"
@@ -15,6 +18,10 @@ $alertmanagerPolicy = [regex]::Match(
 $certManagerPolicy = [regex]::Match(
     $certManager,
     "(?ms)^apiVersion: cilium\.io/v2`nkind: CiliumNetworkPolicy`nmetadata:`n  name: cert-manager-controller`n.*?(?=^---`n|\z)"
+).Value
+$certManagerApiEgress = [regex]::Match(
+    $certManagerPolicy,
+    '(?ms)^  - toEntities:\n.*?(?=^  - to(?:Endpoints|Entities|FQDNs):|\z)'
 ).Value
 $alertmanagerAuthorization = Get-RenderedResourceByName -Rendered $observability -Kind "AuthorizationPolicy" -Name "allow-prometheus-to-alertmanager"
 $prometheusAuthorization = Get-RenderedResourceByName -Rendered $observability -Kind "AuthorizationPolicy" -Name "allow-observability-clients-to-prometheus"
@@ -41,11 +48,19 @@ Assert-NoMatches $alertmanagerConfig "alerting\.aienterprise\.io/role" "the glob
 Assert-NoMatches $alertmanagerSpec "(?m)^\s+secrets:" "Alertmanager must not mount the webhook as a file"
 Assert-Matches $alertmanagerConfig "(?ms)apiURL:.*?key: address.*?name: alertmanager-discord-webhook" "Discord must select the Vault-backed Secret key"
 Assert-Matches $alertmanagerConfig "(?m)^\s+sendResolved: true$" "resolved alerts must be delivered"
-Assert-Matches $alertmanagerConfig "(?ms)groupBy:.*?- namespace.*?- alertname" "alerts must keep stable grouping"
-Assert-Matches $alertmanagerConfig "(?m)^\s+groupWait: 30s$" "notification group wait must remain bounded"
-Assert-Matches $alertmanagerConfig "(?m)^\s+groupInterval: 5m$" "notification group interval must remain bounded"
-Assert-Matches $alertmanagerConfig "(?m)^\s+repeatInterval: 4h$" "notification repeat interval must remain bounded"
-Assert-Matches $alertmanagerConfig '(?ms)routes:.*?matchers:.*?name: alertname.*?value: Watchdog.*?receiver: "null"' "Watchdog must route to null"
+Assert-Matches $alertmanagerRootRoute '(?m)^    receiver: discord$' "unknown warnings and critical alerts must default to Discord"
+Assert-MatchCount $alertmanagerRootRoute '(?m)^    - namespace$' 1 "root alerts must group by namespace"
+Assert-NoMatches $alertmanagerRootRoute '(?m)^    - alertname$' "root grouping must coalesce related alert names"
+Assert-Matches $alertmanagerRootRoute '(?m)^    groupWait: 2m$' "warnings must wait two minutes for related symptoms"
+Assert-Matches $alertmanagerRootRoute '(?m)^    groupInterval: 5m$' "notification group interval must remain five minutes"
+Assert-Matches $alertmanagerRootRoute '(?m)^    repeatInterval: 12h$' "warnings must repeat no more than twice daily"
+Assert-MatchCount $alertmanagerChildRoutes '(?m)^      receiver: "null"$' 3 "only three child routes may discard alerts"
+Assert-Matches $alertmanagerChildRoutes '(?ms)name: alertname\n\s+value: Watchdog\n\s+receiver: "null"' "Watchdog must route to null"
+Assert-Matches $alertmanagerChildRoutes '(?ms)name: severity\n\s+value: info\n\s+receiver: "null"' "informational alerts must route directly to null"
+Assert-Matches $alertmanagerChildRoutes '(?ms)matchType: =~\n\s+name: alertname\n\s+value: KubeCPUOvercommit\|KubeMemoryOvercommit\n\s+receiver: "null"' "only the structural overcommit alerts must route to null"
+Assert-Matches $alertmanagerChildRoutes '(?ms)groupWait: 30s.*?name: severity\n\s+value: critical\n\s+receiver: discord\n\s+repeatInterval: 4h' "critical alerts must retain fast delivery and repetition"
+Assert-MatchCount $alertmanagerRoute '(?m)^[ \t]+- groupWait: 30s\r?$' 1 "only critical alerts may use the short wait"
+Assert-MatchCount $alertmanagerRoute '(?m)^[ \t]+repeatInterval: 4h\r?$' 1 "only critical alerts may use the short repeat"
 Assert-MatchCount $alertmanagerConfig "(?m)^\s+(?:-\s+)?sourceMatch:$" 3 "the three source-based inhibition rules must remain"
 Assert-MatchCount $alertmanagerConfig "(?m)^\s+(?:-\s+)?targetMatch:$" 4 "all four inhibition targets must remain"
 Assert-Matches $alertmanagerConfig "(?ms)sourceMatch:.*?value: critical.*?targetMatch:.*?value: warning\|info" "critical alerts must inhibit warning and info alerts"
@@ -102,6 +117,9 @@ Assert-Matches $certManager "(?m)^\s+- action: keep$" "non-controller cert-manag
 if ($certManagerPolicy.Length -eq 0) {
     throw "[ASSERT] cert-manager controller needs a dedicated Cilium policy"
 }
+if ($certManagerApiEgress.Length -eq 0) {
+    throw "[ASSERT] cert-manager needs a Kubernetes API egress block"
+}
 Assert-Matches $certManagerPolicy "(?ms)endpointSelector:.*?app\.kubernetes\.io/component: controller.*?app\.kubernetes\.io/instance: cert-manager.*?app\.kubernetes\.io/name: cert-manager" "CNP must select only the cert-manager controller"
 Assert-MatchCount $certManagerPolicy "(?m)^\s+- fromEndpoints:$" 1 "cert-manager must have exactly one metrics ingress source"
 Assert-Matches $certManagerPolicy "(?ms)ingress:.*?app\.kubernetes\.io/name: prometheus" "cert-manager metrics ingress must select Prometheus pods"
@@ -117,11 +135,15 @@ Assert-MatchCount $certManagerPolicy "(?m)^\s+- matchName: (?:acme-v02\.api\.let
 Assert-MatchCount $certManagerPolicy "(?m)^\s+- matchName: .+$" 4 "cert-manager must not have extra FQDN destinations"
 Assert-MatchCount $certManagerPolicy "(?m)^\s+- kube-apiserver$" 1 "cert-manager must reach only the Kubernetes API entity"
 Assert-MatchCount $certManagerPolicy "(?m)^\s+- (?:all|world|cluster|host|init|ingress|unmanaged|remote-node|health|kube-apiserver|none)$" 1 "cert-manager must not allow another Cilium entity"
+Assert-MatchCount $certManagerApiEgress '(?m)^      - port: "443"$' 1 "cert-manager API egress must preserve the Service port"
+Assert-MatchCount $certManagerApiEgress '(?m)^      - port: "6443"$' 1 "cert-manager API egress must allow the observed OKE backend port"
+Assert-MatchCount $certManagerApiEgress '(?m)^        protocol: TCP$' 2 "cert-manager API egress must contain only two TCP ports"
+Assert-MatchCount $certManagerPolicy '(?m)^      - port: "6443"$' 1 "cert-manager must expose the OKE API backend port only once"
 Assert-MatchCount $certManagerPolicy '(?m)^\s+- port: "53"$' 2 "cert-manager DNS must use TCP and UDP 53"
 Assert-MatchCount $certManagerPolicy '(?m)^\s+- port: "443"$' 2 "cert-manager API and ACME traffic must use HTTPS"
 Assert-MatchCount $certManagerPolicy '(?m)^\s+- port: "80"$' 1 "HTTP-01 self-checks must use the public HTTP listener"
 Assert-MatchCount $certManagerPolicy '(?m)^\s+- port: "15008"$' 1 "cert-manager must accept Ambient HBONE"
-Assert-MatchCount $certManagerPolicy '(?m)^\s+- port: "[^\"]+"$' 7 "cert-manager policy must contain no extra ports"
+Assert-MatchCount $certManagerPolicy '(?m)^\s+- port: "[^\"]+"$' 8 "cert-manager policy must contain no extra ports"
 Assert-Matches $infrastructure "(?ms)name: infra-observability.*?dependsOn:.*?name: infra-istio-ambient.*?name: security-external-secrets" "observability must wait for Vault access"
 
 Write-Host "Runtime alerting contracts passed"

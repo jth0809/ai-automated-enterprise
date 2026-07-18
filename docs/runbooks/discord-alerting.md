@@ -60,6 +60,10 @@ kubectl -n monitoring get alertmanagerconfig platform-alertmanager
 kubectl -n monitoring get alertmanager kube-prometheus-stack-alertmanager
 kubectl -n monitoring get pods -l alertmanager=kube-prometheus-stack-alertmanager
 kubectl -n monitoring get prometheusrule platform-actionable-alerts
+kubectl -n cert-manager get deployment/cert-manager -o wide
+kubectl -n cert-manager get pods -l app.kubernetes.io/component=controller -o wide
+kubectl -n flux-system get deployment/notification-controller -o wide
+kubectl -n flux-system get pods -l app=notification-controller -o wide
 ```
 
 - Flux `Provider/discord`와 `Alert/platform-errors`가 오류를 보이지 않는지 확인한다.
@@ -67,8 +71,19 @@ kubectl -n monitoring get prometheusrule platform-actionable-alerts
 - `AlertmanagerConfig/platform-alertmanager`의 Discord `apiURL`이 `alertmanager-discord-webhook/address`를 참조하는지 확인한다. Secret 값 자체를 출력하지 않는다.
 - Alertmanager 조건이 `Reconciled=True`, `Available=True`이고 Pod가 정확히 1개만 Ready인지 확인한다. PrometheusRule에는 `NodeCPURequestsHigh`, `CertificateExpiringSoon`, `FlaggerCanaryFailed`가 로드돼야 한다.
 - 경보 전달 검증은 자연 발생한 비프로덕션 또는 실제 이벤트를 사용한다. 확인만을 위해 프로덕션 Kustomization, Canary, Pod를 고의로 실패시키지 않는다.
-- 자연 이벤트의 Discord 수신을 확인하기 전까지 실제 전달 검증은 대기 상태로 기록한다.
+- Alertmanager 경로는 2026-07-18 실제 경고의 Discord 수신으로 검증했다. Flux Provider와 Flagger AlertProvider의 직접 전달은 각각 자연 이벤트를 확인할 때까지 별도 대기 상태다.
 - 전달이 안 되면 ExternalSecret → Provider/AlertProvider/Alertmanager 상태 → DNS → Cilium/Hubble drop 순서로 확인한다.
+
+## Discord 라우팅 및 복구 판정
+
+- warning은 `namespace`별로 `groupWait: 2m`, `groupInterval: 5m`, `repeatInterval: 12h`를 적용한다. 같은 컴포넌트의 CrashLoop, replica mismatch, target down을 한 사고 묶음으로 모은다.
+- critical은 `groupWait: 30s`, `repeatInterval: 4h`를 유지한다. 새 critical을 누락하지 않도록 Discord가 기본 receiver다.
+- `severity=info`는 `null`로 보낸다. `KubeCPUOvercommit`과 `KubeMemoryOvercommit`도 이 2노드 Free Tier의 구조적 무중단 조건 경고이므로 `null`로 보내되 Prometheus/Grafana에는 보존한다. 실제 포화는 `NodeCPURequestsHigh`로 감시한다.
+- OKE의 Kubernetes Service 443은 현재 Cilium에서 `10.0.0.73:6443` API backend로 변환된다. cert-manager와 notification-controller의 전용 CNP는 `kube-apiserver` identity에 TCP 443과 6443만 허용해야 한다.
+- `[RESOLVED]` 한 건만으로 복구를 선언하지 않는다. `stable for 10m`: 최소 10분 동안 Deployment와 Pod가 Ready이고 `restart` 횟수가 증가하지 않으며 Prometheus에 해당 alert의 `pending` 및 `firing` 상태가 모두 없어야 한다.
+- cert-manager는 readiness probe가 없어 CrashLoop 재시작 직후 짧은 실행 구간이 Ready로 샘플링될 수 있다. 이때 replica mismatch가 RESOLVED 후 다시 pending으로 바뀌는 것은 복구가 아니라 플랩이다.
+
+Secret 값을 출력하지 않고 Prometheus의 `ALERTS` 시계열, Deployment Available 수, Pod Ready 상태와 restart 횟수를 함께 확인한다. 정책 변경 후에도 이 네 조건 중 하나가 실패하면 포트를 추가로 넓히지 말고 Cilium drop과 컨트롤러 로그부터 다시 진단한다.
 
 ## Webhook 교체(rotation)
 

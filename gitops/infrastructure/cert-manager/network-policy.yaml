@@ -41,6 +41,8 @@ spec:
         - ports:
             - port: "443"
               protocol: TCP
+            - port: "6443"
+              protocol: TCP
     - toFQDNs:
         - matchName: acme-v02.api.letsencrypt.org
         - matchName: acme.zerossl.com
