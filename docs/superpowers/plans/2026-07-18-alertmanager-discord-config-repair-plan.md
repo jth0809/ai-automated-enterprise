@@ -57,8 +57,9 @@ Replace the old file-backed and inline Watchdog assertions with these contracts:
 Assert-MatchCount $observability "(?m)^kind: AlertmanagerConfig$" 1 "observability must define exactly one AlertmanagerConfig"
 Assert-Matches $alertmanagerSpec "(?ms)alertmanagerConfiguration:.*?name: platform-alertmanager" "Alertmanager must select the global configuration"
 Assert-Matches $alertmanagerSpec "(?m)^\s+resolveTimeout: 5m$" "the global resolve timeout must be preserved"
-Assert-Matches $alertmanagerSpec "(?m)^\s+alertmanagerConfigSelector: null$" "supplemental configuration selection must be disabled"
-Assert-Matches $alertmanagerSpec "(?m)^\s+alertmanagerConfigNamespaceSelector: null$" "cross-namespace supplemental selection must be disabled"
+Assert-Matches $alertmanagerSpec "(?ms)alertmanagerConfigSelector:.*?matchLabels:.*?alerting\.aienterprise\.io/role: supplemental" "only explicitly labeled supplemental configurations may be merged"
+Assert-Matches $alertmanagerSpec "(?ms)alertmanagerConfigNamespaceSelector:.*?matchLabels:.*?kubernetes\.io/metadata\.name: monitoring" "supplemental configurations must stay in monitoring"
+Assert-NoMatches $alertmanagerConfig "alerting\.aienterprise\.io/role" "the global configuration must not be selected as supplemental"
 Assert-NoMatches $alertmanagerSpec "(?m)^\s+secrets:" "Alertmanager must not mount the webhook as a file"
 Assert-Matches $alertmanagerConfig "(?ms)apiURL:.*?key: address.*?name: alertmanager-discord-webhook" "Discord must select the Vault-backed Secret key"
 Assert-Matches $alertmanagerConfig "(?m)^\s+sendResolved: true$" "resolved alerts must be delivered"
@@ -162,8 +163,12 @@ Add this resource to `gitops/infrastructure/observability/kustomization.yaml`:
 Delete `alertmanager.config` and `alertmanagerSpec.secrets` from `release.yaml`. Add this under `alertmanager.alertmanagerSpec`:
 
 ```yaml
-        alertmanagerConfigSelector: null
-        alertmanagerConfigNamespaceSelector: null
+        alertmanagerConfigSelector:
+          matchLabels:
+            alerting.aienterprise.io/role: supplemental
+        alertmanagerConfigNamespaceSelector:
+          matchLabels:
+            kubernetes.io/metadata.name: monitoring
         alertmanagerConfiguration:
           name: platform-alertmanager
           global:
@@ -320,7 +325,7 @@ git status --short
 git log --oneline origin/main..HEAD
 ```
 
-Expected: no whitespace errors, no uncommitted files, and exactly the design, implementation-plan, runtime-repair, and documentation commits.
+Expected: no whitespace errors, no uncommitted files, and exactly the design, implementation-plan, runtime-repair, documentation, and selector-hardening commits.
 
 - [ ] **Step 4: Review the final diff for scope and Secret safety**
 

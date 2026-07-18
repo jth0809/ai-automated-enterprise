@@ -1,7 +1,9 @@
 # Alertmanager Discord Configuration Repair Design
 
-**Date:** 2026-07-18  
-**Status:** Approved for implementation  
+**Date:** 2026-07-18
+
+**Status:** Approved for implementation
+
 **Scope:** Alertmanager runtime configuration, alerting contracts, Discord runbook, root README
 
 ## Problem
@@ -51,7 +53,7 @@ The configuration will contain:
 
 The inline Helm `alertmanager.config` block and file-mount-only `alertmanagerSpec.secrets` entry will be removed. The ExternalSecret remains unchanged and the webhook value remains absent from rendered Git content.
 
-The chart's default empty AlertmanagerConfig selectors will be overridden with `null`. This prevents the global configuration from also being selected as a supplemental configuration and keeps the global resource as the single route owner.
+The chart's default empty AlertmanagerConfig selectors will be replaced with an explicit supplemental label selector (`alerting.aienterprise.io/role: supplemental`) restricted to the `monitoring` namespace. The global resource intentionally lacks that label, preventing it from also being selected as a supplemental configuration while leaving a controlled extension point for future configs.
 
 ## Alternatives rejected
 

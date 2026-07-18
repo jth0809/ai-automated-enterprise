@@ -40,8 +40,12 @@ spec:
         automountServiceAccountToken: false
         replicas: 1
         retention: 24h
-        alertmanagerConfigSelector: null
-        alertmanagerConfigNamespaceSelector: null
+        alertmanagerConfigSelector:
+          matchLabels:
+            alerting.aienterprise.io/role: supplemental
+        alertmanagerConfigNamespaceSelector:
+          matchLabels:
+            kubernetes.io/metadata.name: monitoring
         alertmanagerConfiguration:
           name: platform-alertmanager
           global:
