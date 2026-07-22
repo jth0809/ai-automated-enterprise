@@ -124,6 +124,38 @@ spec:
           memory: 256Mi
 
     kube-state-metrics:
+      rbac:
+        extraRules:
+          - apiGroups:
+              - kustomize.toolkit.fluxcd.io
+            resources:
+              - kustomizations
+            verbs:
+              - list
+              - watch
+      customResourceState:
+        enabled: true
+        config:
+          kind: CustomResourceStateMetrics
+          spec:
+            resources:
+              - groupVersionKind:
+                  group: kustomize.toolkit.fluxcd.io
+                  version: v1
+                  kind: Kustomization
+                metricNamePrefix: gotk
+                metrics:
+                  - name: resource_info
+                    help: "The current state of a Flux Kustomization resource."
+                    each:
+                      type: Info
+                      info:
+                        labelsFromPath:
+                          name: [metadata, name]
+                    labelsFromPath:
+                      exported_namespace: [metadata, namespace]
+                      ready: [status, conditions, "[type=Ready]", status]
+                      suspended: [spec, suspend]
       resources:
         requests:
           cpu: 10m
