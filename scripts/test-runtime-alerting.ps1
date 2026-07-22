@@ -8,6 +8,9 @@ $certManagerNamespace = Get-RenderedResource -Rendered $certManager -Kind "Names
 $alertmanagerValues = [regex]::Match($observability, "(?ms)^    alertmanager:`n.*?(?=^    [a-zA-Z]|\z)").Value
 $alertmanagerSpec = [regex]::Match($observability, "(?ms)^      alertmanagerSpec:`n.*?(?=^      [a-zA-Z]|\z)").Value
 $alertmanagerConfig = Get-RenderedResourceByName -Rendered $observability -Kind "AlertmanagerConfig" -Name "platform-alertmanager"
+$kubePrometheusRelease = Get-RenderedResourceByName -Rendered $observability -Kind "HelmRelease" -Name "kube-prometheus-stack"
+$platformAlertRules = Get-RenderedResourceByName -Rendered $observability -Kind "PrometheusRule" -Name "platform-actionable-alerts"
+$kubeStateMetricsValues = [regex]::Match($kubePrometheusRelease, '(?ms)^    kube-state-metrics:\n.*?(?=^    [a-zA-Z]|\z)').Value
 $alertmanagerRoute = [regex]::Match($alertmanagerConfig, '(?ms)^  route:\n.*\z').Value
 $alertmanagerRootRoute = [regex]::Match($alertmanagerRoute, '(?ms)^  route:\n.*?(?=^    routes:)').Value
 $alertmanagerChildRoutes = [regex]::Match($alertmanagerRoute, '(?ms)^    routes:\n.*\z').Value
@@ -58,8 +61,9 @@ Assert-MatchCount $alertmanagerChildRoutes '(?m)^      receiver: "null"$' 3 "onl
 Assert-Matches $alertmanagerChildRoutes '(?ms)name: alertname\n\s+value: Watchdog\n\s+receiver: "null"' "Watchdog must route to null"
 Assert-Matches $alertmanagerChildRoutes '(?ms)name: severity\n\s+value: info\n\s+receiver: "null"' "informational alerts must route directly to null"
 Assert-Matches $alertmanagerChildRoutes '(?ms)matchType: =~\n\s+name: alertname\n\s+value: KubeCPUOvercommit\|KubeMemoryOvercommit\n\s+receiver: "null"' "only the structural overcommit alerts must route to null"
+Assert-Matches $alertmanagerChildRoutes '(?ms)groupBy:\n\s+- alertname\n\s+- exported_namespace\n\s+groupWait: 30s\n\s+matchers:.*?name: alertname\n\s+value: FluxKustomizationNotReady\n\s+receiver: discord\n\s+repeatInterval: 12h' "sustained Flux failures must have a dedicated low-noise Discord route"
 Assert-Matches $alertmanagerChildRoutes '(?ms)groupWait: 30s.*?name: severity\n\s+value: critical\n\s+receiver: discord\n\s+repeatInterval: 4h' "critical alerts must retain fast delivery and repetition"
-Assert-MatchCount $alertmanagerRoute '(?m)^[ \t]+- groupWait: 30s\r?$' 1 "only critical alerts may use the short wait"
+Assert-MatchCount $alertmanagerRoute '(?m)^[ \t]+(?:- )?groupWait: 30s\r?$' 2 "only critical and sustained Flux alerts may use the short wait"
 Assert-MatchCount $alertmanagerRoute '(?m)^[ \t]+repeatInterval: 4h\r?$' 1 "only critical alerts may use the short repeat"
 Assert-MatchCount $alertmanagerConfig "(?m)^\s+(?:-\s+)?sourceMatch:$" 3 "the three source-based inhibition rules must remain"
 Assert-MatchCount $alertmanagerConfig "(?m)^\s+(?:-\s+)?targetMatch:$" 4 "all four inhibition targets must remain"
@@ -74,6 +78,28 @@ Assert-Matches $observability "(?m)^\s+- alert: CertificateExpiringSoon$" "certi
 Assert-Matches $observability "1814400" "certificate window must be 21 days"
 Assert-Matches $observability "(?m)^\s+- alert: FlaggerCanaryFailed$" "persistent Flagger rule must exist"
 Assert-Matches $observability "flagger_canary_status > 1" "official Flagger failed-state expression must be used"
+Assert-Matches $kubeStateMetricsValues '(?ms)rbac:.*?extraRules:.*?apiGroups:.*?kustomize\.toolkit\.fluxcd\.io.*?resources:.*?kustomizations.*?verbs:.*?list.*?watch' "kube-state-metrics must have least-privilege Kustomization read access"
+Assert-NoMatches $kubeStateMetricsValues 'custom-resource-state-only' "core kube-state-metrics collectors must remain enabled"
+Assert-Matches $kubeStateMetricsValues '(?m)^\s+customResourceState:$' "kube-state-metrics custom resource state support must be configured"
+Assert-Matches $kubeStateMetricsValues '(?m)^\s+enabled: true$' "kube-state-metrics custom resource state support must be enabled"
+Assert-Matches $kubeStateMetricsValues '(?m)^\s+kind: CustomResourceStateMetrics$' "the custom resource state document kind must be explicit"
+Assert-Matches $kubeStateMetricsValues '(?m)^\s+group: kustomize\.toolkit\.fluxcd\.io$' "the exact Flux Kustomization API group must be configured"
+Assert-Matches $kubeStateMetricsValues '(?m)^\s+version: v1$' "the stable Flux Kustomization API version must be configured"
+Assert-Matches $kubeStateMetricsValues '(?m)^\s+kind: Kustomization$' "only the Flux Kustomization kind must be configured"
+Assert-Matches $kubeStateMetricsValues '(?m)^\s+metricNamePrefix: gotk$' "the Flux metric prefix must be gotk"
+Assert-Matches $kubeStateMetricsValues '(?m)^\s+(?:- )?name: resource_info$' "the documented resource_info metric must be configured"
+Assert-Matches $kubeStateMetricsValues '(?m)^\s+type: Info$' "gotk_resource_info must be an Info metric"
+Assert-Matches $kubeStateMetricsValues '(?ms)exported_namespace:.*?metadata.*?namespace.*?ready:.*?status.*?conditions.*?\[type=Ready\].*?status.*?suspended:.*?spec.*?suspend' "gotk_resource_info must expose namespace, Ready, and suspend state"
+Assert-MatchCount $kubeStateMetricsValues '(?m)^\s+group: kustomize\.toolkit\.fluxcd\.io$' 1 "only one Flux custom-resource metric group may be configured"
+Assert-Matches $platformAlertRules '(?m)^\s+- alert: FluxKustomizationNotReady$' "the sustained Flux alert must exist"
+Assert-Matches $platformAlertRules 'gotk_resource_info\{' "the sustained Flux alert must use the kube-state-metrics resource metric"
+Assert-Matches $platformAlertRules 'customresource_group="kustomize\.toolkit\.fluxcd\.io"' "the rule must select the exact Flux API group"
+Assert-Matches $platformAlertRules 'customresource_kind="Kustomization"' "the rule must select only Kustomizations"
+Assert-Matches $platformAlertRules 'exported_namespace="flux-system"' "the rule must retain the existing Flux Alert namespace boundary"
+Assert-Matches $platformAlertRules 'ready!="True"' "False, Unknown, and initially absent Ready conditions must count as NotReady"
+Assert-Matches $platformAlertRules 'suspended!="true"' "intentionally suspended Kustomizations must not alert"
+Assert-Matches $platformAlertRules '(?ms)alert: FluxKustomizationNotReady.*?for: 5m.*?severity: warning' "NotReady must persist for five minutes before warning"
+Assert-MatchCount $platformAlertRules '(?m)^\s+- alert: FluxKustomizationNotReady$' 1 "the sustained Flux rule must be unique"
 Assert-NoMatches $observability "(?m)^\s+- alert: KubePodCrashLooping$" "KubePodCrashLooping must remain chart-provided"
 Assert-Matches $observability "(?m)^\s+release: kube-prometheus-stack$" "rules must match Prometheus selectors"
 if ($alertmanagerPolicy.Length -eq 0) {

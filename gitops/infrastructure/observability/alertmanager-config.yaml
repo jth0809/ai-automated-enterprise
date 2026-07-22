@@ -28,6 +28,16 @@ spec:
             matchType: "=~"
             value: KubeCPUOvercommit|KubeMemoryOvercommit
       - receiver: discord
+        groupBy:
+          - alertname
+          - exported_namespace
+        groupWait: 30s
+        repeatInterval: 12h
+        matchers:
+          - name: alertname
+            matchType: "="
+            value: FluxKustomizationNotReady
+      - receiver: discord
         groupWait: 30s
         repeatInterval: 4h
         matchers:

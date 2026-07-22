@@ -44,6 +44,26 @@ spec:
             summary: "Certificate {{ $labels.namespace }}/{{ $labels.name }} expires within 21 days"
             description: "Investigate issuer and renewal status."
             runbook: "Inspect Certificate, CertificateRequest, Challenge, and issuer events."
+    - name: platform-flux
+      rules:
+        - alert: FluxKustomizationNotReady
+          expr: |
+            max by (exported_namespace, name) (
+              gotk_resource_info{
+                customresource_group="kustomize.toolkit.fluxcd.io",
+                customresource_kind="Kustomization",
+                exported_namespace="flux-system",
+                ready!="True",
+                suspended!="true"
+              }
+            ) == 1
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Flux Kustomization {{ $labels.exported_namespace }}/{{ $labels.name }} remains NotReady"
+            description: "The Ready condition has remained non-True for at least five minutes."
+            runbook: "Inspect the Kustomization condition and controller logs; repair only through GitOps."
     - name: platform-flagger
       rules:
         - alert: FlaggerCanaryFailed
