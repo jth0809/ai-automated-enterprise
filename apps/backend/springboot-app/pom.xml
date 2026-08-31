@@ -9,7 +9,7 @@
     <artifactId>spring-boot-starter-parent</artifactId>
     <!-- Keep on the latest patch: the Trivy CI gate blocks images carrying
          fixable HIGH/CRITICAL CVEs in managed deps (tomcat, jackson). -->
-    <version>4.1.0</version>
+    <version>4.1.1</version>
     <relativePath/>
   </parent>
 
@@ -45,7 +45,7 @@
     <dependency>
       <groupId>org.jsoup</groupId>
       <artifactId>jsoup</artifactId>
-      <version>1.22.2</version>
+      <version>1.23.2</version>
     </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
